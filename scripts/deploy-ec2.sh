@@ -17,6 +17,19 @@ if [[ ! "$RELEASE_ID" =~ ^[A-Za-z0-9._-]+$ ]]; then
   exit 1
 fi
 
+load_node_runtime() {
+  if command -v node >/dev/null 2>&1 && command -v pm2 >/dev/null 2>&1; then
+    return
+  fi
+
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    . "$NVM_DIR/nvm.sh"
+  fi
+}
+
+load_node_runtime
+
 if ! command -v node >/dev/null 2>&1; then
   echo "node is required on the EC2 instance" >&2
   exit 1
