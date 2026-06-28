@@ -6,15 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "tsc -p tsconfig.test.json && node --test .test-build/__tests__/*.test.js",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:push:watch": "node scripts/watch-db-push.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@next/env": "^16.2.9",
+    "argon2": "^0.44.0",
     "drizzle-orm": "^0.45.2",
     "mysql2": "^3.22.5",
     "next": "16.2.9",
