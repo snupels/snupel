@@ -48,20 +48,13 @@ jobs:
           DEPLOYMENT_VERSION: ${{ github.sha }}
         run: npm run build
 
-      - name: Migrate database
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-        run: npm run db:migrate
-
       - name: Package standalone server
         run: |
           mkdir -p .next/standalone/.next
           cp -r public .next/standalone/
           cp -r .next/static .next/standalone/.next/
+          cp package.json package-lock.json drizzle.config.ts .next/standalone/
+          cp -r drizzle lib .next/standalone/
           tar -czf "${APP_NAME}-${GITHUB_SHA}.tar.gz" -C .next/standalone .
 
       - name: Configure SSH

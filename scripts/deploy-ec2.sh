@@ -83,14 +83,16 @@ if [[ ! -f "$RELEASE_DIR/server.js" ]]; then
   exit 1
 fi
 
-ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
-
 set -a
 if [[ -f "$SHARED_DIR/.env" ]]; then
   # shellcheck disable=SC1091
   . "$SHARED_DIR/.env"
 fi
 set +a
+
+(cd "$RELEASE_DIR" && npm ci && npm run db:migrate)
+
+ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 
 export NODE_ENV=production
 export HOSTNAME="${HOSTNAME:-0.0.0.0}"
