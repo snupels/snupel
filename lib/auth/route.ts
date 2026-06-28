@@ -1,10 +1,16 @@
 import { z } from "zod";
 
 import { AuthError } from "./service";
+import { verifyAccessToken } from "./token";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 20;
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+type LoginUser = {
+  id: number;
+  email: string;
+};
 
 export async function authJson<T>(
   request: Request,
@@ -40,6 +46,29 @@ export async function authJson<T>(
 
     throw error;
   }
+}
+
+export async function requireLogin(
+  request: Request,
+  handler: (user: LoginUser) => Promise<Response> | Response,
+) {
+  const user = getLoginUser(request);
+
+  if (!user) {
+    return Response.json(
+      { error: "unauthorized", message: "Login is required." },
+      { status: 401 },
+    );
+  }
+
+  return handler(user);
+}
+
+export function getLoginUser(request: Request) {
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+
+  return token ? verifyAccessToken(token) : null;
 }
 
 function allowRequest(request: Request) {

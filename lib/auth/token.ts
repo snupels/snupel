@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const DEFAULT_EXPIRES_IN = 60 * 60 * 24 * 7;
 
@@ -52,4 +52,63 @@ export function signAccessToken(user: { id: number; email: string }) {
     accessToken: `${signingInput}.${signature}`,
     expiresIn,
   };
+}
+
+export function verifyAccessToken(accessToken: string) {
+  const parts = accessToken.split(".");
+
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [encodedHeader, encodedPayload, signature] = parts;
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  const expectedSignature = createHmac("sha256", getJwtSecret())
+    .update(signingInput)
+    .digest("base64url");
+
+  if (!safeEqual(signature, expectedSignature)) {
+    return null;
+  }
+
+  const header = parseBase64Json<{ alg?: string; typ?: string }>(encodedHeader);
+  const payload = parseBase64Json<Partial<JwtPayload>>(encodedPayload);
+
+  if (header?.alg !== "HS256" || header.typ !== "JWT") {
+    return null;
+  }
+
+  const id = Number(payload?.sub);
+  const now = Math.floor(Date.now() / 1000);
+
+  if (
+    !payload ||
+    !Number.isSafeInteger(id) ||
+    id <= 0 ||
+    typeof payload.email !== "string" ||
+    typeof payload.exp !== "number" ||
+    payload.exp <= now
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    email: payload.email,
+  };
+}
+
+function safeEqual(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+function parseBase64Json<T>(value: string) {
+  try {
+    return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T;
+  } catch {
+    return null;
+  }
 }
