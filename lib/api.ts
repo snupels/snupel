@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-export function json(data: unknown, status = 200) {
-  return NextResponse.json(data as any, { status });
+export function json<T = unknown>(data: T, status = 200) {
+  return NextResponse.json(data as unknown, { status });
 }
 
 export function created(data: unknown) {
