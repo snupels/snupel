@@ -113,7 +113,7 @@ set +a
 ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 
 export NODE_ENV=production
-export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+export HOSTNAME="0.0.0.0"
 export PORT="$APP_PORT"
 export DEPLOYMENT_VERSION="$RELEASE_ID"
 
