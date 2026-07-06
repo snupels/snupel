@@ -49,6 +49,15 @@ RELEASES_DIR="$APP_DIR/releases"
 SHARED_DIR="$APP_DIR/shared"
 CURRENT_LINK="$APP_DIR/current"
 RELEASE_DIR="$RELEASES_DIR/$RELEASE_ID"
+KEEP_RELEASES="${KEEP_RELEASES:-2}"
+
+prune_old_releases() {
+  find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+    | sort -rn \
+    | tail -n +"$((KEEP_RELEASES + 1))" \
+    | cut -d' ' -f2- \
+    | xargs -r rm -rf
+}
 
 if [[ ! -d "$APP_DIR" ]]; then
   APP_PARENT="$(dirname "$APP_DIR")"
@@ -73,8 +82,17 @@ if [[ ! -w "$APP_DIR" ]]; then
 fi
 
 mkdir -p "$RELEASES_DIR" "$SHARED_DIR"
+prune_old_releases
 rm -rf "$RELEASE_DIR"
 mkdir -p "$RELEASE_DIR"
+
+DEPLOY_SUCCEEDED=0
+cleanup_failed_release() {
+  if [[ "$DEPLOY_SUCCEEDED" != "1" ]]; then
+    rm -rf "$RELEASE_DIR"
+  fi
+}
+trap cleanup_failed_release EXIT
 
 tar -xzf "$ARCHIVE_PATH" -C "$RELEASE_DIR"
 
@@ -108,8 +126,5 @@ fi
 pm2 save
 rm -f "$ARCHIVE_PATH"
 
-find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
-  | sort -rn \
-  | tail -n +6 \
-  | cut -d' ' -f2- \
-  | xargs -r rm -rf
+DEPLOY_SUCCEEDED=1
+prune_old_releases
