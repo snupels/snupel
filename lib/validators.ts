@@ -20,6 +20,16 @@ const PassportPatchSchema = z.object({
   user_id: z.number().int().positive().optional(),
 });
 
+const CollectedBadgeCreateSchema = z.object({
+  passport_id: z.number().int().positive(),
+  badge_id: z.number().int().positive(),
+});
+
+const CollectedBadgePatchSchema = z.object({
+  passport_id: z.number().int().positive().optional(),
+  badge_id: z.number().int().positive().optional(),
+});
+
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
   const parsed = BadgeCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -57,6 +67,28 @@ export function validatePassportPayload(body: unknown): ValidationResult<{ user_
 
 export function validatePassportPatchPayload(body: unknown): ValidationResult<{ user_id?: number }> {
   const parsed = PassportPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  if (Object.keys(parsed.data).length === 0) {
+    return { error: "At least one field must be provided to update." };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCollectedBadgePayload(body: unknown): ValidationResult<{ passport_id: number; badge_id: number }> {
+  const parsed = CollectedBadgeCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCollectedBadgePatchPayload(body: unknown): ValidationResult<{ passport_id?: number; badge_id?: number }> {
+  const parsed = CollectedBadgePatchSchema.safeParse(body);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }

@@ -77,6 +77,72 @@ export async function deletePassport(id: number) {
   return true;
 }
 
+export async function getCollectedBadges() {
+  return await db.select().from(collectedBadges).orderBy(collectedBadges.id);
+}
+
+export async function createCollectedBadge(input: { passport_id: number; badge_id: number }) {
+  const [inserted] = await db
+    .insert(collectedBadges)
+    .values({
+      passportId: input.passport_id,
+      badgeId: input.badge_id,
+    })
+    .$returningId();
+
+  const [row] = await db
+    .select()
+    .from(collectedBadges)
+    .where(eq(collectedBadges.id, inserted.id))
+    .limit(1);
+  return row;
+}
+
+export async function getCollectedBadgeById(id: number) {
+  const [row] = await db
+    .select()
+    .from(collectedBadges)
+    .where(eq(collectedBadges.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateCollectedBadge(id: number, data: { passport_id?: number; badge_id?: number }) {
+  const [existing] = await db
+    .select()
+    .from(collectedBadges)
+    .where(eq(collectedBadges.id, id))
+    .limit(1);
+  if (!existing) return null;
+
+  await db
+    .update(collectedBadges)
+    .set({
+      ...(data.passport_id !== undefined ? { passportId: data.passport_id } : {}),
+      ...(data.badge_id !== undefined ? { badgeId: data.badge_id } : {}),
+    })
+    .where(eq(collectedBadges.id, id));
+
+  const [row] = await db
+    .select()
+    .from(collectedBadges)
+    .where(eq(collectedBadges.id, id))
+    .limit(1);
+  return row;
+}
+
+export async function deleteCollectedBadge(id: number) {
+  const [existing] = await db
+    .select()
+    .from(collectedBadges)
+    .where(eq(collectedBadges.id, id))
+    .limit(1);
+  if (!existing) return false;
+
+  await db.delete(collectedBadges).where(eq(collectedBadges.id, id));
+  return true;
+}
+
 export async function createBadge(input: { image_url?: string; description?: string }) {
   const [inserted] = await db
     .insert(badges)
