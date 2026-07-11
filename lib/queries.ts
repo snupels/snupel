@@ -42,7 +42,7 @@ export async function getPassportById(id: number) {
   return row ?? null;
 }
 
-export async function updatePassport(id: number, data: { user_id?: number | null }) {
+export async function updatePassport(id: number, data: { user_id?: number }) {
   const [existing] = await db
     .select()
     .from(passports)

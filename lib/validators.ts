@@ -17,7 +17,7 @@ const PassportCreateSchema = z.object({
 });
 
 const PassportPatchSchema = z.object({
-  user_id: z.number().int().positive().nullable().optional(),
+  user_id: z.number().int().positive().optional(),
 });
 
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
@@ -55,7 +55,7 @@ export function validatePassportPayload(body: unknown): ValidationResult<{ user_
   return { data: parsed.data };
 }
 
-export function validatePassportPatchPayload(body: unknown): ValidationResult<{ user_id?: number | null }> {
+export function validatePassportPatchPayload(body: unknown): ValidationResult<{ user_id?: number }> {
   const parsed = PassportPatchSchema.safeParse(body);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
