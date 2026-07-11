@@ -30,6 +30,16 @@ const CollectedBadgePatchSchema = z.object({
   badge_id: z.number().int().positive().optional(),
 });
 
+const CollectedStampCreateSchema = z.object({
+  passport_id: z.number().int().positive(),
+  stamp_id: z.number().int().positive(),
+});
+
+const CollectedStampPatchSchema = z.object({
+  passport_id: z.number().int().positive().optional(),
+  stamp_id: z.number().int().positive().optional(),
+});
+
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
   const parsed = BadgeCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -89,6 +99,28 @@ export function validateCollectedBadgePayload(body: unknown): ValidationResult<{
 
 export function validateCollectedBadgePatchPayload(body: unknown): ValidationResult<{ passport_id?: number; badge_id?: number }> {
   const parsed = CollectedBadgePatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  if (Object.keys(parsed.data).length === 0) {
+    return { error: "At least one field must be provided to update." };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCollectedStampPayload(body: unknown): ValidationResult<{ passport_id: number; stamp_id: number }> {
+  const parsed = CollectedStampCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCollectedStampPatchPayload(body: unknown): ValidationResult<{ passport_id?: number; stamp_id?: number }> {
+  const parsed = CollectedStampPatchSchema.safeParse(body);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }

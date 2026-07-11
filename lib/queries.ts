@@ -143,6 +143,72 @@ export async function deleteCollectedBadge(id: number) {
   return true;
 }
 
+export async function getCollectedStamps() {
+  return await db.select().from(collectedStamps).orderBy(collectedStamps.id);
+}
+
+export async function createCollectedStamp(input: { passport_id: number; stamp_id: number }) {
+  const [inserted] = await db
+    .insert(collectedStamps)
+    .values({
+      passportId: input.passport_id,
+      stampId: input.stamp_id,
+    })
+    .$returningId();
+
+  const [row] = await db
+    .select()
+    .from(collectedStamps)
+    .where(eq(collectedStamps.id, inserted.id))
+    .limit(1);
+  return row;
+}
+
+export async function getCollectedStampById(id: number) {
+  const [row] = await db
+    .select()
+    .from(collectedStamps)
+    .where(eq(collectedStamps.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateCollectedStamp(id: number, data: { passport_id?: number; stamp_id?: number }) {
+  const [existing] = await db
+    .select()
+    .from(collectedStamps)
+    .where(eq(collectedStamps.id, id))
+    .limit(1);
+  if (!existing) return null;
+
+  await db
+    .update(collectedStamps)
+    .set({
+      ...(data.passport_id !== undefined ? { passportId: data.passport_id } : {}),
+      ...(data.stamp_id !== undefined ? { stampId: data.stamp_id } : {}),
+    })
+    .where(eq(collectedStamps.id, id));
+
+  const [row] = await db
+    .select()
+    .from(collectedStamps)
+    .where(eq(collectedStamps.id, id))
+    .limit(1);
+  return row;
+}
+
+export async function deleteCollectedStamp(id: number) {
+  const [existing] = await db
+    .select()
+    .from(collectedStamps)
+    .where(eq(collectedStamps.id, id))
+    .limit(1);
+  if (!existing) return false;
+
+  await db.delete(collectedStamps).where(eq(collectedStamps.id, id));
+  return true;
+}
+
 export async function createBadge(input: { image_url?: string; description?: string }) {
   const [inserted] = await db
     .insert(badges)
