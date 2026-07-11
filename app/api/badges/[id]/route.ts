@@ -9,11 +9,9 @@ function parseId(id: string | string[] | undefined) {
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = parseId(params.id);
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await context.params;
+  const id = parseId(rawId);
   if (!id) {
     return badRequest("Badge id must be a positive integer.");
   }
@@ -26,11 +24,9 @@ export async function GET(
   return json(badge);
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = parseId(params.id);
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await context.params;
+  const id = parseId(rawId);
   if (!id) {
     return badRequest("Badge id must be a positive integer.");
   }
@@ -49,11 +45,9 @@ export async function PATCH(
   return json(updated);
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = parseId(params.id);
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await context.params;
+  const id = parseId(rawId);
   if (!id) {
     return badRequest("Badge id must be a positive integer.");
   }

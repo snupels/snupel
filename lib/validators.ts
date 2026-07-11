@@ -15,7 +15,7 @@ type ValidationResult<T> = { data: T } | { error: string };
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
   const parsed = BadgeCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return { error: parsed.error.errors.map((e) => e.message).join(", ") };
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }
 
   if (!parsed.data.image_url && !parsed.data.description) {
@@ -28,7 +28,7 @@ export function validateBadgePayload(body: unknown): ValidationResult<{ image_ur
 export function validateBadgePatchPayload(body: unknown): ValidationResult<{ image_url?: string | null; description?: string | null }> {
   const parsed = BadgePatchSchema.safeParse(body);
   if (!parsed.success) {
-    return { error: parsed.error.errors.map((e) => e.message).join(", ") };
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }
 
   if (Object.keys(parsed.data).length === 0) {
