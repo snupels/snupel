@@ -12,6 +12,14 @@ const BadgePatchSchema = z.object({
 
 type ValidationResult<T> = { data: T } | { error: string };
 
+const PassportCreateSchema = z.object({
+  user_id: z.number().int().positive(),
+});
+
+const PassportPatchSchema = z.object({
+  user_id: z.number().int().positive().nullable().optional(),
+});
+
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
   const parsed = BadgeCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -27,6 +35,28 @@ export function validateBadgePayload(body: unknown): ValidationResult<{ image_ur
 
 export function validateBadgePatchPayload(body: unknown): ValidationResult<{ image_url?: string | null; description?: string | null }> {
   const parsed = BadgePatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  if (Object.keys(parsed.data).length === 0) {
+    return { error: "At least one field must be provided to update." };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validatePassportPayload(body: unknown): ValidationResult<{ user_id: number }> {
+  const parsed = PassportCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validatePassportPatchPayload(body: unknown): ValidationResult<{ user_id?: number | null }> {
+  const parsed = PassportPatchSchema.safeParse(body);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }

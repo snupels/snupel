@@ -13,6 +13,70 @@ export async function getBadges() {
   return await db.select().from(badges).orderBy(badges.id);
 }
 
+export async function getPassports() {
+  return await db.select().from(passports).orderBy(passports.id);
+}
+
+export async function createPassport(input: { user_id: number }) {
+  const [inserted] = await db
+    .insert(passports)
+    .values({
+      userId: input.user_id,
+    })
+    .$returningId();
+
+  const [row] = await db
+    .select()
+    .from(passports)
+    .where(eq(passports.id, inserted.id))
+    .limit(1);
+  return row;
+}
+
+export async function getPassportById(id: number) {
+  const [row] = await db
+    .select()
+    .from(passports)
+    .where(eq(passports.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updatePassport(id: number, data: { user_id?: number | null }) {
+  const [existing] = await db
+    .select()
+    .from(passports)
+    .where(eq(passports.id, id))
+    .limit(1);
+  if (!existing) return null;
+
+  await db
+    .update(passports)
+    .set({
+      ...(data.user_id !== undefined ? { userId: data.user_id } : {}),
+    })
+    .where(eq(passports.id, id));
+
+  const [row] = await db
+    .select()
+    .from(passports)
+    .where(eq(passports.id, id))
+    .limit(1);
+  return row;
+}
+
+export async function deletePassport(id: number) {
+  const [existing] = await db
+    .select()
+    .from(passports)
+    .where(eq(passports.id, id))
+    .limit(1);
+  if (!existing) return false;
+
+  await db.delete(passports).where(eq(passports.id, id));
+  return true;
+}
+
 export async function createBadge(input: { image_url?: string; description?: string }) {
   const [inserted] = await db
     .insert(badges)
