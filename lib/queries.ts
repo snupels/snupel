@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
+  activities,
   badges,
   users,
   passports,
@@ -8,6 +9,27 @@ import {
   collectedBadges,
   collectedStamps,
 } from "@/lib/db/schema";
+
+export type ActivityInput = {
+  category: "sports" | "event" | "festival";
+  representative_image_url?: string;
+  sport_name?: string;
+  region?: string;
+  place_name?: string;
+  latitude?: number;
+  longitude?: number;
+};
+
+export type ActivityPatchInput = Partial<
+  Omit<ActivityInput, "representative_image_url" | "sport_name" | "region" | "place_name" | "latitude" | "longitude">
+> & {
+  representative_image_url?: string | null;
+  sport_name?: string | null;
+  region?: string | null;
+  place_name?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
 
 export async function getBadges() {
   return await db.select().from(badges).orderBy(badges.id);
@@ -206,6 +228,82 @@ export async function deleteCollectedStamp(id: number) {
   if (!existing) return false;
 
   await db.delete(collectedStamps).where(eq(collectedStamps.id, id));
+  return true;
+}
+
+export async function getActivities() {
+  return await db.select().from(activities).orderBy(activities.id);
+}
+
+export async function createActivity(input: ActivityInput) {
+  const [inserted] = await db
+    .insert(activities)
+    .values({
+      category: input.category,
+      representativeImageUrl: input.representative_image_url ?? null,
+      sportName: input.sport_name ?? null,
+      region: input.region ?? null,
+      placeName: input.place_name ?? null,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
+    })
+    .$returningId();
+
+  const [row] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, inserted.id))
+    .limit(1);
+  return row;
+}
+
+export async function getActivityById(id: number) {
+  const [row] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateActivity(id: number, data: ActivityPatchInput) {
+  const [existing] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, id))
+    .limit(1);
+  if (!existing) return null;
+
+  await db
+    .update(activities)
+    .set({
+      ...(data.category !== undefined ? { category: data.category } : {}),
+      ...(data.representative_image_url !== undefined ? { representativeImageUrl: data.representative_image_url } : {}),
+      ...(data.sport_name !== undefined ? { sportName: data.sport_name } : {}),
+      ...(data.region !== undefined ? { region: data.region } : {}),
+      ...(data.place_name !== undefined ? { placeName: data.place_name } : {}),
+      ...(data.latitude !== undefined ? { latitude: data.latitude } : {}),
+      ...(data.longitude !== undefined ? { longitude: data.longitude } : {}),
+    })
+    .where(eq(activities.id, id));
+
+  const [row] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, id))
+    .limit(1);
+  return row;
+}
+
+export async function deleteActivity(id: number) {
+  const [existing] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, id))
+    .limit(1);
+  if (!existing) return false;
+
+  await db.delete(activities).where(eq(activities.id, id));
   return true;
 }
 
