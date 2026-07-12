@@ -6,6 +6,8 @@ import {
   validateActivityPayload,
   validateCollectedBadgePayload,
   validateCollectedBadgePatchPayload,
+  validateCoursePatchPayload,
+  validateCoursePayload,
 } from "../lib/validators";
 
 test("accepts a valid activity payload", () => {
@@ -40,6 +42,39 @@ test("rejects invalid activity category and coordinates", () => {
 
 test("requires at least one field for activity patch", () => {
   assert.deepEqual(validateActivityPatchPayload({}), {
+    error: "At least one field must be provided to update.",
+  });
+});
+
+test("accepts a valid course payload", () => {
+  const result = validateCoursePayload({
+    recommended_companion: "친구",
+    estimated_duration_minutes: 90,
+    theme: "photo_spot",
+  });
+
+  assert.deepEqual(result, {
+    data: {
+      recommended_companion: "친구",
+      estimated_duration_minutes: 90,
+      theme: "photo_spot",
+    },
+  });
+});
+
+test("rejects invalid course theme and duration", () => {
+  assert.ok("error" in validateCoursePayload({ theme: "food" }));
+  assert.ok(
+    "error" in
+      validateCoursePayload({
+        theme: "healing",
+        estimated_duration_minutes: 0,
+      }),
+  );
+});
+
+test("requires at least one field for course patch", () => {
+  assert.deepEqual(validateCoursePatchPayload({}), {
     error: "At least one field must be provided to update.",
   });
 });

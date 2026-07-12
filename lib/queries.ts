@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import {
   activities,
   badges,
+  courses,
   users,
   passports,
   stamps,
@@ -29,6 +30,20 @@ export type ActivityPatchInput = Partial<
   place_name?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+};
+
+export type CourseInput = {
+  recommended_companion?: string;
+  representative_image_url?: string;
+  estimated_duration_minutes?: number;
+  theme: "healing" | "thrill" | "photo_spot" | "stamp";
+};
+
+export type CoursePatchInput = {
+  recommended_companion?: string | null;
+  representative_image_url?: string | null;
+  estimated_duration_minutes?: number | null;
+  theme?: CourseInput["theme"];
 };
 
 export async function getBadges() {
@@ -304,6 +319,82 @@ export async function deleteActivity(id: number) {
   if (!existing) return false;
 
   await db.delete(activities).where(eq(activities.id, id));
+  return true;
+}
+
+export async function getCourses() {
+  return await db.select().from(courses).orderBy(courses.id);
+}
+
+export async function createCourse(input: CourseInput) {
+  const [inserted] = await db
+    .insert(courses)
+    .values({
+      recommendedCompanion: input.recommended_companion ?? null,
+      representativeImageUrl: input.representative_image_url ?? null,
+      estimatedDurationMinutes: input.estimated_duration_minutes ?? null,
+      theme: input.theme,
+    })
+    .$returningId();
+
+  const [row] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.id, inserted.id))
+    .limit(1);
+  return row;
+}
+
+export async function getCourseById(id: number) {
+  const [row] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateCourse(id: number, data: CoursePatchInput) {
+  const [existing] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.id, id))
+    .limit(1);
+  if (!existing) return null;
+
+  await db
+    .update(courses)
+    .set({
+      ...(data.recommended_companion !== undefined
+        ? { recommendedCompanion: data.recommended_companion }
+        : {}),
+      ...(data.representative_image_url !== undefined
+        ? { representativeImageUrl: data.representative_image_url }
+        : {}),
+      ...(data.estimated_duration_minutes !== undefined
+        ? { estimatedDurationMinutes: data.estimated_duration_minutes }
+        : {}),
+      ...(data.theme !== undefined ? { theme: data.theme } : {}),
+    })
+    .where(eq(courses.id, id));
+
+  const [row] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.id, id))
+    .limit(1);
+  return row;
+}
+
+export async function deleteCourse(id: number) {
+  const [existing] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.id, id))
+    .limit(1);
+  if (!existing) return false;
+
+  await db.delete(courses).where(eq(courses.id, id));
   return true;
 }
 

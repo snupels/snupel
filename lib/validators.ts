@@ -60,6 +60,20 @@ const ActivityPatchSchema = z.object({
   longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
+const CourseCreateSchema = z.object({
+  recommended_companion: z.string().max(100).optional(),
+  representative_image_url: z.string().url().optional(),
+  estimated_duration_minutes: z.number().int().positive().optional(),
+  theme: z.enum(["healing", "thrill", "photo_spot", "stamp"]),
+});
+
+const CoursePatchSchema = z.object({
+  recommended_companion: z.string().max(100).nullable().optional(),
+  representative_image_url: z.string().url().nullable().optional(),
+  estimated_duration_minutes: z.number().int().positive().nullable().optional(),
+  theme: z.enum(["healing", "thrill", "photo_spot", "stamp"]).optional(),
+});
+
 export function validateBadgePayload(body: unknown): ValidationResult<{ image_url?: string; description?: string }> {
   const parsed = BadgeCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -163,6 +177,38 @@ export function validateActivityPayload(body: unknown): ValidationResult<{ categ
 
 export function validateActivityPatchPayload(body: unknown): ValidationResult<{ category?: "sports" | "event" | "festival"; representative_image_url?: string | null; sport_name?: string | null; region?: string | null; place_name?: string | null; latitude?: number | null; longitude?: number | null }> {
   const parsed = ActivityPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  if (Object.keys(parsed.data).length === 0) {
+    return { error: "At least one field must be provided to update." };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCoursePayload(body: unknown): ValidationResult<{
+  recommended_companion?: string;
+  representative_image_url?: string;
+  estimated_duration_minutes?: number;
+  theme: "healing" | "thrill" | "photo_spot" | "stamp";
+}> {
+  const parsed = CourseCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
+  }
+
+  return { data: parsed.data };
+}
+
+export function validateCoursePatchPayload(body: unknown): ValidationResult<{
+  recommended_companion?: string | null;
+  representative_image_url?: string | null;
+  estimated_duration_minutes?: number | null;
+  theme?: "healing" | "thrill" | "photo_spot" | "stamp";
+}> {
+  const parsed = CoursePatchSchema.safeParse(body);
   if (!parsed.success) {
     return { error: parsed.error.issues.map((issue) => issue.message).join(", ") };
   }
