@@ -1,5 +1,9 @@
+"use client";
+
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
@@ -44,6 +48,28 @@ const recommendations: Array<{ title: string; place: string; level: string; time
 ];
 
 export function MyPassportPage() {
+  const [liveStats, setLiveStats] = useState(stats);
+  const [badgeCounts, setBadgeCounts] = useState({ collected: 4, total: 24 });
+
+  useEffect(() => {
+    if (!api.hasToken()) return;
+    Promise.all([
+      api.passports.list(),
+      api.collectedStamps.list(),
+      api.collectedBadges.list(),
+      api.activities.list(),
+      api.badges.list(),
+    ]).then(([, collectedStamps, collectedBadges, allActivities, allBadges]) => {
+      setLiveStats([
+        { label: "모은 도장", value: `${collectedStamps.length}개`, icon: "award" },
+        { label: "인증한 장소", value: `${allActivities.filter((item) => item.placeName).length}곳`, icon: "mapPin" },
+        { label: "참여한 행사", value: `${allActivities.filter((item) => item.category !== "sports").length}개`, icon: "calendar", accent: true },
+        { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
+      ]);
+      setBadgeCounts({ collected: collectedBadges.length, total: allBadges.length });
+    }).catch(() => undefined);
+  }, []);
+
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
       <section className="relative overflow-hidden px-4 pb-24 pt-12 sm:px-6 lg:px-8">
@@ -70,7 +96,7 @@ export function MyPassportPage() {
       </section>
 
       <section className="relative z-10 mx-auto -mt-16 grid max-w-[1180px] gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {stats.map((stat) => <div key={stat.label} className="rounded-2xl border border-[#e0e7e2] bg-white p-6 shadow-lg"><span className={`flex size-11 items-center justify-center rounded-xl ${stat.accent ? "bg-[#fff6dc] text-[#e4a900]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={stat.icon} className="size-5" /></span><p className="mt-5 text-sm text-[#6f7a87]">{stat.label}</p><strong className="mt-1 block text-3xl">{stat.value}</strong></div>)}
+        {liveStats.map((stat) => <div key={stat.label} className="rounded-2xl border border-[#e0e7e2] bg-white p-6 shadow-lg"><span className={`flex size-11 items-center justify-center rounded-xl ${stat.accent ? "bg-[#fff6dc] text-[#e4a900]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={stat.icon} className="size-5" /></span><p className="mt-5 text-sm text-[#6f7a87]">{stat.label}</p><strong className="mt-1 block text-3xl">{stat.value}</strong></div>)}
       </section>
 
       <section className="mx-auto grid max-w-[1180px] gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)]">
@@ -87,7 +113,7 @@ export function MyPassportPage() {
         </div>
 
         <aside className="space-y-6">
-          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badges.map((badge) => <div key={badge.name} className={`text-center ${badge.unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${badge.unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>)}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">4개</strong> · 전체 배지 24개</p><button type="button" className="mt-4 h-10 w-full rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45]">전체 배지 보기 (24개)</button></section>
+          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badges.map((badge) => <div key={badge.name} className={`text-center ${badge.unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${badge.unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>)}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">{badgeCounts.collected}개</strong> · 전체 배지 {badgeCounts.total}개</p><button type="button" className="mt-4 h-10 w-full rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45]">전체 배지 보기 ({badgeCounts.total}개)</button></section>
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">최근 방문 인증</h2><div className="mt-6 space-y-6">{activities.map((activity) => <div key={activity.date + activity.text} className="flex gap-3"><span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${activity.yellow ? "bg-[#fff5d9] text-[#d99f00]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={activity.icon} className="size-4" /></span><div><p className="text-xs text-[#8a9490]">{activity.date}</p><p className="mt-1 text-sm font-semibold leading-5">{activity.text}</p></div></div>)}</div><button type="button" className="mt-6 h-10 w-full border-t border-[#edf0ee] pt-4 text-sm font-bold text-[#008f45]">전체 활동 보기</button></section>
         </aside>
       </section>

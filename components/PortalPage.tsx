@@ -2,8 +2,9 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
@@ -128,6 +129,44 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
   events: [{ label: "지역", key: "region", items: regions }],
 };
 
+const cardImages = [image1, image2, image3, image4];
+const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
+
+async function loadCards(page: PortalPageKey): Promise<PageConfig["cards"]> {
+  if (page === "courses") {
+    return (await api.courses.list()).map((course, index) => ({
+      image: cardImages[index % cardImages.length],
+      tag: themeLabels[course.theme],
+      title: `${themeLabels[course.theme]} 코스 #${course.id}`,
+      description: course.recommendedCompanion ? `${course.recommendedCompanion}와 함께하기 좋은 코스` : "추천 스포츠 코스",
+      meta: course.estimatedDurationMinutes ? `약 ${course.estimatedDurationMinutes}분` : "소요 시간 미정",
+      icon: "map" as const,
+    }));
+  }
+  if (page === "missions") {
+    return (await api.badges.list()).map((badge, index) => ({
+      image: cardImages[index % cardImages.length],
+      tag: "배지",
+      title: `배지 #${badge.id}`,
+      description: badge.description ?? "스포츠 활동으로 획득할 수 있는 배지",
+      meta: "패스포트 리워드",
+      icon: "award" as const,
+    }));
+  }
+
+  const categories = page === "sports" ? ["sports"] : ["event", "festival"];
+  return (await api.activities.list())
+    .filter((activity) => categories.includes(activity.category))
+    .map((activity, index) => ({
+      image: cardImages[index % cardImages.length],
+      tag: activity.category === "sports" ? "스포츠" : activity.category === "event" ? "이벤트" : "축제",
+      title: activity.sportName ?? activity.placeName ?? `활동 #${activity.id}`,
+      description: activity.placeName ? `${activity.placeName}에서 즐기는 강원 스포츠 활동` : "강원 스포츠 활동",
+      meta: [activity.region, activity.placeName].filter(Boolean).join(" · ") || "장소 미정",
+      icon: activity.category === "sports" ? "activity" as const : "calendar" as const,
+    }));
+}
+
 export function PortalPage({ page }: { page: PortalPageKey }) {
   return <Suspense><PortalPageContent page={page} /></Suspense>;
 }
@@ -143,6 +182,25 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   );
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
+  const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
+  const [apiMessage, setApiMessage] = useState("");
+
+  useEffect(() => {
+    if (!api.hasToken()) return;
+    loadCards(page)
+      .then((cards) => {
+        setRemoteCards(cards);
+        setApiMessage(cards.length ? "" : "등록된 데이터가 없습니다.");
+      })
+      .catch(() => setApiMessage("데이터를 불러오지 못했습니다."));
+  }, [page]);
+
+  const cards = (remoteCards ?? config.cards).filter((card) => {
+    const query = activeFilters.q?.toLowerCase();
+    return (!query || `${card.title} ${card.description} ${card.meta}`.toLowerCase().includes(query))
+      && (!activeFilters.region || card.meta.includes(activeFilters.region))
+      && (!activeFilters.sport || card.title.includes(activeFilters.sport) || card.tag.includes(activeFilters.sport));
+  });
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
@@ -187,8 +245,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               </div>
             </div>)}
           </div>}
+          {apiMessage && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {config.cards.map((card) => <article key={card.title} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
+            {cards.map((card) => <article key={card.title} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
           </div>
         </div>
       </section>
