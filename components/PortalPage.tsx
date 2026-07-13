@@ -1,0 +1,187 @@
+import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
+import { AppIcon, type AppIconName } from "./AppIcon";
+import { CoursePreferences } from "./CoursePreferences";
+import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
+import image1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
+import image2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
+import image3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
+import image4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
+
+export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
+
+type PageConfig = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon: AppIconName;
+  action: { label: string; href: string };
+  stats: Array<{ value: string; label: string }>;
+  sectionTitle: string;
+  sectionDescription: string;
+  cards: Array<{ image: StaticImageData; tag: string; title: string; description: string; meta: string; icon: AppIconName }>;
+};
+
+const configs: Record<PortalPageKey, PageConfig> = {
+  sports: {
+    eyebrow: "스포츠 탐색",
+    title: "강원 곳곳의 스포츠를 한눈에",
+    description: "지역과 종목, 난이도를 기준으로 지금 즐길 수 있는 스포츠를 찾아보세요.",
+    icon: "mountain",
+    action: { label: "맞춤 코스 보기", href: "/courses" },
+    stats: [{ value: "38", label: "스포츠 종목" }, { value: "120", label: "추천 장소" }, { value: "18", label: "강원 지역" }],
+    sectionTitle: "지금 인기 있는 스포츠",
+    sectionDescription: "계절과 지역을 고려해 가장 반응이 좋은 활동을 골랐습니다.",
+    cards: [
+      { image: image1, tag: "트레일런", title: "설악산 능선 트레일", description: "초록 능선을 따라 달리는 중급 트레일 코스", meta: "고성 · 12.4km", icon: "mountain" },
+      { image: image2, tag: "MTB", title: "청산 MTB 파크", description: "숲길과 다운힐을 함께 즐기는 산악자전거 코스", meta: "정선 · 3시간", icon: "activity" },
+      { image: image3, tag: "래프팅", title: "내린천 수상 스포츠", description: "시원한 계곡에서 즐기는 팀 래프팅 체험", meta: "인제 · 2시간", icon: "waves" },
+      { image: image4, tag: "라이딩", title: "강촌 호반 라이딩", description: "북한강 풍경을 따라 달리는 편안한 자전거길", meta: "춘천 · 28km", icon: "person" },
+    ],
+  },
+  courses: {
+    eyebrow: "맞춤 코스",
+    title: "하루와 취향에 맞춘 강원 여행",
+    description: "스포츠와 지역 명소를 자연스럽게 연결한 일정으로 계획 부담을 줄였습니다.",
+    icon: "map",
+    action: { label: "스포츠부터 찾기", href: "/sports" },
+    stats: [{ value: "24", label: "추천 코스" }, { value: "7", label: "테마" }, { value: "4.8", label: "평균 만족도" }],
+    sectionTitle: "추천 맞춤 코스",
+    sectionDescription: "소요 시간과 난이도가 명확한 코스만 모았습니다.",
+    cards: [
+      { image: image1, tag: "1박 2일", title: "대관령 하늘길 트레킹", description: "트레킹과 목장 풍경을 함께 즐기는 주말 코스", meta: "중급 · 5시간", icon: "mountain" },
+      { image: image3, tag: "당일", title: "동해 패들 & 서핑", description: "오전 패들보드와 오후 서핑을 잇는 바다 코스", meta: "초급 · 6시간", icon: "waves" },
+      { image: image4, tag: "1박 2일", title: "춘천 라이딩 & 미식", description: "호반 라이딩 뒤 지역 음식을 즐기는 여유로운 일정", meta: "초중급 · 30km", icon: "person" },
+      { image: image2, tag: "당일", title: "정선 MTB 어드벤처", description: "숲길 라이딩과 케이블카 전망을 묶은 활동형 코스", meta: "중급 · 4시간", icon: "activity" },
+    ],
+  },
+  missions: {
+    eyebrow: "패스포트 미션",
+    title: "도전하고 인증하며 패스포트를 완성하세요",
+    description: "스포츠 참여와 지역 방문을 기록하고 도장과 리워드를 모아보세요.",
+    icon: "award",
+    action: { label: "내 패스포트", href: "/mypage" },
+    stats: [{ value: "12", label: "진행 중 미션" }, { value: "7", label: "획득 도장" }, { value: "2", label: "받은 리워드" }],
+    sectionTitle: "이번 달 추천 미션",
+    sectionDescription: "처음 참여해도 완료 조건을 쉽게 이해할 수 있는 미션입니다.",
+    cards: [
+      { image: image1, tag: "주간", title: "트레일 10km 완주", description: "지정 트레일 코스에서 10km 이상 활동을 기록하세요.", meta: "보상 · 능선 도장", icon: "medal" },
+      { image: image2, tag: "지역", title: "정선 스포츠 2곳 방문", description: "정선의 스포츠 명소 두 곳에서 방문 인증을 남기세요.", meta: "보상 · 500 포인트", icon: "mapPin" },
+      { image: image3, tag: "체험", title: "수상 스포츠 첫 도전", description: "래프팅, 카약, 서핑 중 한 종목에 참여하세요.", meta: "보상 · 물결 배지", icon: "waves" },
+      { image: image4, tag: "월간", title: "강원 3개 지역 탐험", description: "서로 다른 세 지역에서 스포츠 활동을 완료하세요.", meta: "보상 · 탐험가 도장", icon: "trophy" },
+    ],
+  },
+  events: {
+    eyebrow: "이벤트 · 축제",
+    title: "스포츠가 축제가 되는 순간",
+    description: "대회, 체험 행사, 지역 축제 일정을 한곳에서 확인하고 참여하세요.",
+    icon: "calendar",
+    action: { label: "미션과 함께 보기", href: "/missions" },
+    stats: [{ value: "16", label: "이번 달 행사" }, { value: "9", label: "참가 모집 중" }, { value: "6", label: "무료 체험" }],
+    sectionTitle: "다가오는 행사",
+    sectionDescription: "접수 상태와 일정이 확인된 행사만 보여드립니다.",
+    cards: [
+      { image: image1, tag: "06.16", title: "양양 서프 트레일 2026", description: "산과 바다를 잇는 양양 대표 트레일 대회", meta: "접수 중 · 양양", icon: "calendar" },
+      { image: image2, tag: "06.17", title: "청산 MTB 페스티벌", description: "레이스와 가족 체험이 함께 열리는 MTB 축제", meta: "접수 중 · 정선", icon: "activity" },
+      { image: image3, tag: "06.20", title: "내린천 래프팅 축제", description: "래프팅 경기와 초보자 체험 프로그램", meta: "무료 체험 · 인제", icon: "waves" },
+      { image: image4, tag: "06.23", title: "강촌 바이크 페스티벌", description: "호반 라이딩과 자전거 문화를 즐기는 주말", meta: "현장 접수 · 춘천", icon: "person" },
+    ],
+  },
+  mypage: {
+    eyebrow: "마이페이지",
+    title: "홍길동님의 강원 스포츠 패스포트",
+    description: "방문 기록, 도장, 진행 중인 미션과 다음 리워드를 한눈에 확인하세요.",
+    icon: "trophy",
+    action: { label: "새 미션 찾기", href: "/missions" },
+    stats: [{ value: "7", label: "모은 도장" }, { value: "5", label: "인증 장소" }, { value: "3", label: "다음 리워드까지" }],
+    sectionTitle: "최근 활동",
+    sectionDescription: "인증 기록과 이어서 도전할 활동을 정리했습니다.",
+    cards: [
+      { image: image1, tag: "완료", title: "설악산 트레일 챌린지", description: "10km 완주 기록이 패스포트에 반영되었습니다.", meta: "2026.06.12", icon: "medal" },
+      { image: image2, tag: "진행 중", title: "정선 스포츠 2곳 방문", description: "한 곳을 인증했습니다. 한 곳이 더 남았습니다.", meta: "1 / 2 완료", icon: "mapPin" },
+      { image: image3, tag: "추천", title: "내린천 수상 스포츠", description: "현재 도장 조합과 가장 잘 맞는 다음 활동입니다.", meta: "리워드 +300", icon: "waves" },
+      { image: image4, tag: "리워드", title: "탐험가 레벨 2", description: "도장 세 개를 더 모으면 새로운 혜택이 열립니다.", meta: "진행률 70%", icon: "award" },
+    ],
+  },
+};
+
+type FilterGroup = { label: string; key: string; items: Array<{ label: string; value: string; icon: AppIconName }> };
+
+const regions = ["전체 지역", "춘천", "원주", "강릉", "동해", "태백", "속초", "삼척", "홍천", "평창", "정선", "인제", "양양"].map((label) => ({ label, value: label === "전체 지역" ? "" : label, icon: "mapPin" as AppIconName }));
+const sports = [
+  { label: "전체 스포츠", value: "", icon: "medal" as AppIconName },
+  { label: "산악스포츠", value: "산악스포츠", icon: "mountain" as AppIconName },
+  { label: "빙상스포츠", value: "빙상스포츠", icon: "snowflake" as AppIconName },
+  { label: "수상스포츠", value: "수상스포츠", icon: "waves" as AppIconName },
+  { label: "육상스포츠", value: "육상스포츠", icon: "person" as AppIconName },
+  { label: "올림픽레거시", value: "올림픽레거시", icon: "trophy" as AppIconName },
+];
+
+const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
+  sports: [{ label: "스포츠 종류", key: "sport", items: sports }, { label: "지역", key: "region", items: regions }],
+  courses: [{ label: "카테고리", key: "category", items: sports.map((item) => ({ ...item, label: item.label === "전체 스포츠" ? "전체" : item.label })) }],
+  missions: [{ label: "스포츠 종류", key: "sport", items: sports }, { label: "지역", key: "region", items: regions }],
+  events: [{ label: "지역", key: "region", items: regions }],
+};
+
+export function PortalPage({ page, activeFilters = {}, preferenceValues = {} }: { page: PortalPageKey; activeFilters?: Record<string, string>; preferenceValues?: Record<string, string | string[] | undefined> }) {
+  const config = configs[page];
+  const pageFilters = filterGroups[page] ?? [];
+
+  return (
+    <div className="bg-[#f3f7f4] text-[#172033]">
+      <section className="bg-gradient-to-b from-[#e6f0e9] to-[#f3f7f4] px-4 pb-10 pt-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1180px]">
+          <div className="relative flex min-h-[320px] flex-col justify-end gap-8 overflow-hidden rounded-[28px] bg-[#173a2d] p-7 shadow-[0_24px_70px_rgba(28,72,51,0.18)] sm:p-10 lg:flex-row lg:items-end lg:justify-between">
+            <Image src={heroImage} alt="강원 산악 전경" fill priority sizes="(max-width: 1180px) 100vw, 1180px" className="object-cover" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,36,27,0.88)_0%,rgba(9,36,27,0.58)_62%,rgba(9,36,27,0.38)_100%)]" />
+            <div className="relative max-w-3xl text-white">
+              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur"><AppIcon name={config.icon} className="size-6" /></span>
+              <p className="mt-5 text-sm font-semibold text-[#75e5a5]">{config.eyebrow}</p>
+              <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{config.title}</h1>
+              <p className="mt-4 max-w-2xl leading-7 text-white/80">{config.description}</p>
+            </div>
+            <Link href={config.action.href} className="relative inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#00a94f] px-6 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">{config.action.label}<AppIcon name="arrowRight" /></Link>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {config.stats.map((stat) => <div key={stat.label} className="rounded-2xl border border-[#dfe8e2] bg-white px-6 py-5 shadow-sm"><strong className="text-2xl text-[#008f45]">{stat.value}</strong><span className="ml-2 text-sm text-[#6f7a87]">{stat.label}</span></div>)}
+          </div>
+        </div>
+      </section>
+
+      {page === "courses" && <CoursePreferences values={preferenceValues} />}
+
+      <section className="bg-white py-12">
+        <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div><h2 className="text-2xl font-bold">{config.sectionTitle}</h2><p className="mt-2 text-sm text-[#6f7a87]">{config.sectionDescription}</p></div>
+            <form action={`/${page}`} role="search" className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-[#dbe4de] bg-[#f5f7f6] px-3"><AppIcon name="search" className="size-4 text-[#738078]" /><label htmlFor={`${page}-search`} className="sr-only">{config.eyebrow} 검색</label><input id={`${page}-search`} name="q" type="search" placeholder="검색어를 입력하세요" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" /></form>
+          </div>
+          {pageFilters.length > 0 && <div className="mt-6 space-y-3 border-y border-[#e4ebe6] py-4">
+            {pageFilters.map((group) => <div key={group.key} className="flex items-center gap-3">
+              <span className="w-20 shrink-0 text-xs font-semibold text-[#778279]">{group.label}</span>
+              <div className="flex min-w-0 gap-2 overflow-x-auto pb-1">
+                {group.items.map((item) => {
+                  const active = (activeFilters[group.key] ?? "") === item.value;
+                  const query = Object.fromEntries(Object.entries(activeFilters).filter(([key, value]) => key !== group.key && value));
+                  if (item.value) query[group.key] = item.value;
+                  const href = Object.keys(query).length ? { pathname: `/${page}`, query } : `/${page}`;
+                  return <Link key={item.label} href={href} aria-current={active ? "page" : undefined} className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition ${active ? "border-[#008f45] bg-[#008f45] text-white" : "border-[#dfe6e1] bg-white text-[#5f6b63] hover:border-[#8db69b] hover:text-[#008f45]"}`}><AppIcon name={item.icon} />{item.label}</Link>;
+                })}
+              </div>
+            </div>)}
+          </div>}
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {config.cards.map((card) => <article key={card.title} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f3f7f4] py-12">
+        <div className="mx-auto grid max-w-[1180px] gap-5 px-4 sm:px-6 md:grid-cols-3">
+          {[{ icon: "map" as const, title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요." }, { icon: "calendar" as const, title: "일정에 저장", text: "관심 활동과 행사를 내 일정에 모아보세요." }, { icon: "award" as const, title: "패스포트 연결", text: "참여 기록을 인증하고 도장과 혜택을 받으세요." }].map((item) => <div key={item.title} className="rounded-2xl border border-[#dfe8e2] bg-white p-6"><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></div>)}
+        </div>
+      </section>
+    </div>
+  );
+}
