@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api").replace(/\/$/, "");
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.sportspassport.kr/api").replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(
