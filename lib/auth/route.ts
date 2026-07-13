@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { AuthError } from "./service";
+import { AuthError } from "./error";
 import { verifyAccessToken } from "./token";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
