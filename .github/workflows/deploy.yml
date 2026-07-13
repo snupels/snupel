@@ -1,26 +1,25 @@
-name: CI/CD
+name: Deploy frontend
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  id-token: write
+
+concurrency:
+  group: frontend-production
+  cancel-in-progress: true
 
 env:
-  APP_NAME: snupel
-  APP_DIR: /home/ubuntu/snupel
-  APP_PORT: "3000"
   NODE_VERSION: "20"
+  AWS_REGION: ap-northeast-2
 
 jobs:
-  ci:
-    uses: ./.github/workflows/ci.yml
-
   deploy:
-    name: Deploy
-    needs: ci
+    name: Build and deploy to S3
     runs-on: ubuntu-latest
 
     steps:
@@ -33,59 +32,24 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Cache Next.js build
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        env:
-          DEPLOYMENT_VERSION: ${{ github.sha }}
+      - name: Lint
+        run: npm run lint
+
+      - name: Build static site
         run: npm run build
 
-      - name: Package standalone server
-        run: |
-          mkdir -p .next/standalone/.next
-          cp -r public .next/standalone/
-          cp -r .next/static .next/standalone/.next/
-          cp package.json package-lock.json drizzle.config.ts .next/standalone/
-          cp -r drizzle lib .next/standalone/
-          tar -czf "${APP_NAME}-${GITHUB_SHA}.tar.gz" -C .next/standalone .
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Configure SSH
+      - name: Deploy to S3
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
-          test -n "$EC2_HOST"
-          test -n "$EC2_SSH_KEY"
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
-          chmod 600 ~/.ssh/ec2_key
-          ssh-keyscan -p "$EC2_PORT" "$EC2_HOST" >> ~/.ssh/known_hosts
-
-      - name: Upload release archive
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-        run: |
-          test -n "$EC2_USER"
-          scp -i ~/.ssh/ec2_key -P "$EC2_PORT" "${APP_NAME}-${GITHUB_SHA}.tar.gz" "$EC2_USER@$EC2_HOST:/tmp/${APP_NAME}-${GITHUB_SHA}.tar.gz"
-
-      - name: Deploy on EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-        run: |
-          ssh -i ~/.ssh/ec2_key -p "$EC2_PORT" "$EC2_USER@$EC2_HOST" \
-            "APP_NAME='$APP_NAME' APP_DIR='$APP_DIR' APP_PORT='$APP_PORT' RELEASE_ID='$GITHUB_SHA' ARCHIVE_PATH='/tmp/${APP_NAME}-${GITHUB_SHA}.tar.gz' bash -s" \
-            < scripts/deploy-ec2.sh
+          test -n "$S3_BUCKET"
+          aws s3 sync out "s3://$S3_BUCKET" --delete

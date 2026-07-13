@@ -1,5 +1,9 @@
+"use client";
+
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
@@ -124,7 +128,19 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
   events: [{ label: "지역", key: "region", items: regions }],
 };
 
-export function PortalPage({ page, activeFilters = {}, preferenceValues = {} }: { page: PortalPageKey; activeFilters?: Record<string, string>; preferenceValues?: Record<string, string | string[] | undefined> }) {
+export function PortalPage({ page }: { page: PortalPageKey }) {
+  return <Suspense><PortalPageContent page={page} /></Suspense>;
+}
+
+function PortalPageContent({ page }: { page: PortalPageKey }) {
+  const searchParams = useSearchParams();
+  const activeFilters = Object.fromEntries(searchParams.entries());
+  const preferenceValues = Object.fromEntries(
+    [...searchParams.keys()].map((key) => {
+      const values = searchParams.getAll(key);
+      return [key, values.length > 1 ? values : values[0]];
+    }),
+  );
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
 
