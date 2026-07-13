@@ -8,5 +8,5 @@
     "outDir": ".test-build",
     "incremental": false
   },
-  "include": ["__tests__/**/*.ts", "lib/auth/token.ts", "lib/validators.ts"]
+  "include": ["__tests__/**/*.ts", "lib/**/*.ts"]
 }

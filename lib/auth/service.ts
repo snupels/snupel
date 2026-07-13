@@ -7,6 +7,9 @@ import type { AuthProvider, AuthResponse } from "@/schemas/auth";
 import { hashPassword, verifyPassword } from "./password";
 import { fetchOAuthProfile, isAllowedRedirectUri } from "./oauth";
 import { signAccessToken } from "./token";
+import { AuthError } from "./error";
+
+export { AuthError } from "./error";
 
 type AuthUser = {
   id: number;
@@ -158,13 +161,4 @@ async function findSocialAccount(provider: AuthProvider, providerUserId: string)
     .limit(1);
 
   return account;
-}
-
-export class AuthError extends Error {
-  constructor(
-    readonly code: string,
-    message: string,
-  ) {
-    super(message);
-  }
 }
