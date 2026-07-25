@@ -44,11 +44,19 @@ jobs:
 
       - name: Restore assets referenced by cached HTML
         run: |
-          if test -f out/_next/static/chunks/0qd22w6efhkya.js; then
-            cp out/_next/static/chunks/0qd22w6efhkya.js \
-              out/_next/static/chunks/1j59scfz7d6eu.js
-            cp out/_next/static/chunks/0qd22w6efhkya.js \
-              out/_next/static/chunks/355a4lrjr9zbf.js
+          PAGE_JS=""
+          for candidate in \
+            out/_next/static/chunks/0uz0zug29dmzc.js \
+            out/_next/static/chunks/0qd22w6efhkya.js
+          do
+            if test -f "$candidate"; then
+              PAGE_JS="$candidate"
+              break
+            fi
+          done
+          if test -n "$PAGE_JS"; then
+            cp "$PAGE_JS" out/_next/static/chunks/1j59scfz7d6eu.js
+            cp "$PAGE_JS" out/_next/static/chunks/355a4lrjr9zbf.js
           fi
           CSS_FILE="$(find out/_next/static/chunks -maxdepth 1 -name '*.css' -print -quit)"
           if test -n "$CSS_FILE"; then
