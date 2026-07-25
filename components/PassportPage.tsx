@@ -74,7 +74,15 @@ const statusLabels: Record<StampStatus, string> = {
   locked: "미개방",
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 6;
+const stampRotations = [
+  "-rotate-[2.2deg]",
+  "rotate-[1.4deg]",
+  "-rotate-[0.8deg]",
+  "rotate-[2.1deg]",
+  "-rotate-[1.5deg]",
+  "rotate-[0.7deg]",
+] as const;
 const completedCount = stamps.filter((stamp) => stamp.status === "completed").length;
 const availableCount = stamps.filter((stamp) => stamp.status === "available").length;
 const lockedCount = stamps.filter((stamp) => stamp.status === "locked").length;
@@ -88,19 +96,20 @@ const filters: Array<{ value: "all" | StampStatus; label: string; count: number 
 
 function StampEntry({ stamp }: { stamp: PassportStamp }) {
   const isLocked = stamp.status === "locked";
+  const rotation = stampRotations[(stamp.id - 1) % stampRotations.length];
 
   return (
     <article className={`relative text-center ${isLocked ? "opacity-45 grayscale" : ""}`}>
-      <div className="relative mx-auto aspect-[5/3] w-full max-w-[220px] overflow-hidden rounded-xl bg-white shadow-[0_7px_18px_rgba(82,68,37,0.12)]">
+      <div className={`relative mx-auto aspect-[5/3] w-full max-w-[240px] ${rotation}`}>
         <Image
           src={stamp.image}
           alt={`${stamp.regionKo} ${stamp.sportKo} 스탬프`}
           fill
-          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 28vw, 190px"
-          className="object-contain"
+          sizes="(max-width: 640px) 42vw, 240px"
+          className="object-contain opacity-90 mix-blend-multiply"
         />
         {isLocked && (
-          <span className="absolute inset-0 flex items-center justify-center bg-[#f5f1df]/15">
+          <span className="absolute inset-0 flex items-center justify-center">
             <span className="flex size-9 items-center justify-center rounded-full bg-[#2d2b24]/70 text-white">
               <AppIcon name="lock" className="size-4" />
             </span>
@@ -292,9 +301,9 @@ export function PassportPage() {
                 </div>
               </div>
 
-              <div className="min-h-[560px] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.025)_0,rgba(146,126,76,0.025)_1px,transparent_1px,transparent_13px)] px-4 py-10 sm:px-8 lg:px-10">
+              <div className="min-h-[680px] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.025)_0,rgba(146,126,76,0.025)_1px,transparent_1px,transparent_13px)] px-4 py-10 sm:px-8 lg:px-10">
                 {visibleStamps.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-7 lg:grid-cols-5">
+                  <div className="mx-auto grid max-w-[880px] grid-cols-2 gap-x-8 gap-y-12 sm:gap-x-20 sm:gap-y-14">
                     {visibleStamps.map((stamp) => (
                       <StampEntry key={stamp.id} stamp={stamp} />
                     ))}

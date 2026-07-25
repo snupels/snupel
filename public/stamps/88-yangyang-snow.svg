@@ -2,7 +2,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="480" height="288" viewBox="0 0 160 96" role="img" aria-labelledby="title desc">
   <title id="title">강원도 양양 설상 패스포트 도장</title>
   <desc id="desc">YANGYANG, SNOW, stamp 88 of 90</desc>
-  <rect width="160" height="96" fill="#FFFFFF"/>
   <g color="#5C9FCB">
     <rect x="2" y="2" width="156" height="92" rx="20" fill="none" stroke="currentColor" stroke-width="3.5"/>
     <rect x="7.5" y="7.5" width="145" height="81" rx="15" fill="none" stroke="currentColor" stroke-width="0.75" opacity="0.6"/>
