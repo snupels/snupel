@@ -22,4 +22,4 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   { id: 12, name: "Multi Sports Player", description: "서로 다른 스포츠 3종 인증 완료", icon: "dumbbell" },
 ];
 
-export const DEFAULT_COLLECTED_BADGE_IDS = [2, 4, 5, 10];
+export const DEFAULT_COLLECTED_BADGE_IDS = [2, 10, 5, 4];
