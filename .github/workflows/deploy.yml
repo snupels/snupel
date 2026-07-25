@@ -83,15 +83,29 @@ jobs:
             --cache-control "no-cache,no-store,must-revalidate"
 
       - name: Refresh CloudFront cache
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
         run: |
           DISTRIBUTION_ID="$CLOUDFRONT_DISTRIBUTION_ID"
           if test -z "$DISTRIBUTION_ID"; then
+            BUCKET_POLICY="$(aws s3api get-bucket-policy \
+              --bucket "$S3_BUCKET" \
+              --query Policy \
+              --output text 2>/dev/null || true)"
+            DISTRIBUTION_ID="$(printf '%s' "$BUCKET_POLICY" \
+              | grep -oE 'distribution/[A-Z0-9]+' \
+              | head -n 1 \
+              | cut -d/ -f2 || true)"
+          fi
+          if test -z "$DISTRIBUTION_ID"; then
             DISTRIBUTION_ID="$(aws cloudfront list-distributions \
               --query "DistributionList.Items[?contains(Aliases.Items, '$SITE_DOMAIN')].Id | [0]" \
-              --output text)"
+              --output text 2>/dev/null || true)"
           fi
-          test -n "$DISTRIBUTION_ID"
-          test "$DISTRIBUTION_ID" != "None"
+          if test -z "$DISTRIBUTION_ID" || test "$DISTRIBUTION_ID" = "None"; then
+            echo "::warning::CloudFront distribution could not be discovered; cache invalidation skipped."
+            exit 0
+          fi
           aws cloudfront create-invalidation \
             --distribution-id "$DISTRIBUTION_ID" \
             --paths "/*"
