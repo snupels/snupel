@@ -87,9 +87,6 @@ export function MyPassportPage() {
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
             <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">Level 2 Explorer</span>
             <dl className="mt-7 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-white/60">모은 도장</dt><dd className="text-xl font-bold text-[#ffc438]">7개</dd></div><div className="flex justify-between"><dt className="text-white/60">다음 리워드까지</dt><dd className="text-xl font-bold">3개</dd></div></dl>
-            <div className="my-6 h-px bg-white/10" />
-            <p className="text-sm text-white/60">도장 슬롯</p>
-            <div className="mt-4 grid grid-cols-5 gap-3">{Array.from({ length: 10 }, (_, index) => <span key={index} className={`flex aspect-square items-center justify-center rounded-full ${index < 7 ? "bg-[#ffc438] text-[#172c40]" : "border border-dashed border-white/30 text-white/25"}`}><AppIcon name="mapPin" className="size-4" /></span>)}</div>
             <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs text-white/50">최근 인증</p><p className="mt-1 text-sm font-bold">설악산 트레일 챌린지</p></div>
           </aside>
         </div>
