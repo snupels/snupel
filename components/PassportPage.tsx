@@ -61,7 +61,7 @@ const stamps: PassportStamp[] = regions.flatMap((region, regionIndex) =>
       regionEn: region.en,
       sportKo: sport.ko,
       sportEn: sport.en,
-      image: `/stamps/${fileName}`,
+      image: `/stampbook-stamps/${fileName}`,
       date: completedDates[id - 1],
       status,
     };
