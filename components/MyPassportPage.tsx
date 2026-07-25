@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { BADGE_CATALOG, DEFAULT_COLLECTED_BADGE_IDS } from "@/lib/badgeCatalog";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
@@ -25,14 +26,7 @@ const stamps = [
   { title: "강릉 해변 러닝 코스", place: "강릉", date: "", badge: "러닝 스타터", complete: false },
 ];
 
-const badges: Array<{ name: string; icon: AppIconName; unlocked: boolean }> = [
-  { name: "산악 입문자", icon: "mountain", unlocked: true },
-  { name: "강원 Explorer", icon: "award", unlocked: true },
-  { name: "Wave Rider", icon: "waves", unlocked: true },
-  { name: "트레킹 러버", icon: "activity", unlocked: true },
-  { name: "Challenge Starter", icon: "trophy", unlocked: false },
-  { name: "Snow Rookie", icon: "snowflake", unlocked: false },
-];
+const badgePreviewIds = [2, 10, 5, 4, 1, 7];
 
 const activities: Array<{ date: string; text: string; icon: AppIconName; yellow?: boolean }> = [
   { date: "2026.05.15", text: "설악산 트레일 챌린지 인증 완료", icon: "checkCircle" },
@@ -49,7 +43,7 @@ const recommendations: Array<{ title: string; place: string; level: string; time
 
 export function MyPassportPage() {
   const [liveStats, setLiveStats] = useState(stats);
-  const [badgeCounts, setBadgeCounts] = useState({ collected: 4, total: 24 });
+  const [collectedBadgeIds, setCollectedBadgeIds] = useState(DEFAULT_COLLECTED_BADGE_IDS);
 
   useEffect(() => {
     if (!api.hasToken()) return;
@@ -58,17 +52,21 @@ export function MyPassportPage() {
       api.collectedStamps.list(),
       api.collectedBadges.list(),
       api.activities.list(),
-      api.badges.list(),
-    ]).then(([, collectedStamps, collectedBadges, allActivities, allBadges]) => {
+    ]).then(([, collectedStamps, collectedBadges, allActivities]) => {
       setLiveStats([
         { label: "모은 도장", value: `${collectedStamps.length}개`, icon: "award" },
         { label: "인증한 장소", value: `${allActivities.filter((item) => item.placeName).length}곳`, icon: "mapPin" },
         { label: "참여한 행사", value: `${allActivities.filter((item) => item.category !== "sports").length}개`, icon: "calendar", accent: true },
         { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
       ]);
-      setBadgeCounts({ collected: collectedBadges.length, total: allBadges.length });
+      setCollectedBadgeIds(collectedBadges.map((badge) => badge.badgeId));
     }).catch(() => undefined);
   }, []);
+
+  const badgePreview = badgePreviewIds
+    .map((id) => BADGE_CATALOG.find((badge) => badge.id === id))
+    .filter((badge) => badge !== undefined);
+  const collectedBadgeCount = BADGE_CATALOG.filter((badge) => collectedBadgeIds.includes(badge.id)).length;
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
@@ -110,7 +108,7 @@ export function MyPassportPage() {
         </div>
 
         <aside className="space-y-6">
-          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badges.map((badge) => <div key={badge.name} className={`text-center ${badge.unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${badge.unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>)}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">{badgeCounts.collected}개</strong> · 전체 배지 {badgeCounts.total}개</p><button type="button" className="mt-4 h-10 w-full rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45]">전체 배지 보기 ({badgeCounts.total}개)</button></section>
+          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badgePreview.map((badge) => { const unlocked = collectedBadgeIds.includes(badge.id); return <div key={badge.name} className={`text-center ${unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>; })}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">{collectedBadgeCount}개</strong> · 전체 배지 {BADGE_CATALOG.length}개</p><Link href="/badges" className="mt-4 flex h-10 w-full items-center justify-center rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45] transition-colors hover:bg-[#f0f8f3]">전체 배지 보기 ({BADGE_CATALOG.length}개)</Link></section>
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">최근 방문 인증</h2><div className="mt-6 space-y-6">{activities.map((activity) => <div key={activity.date + activity.text} className="flex gap-3"><span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${activity.yellow ? "bg-[#fff5d9] text-[#d99f00]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={activity.icon} className="size-4" /></span><div><p className="text-xs text-[#8a9490]">{activity.date}</p><p className="mt-1 text-sm font-semibold leading-5">{activity.text}</p></div></div>)}</div><button type="button" className="mt-6 h-10 w-full border-t border-[#edf0ee] pt-4 text-sm font-bold text-[#008f45]">전체 활동 보기</button></section>
         </aside>
       </section>
