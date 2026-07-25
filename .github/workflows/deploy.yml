@@ -47,10 +47,13 @@ jobs:
           if test -f out/_next/static/chunks/0qd22w6efhkya.js; then
             cp out/_next/static/chunks/0qd22w6efhkya.js \
               out/_next/static/chunks/1j59scfz7d6eu.js
+            cp out/_next/static/chunks/0qd22w6efhkya.js \
+              out/_next/static/chunks/355a4lrjr9zbf.js
           fi
           CSS_FILE="$(find out/_next/static/chunks -maxdepth 1 -name '*.css' -print -quit)"
           if test -n "$CSS_FILE"; then
             cp "$CSS_FILE" out/_next/static/chunks/2li9a_fbp66pi.css
+            cp "$CSS_FILE" out/_next/static/chunks/14z98_idkgd34.css
           fi
 
       - name: Configure AWS credentials
