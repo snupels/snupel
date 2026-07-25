@@ -79,7 +79,7 @@ export function MyPassportPage() {
             <h1 className="mt-5 text-4xl font-bold tracking-[-0.04em] sm:text-5xl">홍길동님의<br />강원 스포츠 패스포트</h1>
             <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 도장을 한눈에 확인하세요.</p>
             <p className="mt-3 text-sm text-white/75">지금까지 <strong className="text-[#ffd044]">7개</strong>의 도장을 모았어요. 다음 리워드까지 <strong className="text-[#ffd044]">3개</strong> 남았습니다.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><a href="#stamp-book" className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white">내 도장북 보기</a></div>
+            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><Link href="/passport" className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white">내 도장북 보기</Link></div>
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
