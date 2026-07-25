@@ -13,38 +13,39 @@ type PassportStamp = {
   regionEn: string;
   sportKo: string;
   sportEn: string;
+  courseName: string;
   image: string;
   date?: string;
   status: StampStatus;
 };
 
 const regions = [
-  { ko: "춘천", en: "CHUNCHEON", slug: "chuncheon" },
-  { ko: "원주", en: "WONJU", slug: "wonju" },
-  { ko: "강릉", en: "GANGNEUNG", slug: "gangneung" },
-  { ko: "동해", en: "DONGHAE", slug: "donghae" },
-  { ko: "태백", en: "TAEBAEK", slug: "taebaek" },
-  { ko: "속초", en: "SOKCHO", slug: "sokcho" },
-  { ko: "삼척", en: "SAMCHEOK", slug: "samcheok" },
-  { ko: "홍천", en: "HONGCHEON", slug: "hongcheon" },
-  { ko: "횡성", en: "HOENGSEONG", slug: "hoengseong" },
-  { ko: "영월", en: "YEONGWOL", slug: "yeongwol" },
-  { ko: "평창", en: "PYEONGCHANG", slug: "pyeongchang" },
-  { ko: "정선", en: "JEONGSEON", slug: "jeongseon" },
-  { ko: "철원", en: "CHEORWON", slug: "cheorwon" },
-  { ko: "화천", en: "HWACHEON", slug: "hwacheon" },
-  { ko: "양구", en: "YANGGU", slug: "yanggu" },
-  { ko: "인제", en: "INJE", slug: "inje" },
-  { ko: "고성", en: "GOSEONG", slug: "goseong" },
-  { ko: "양양", en: "YANGYANG", slug: "yangyang" },
+  { ko: "춘천", en: "CHUNCHEON", slug: "chuncheon", landmarks: ["삼악산", "의암호", "엘리시안 강촌", "춘천 스포츠타운", "소양강"] },
+  { ko: "원주", en: "WONJU", slug: "wonju", landmarks: ["치악산", "섬강", "오크밸리", "원주 종합운동장", "원주천"] },
+  { ko: "강릉", en: "GANGNEUNG", slug: "gangneung", landmarks: ["대관령", "경포호", "강릉 스노우파크", "강릉 올림픽파크", "경포 해변"] },
+  { ko: "동해", en: "DONGHAE", slug: "donghae", landmarks: ["무릉계곡", "망상 해변", "동해 스노우파크", "동해 웰니스파크", "추암 해변"] },
+  { ko: "태백", en: "TAEBAEK", slug: "taebaek", landmarks: ["태백산", "황지연못", "태백 스노우파크", "태백 고원체육관", "고원 스포츠길"] },
+  { ko: "속초", en: "SOKCHO", slug: "sokcho", landmarks: ["설악산", "영랑호", "설악 스노우파크", "속초 스포츠파크", "청초호"] },
+  { ko: "삼척", en: "SAMCHEOK", slug: "samcheok", landmarks: ["덕항산", "장호항", "삼척 스노우파크", "삼척 종합운동장", "새천년 해안길"] },
+  { ko: "홍천", en: "HONGCHEON", slug: "hongcheon", landmarks: ["팔봉산", "홍천강", "비발디파크", "홍천 스포츠타운", "수타사 숲길"] },
+  { ko: "횡성", en: "HOENGSEONG", slug: "hoengseong", landmarks: ["태기산", "횡성호", "웰리힐리파크", "횡성 종합운동장", "섬강 둘레길"] },
+  { ko: "영월", en: "YEONGWOL", slug: "yeongwol", landmarks: ["봉래산", "동강", "영월 스노우파크", "영월 스포츠파크", "청령포"] },
+  { ko: "평창", en: "PYEONGCHANG", slug: "pyeongchang", landmarks: ["오대산", "평창강", "용평 스노우파크", "평창 올림픽플라자", "대관령 고원길"] },
+  { ko: "정선", en: "JEONGSEON", slug: "jeongseon", landmarks: ["민둥산", "동강 정선", "하이원 스노우파크", "정선 스포츠타운", "아리랑 러닝길"] },
+  { ko: "철원", en: "CHEORWON", slug: "cheorwon", landmarks: ["명성산", "한탄강", "철원 스노우파크", "철원 종합운동장", "주상절리길"] },
+  { ko: "화천", en: "HWACHEON", slug: "hwacheon", landmarks: ["용화산", "파로호", "화천 산천어파크", "화천 생활체육공원", "북한강"] },
+  { ko: "양구", en: "YANGGU", slug: "yanggu", landmarks: ["대암산", "파로호 양구", "양구 스노우파크", "양구 종합운동장", "한반도섬"] },
+  { ko: "인제", en: "INJE", slug: "inje", landmarks: ["점봉산", "내린천", "인제 스노우파크", "인제 스포츠타운", "자작나무숲"] },
+  { ko: "고성", en: "GOSEONG", slug: "goseong", landmarks: ["설악산 북부", "송지호", "고성 스노우파크", "고성 종합운동장", "통일전망대 해안길"] },
+  { ko: "양양", en: "YANGYANG", slug: "yangyang", landmarks: ["오색 주전골", "죽도 해변", "양양 스노우파크", "양양 종합운동장", "낙산 해변"] },
 ] as const;
 
 const sports = [
-  { ko: "산악", en: "MOUNTAIN", slug: "mountain" },
-  { ko: "수상", en: "WATER", slug: "water" },
-  { ko: "설상", en: "SNOW", slug: "snow" },
-  { ko: "올림픽", en: "OLYMPIC", slug: "olympic" },
-  { ko: "육상", en: "ATHLETICS", slug: "athletics" },
+  { ko: "산악", en: "MOUNTAIN", slug: "mountain", suffix: "트레일 챌린지" },
+  { ko: "수상", en: "WATER", slug: "water", suffix: "워터 어드벤처" },
+  { ko: "설상", en: "SNOW", slug: "snow", suffix: "스노우 챌린지" },
+  { ko: "올림픽", en: "OLYMPIC", slug: "olympic", suffix: "올림픽 스포츠 투어" },
+  { ko: "육상", en: "ATHLETICS", slug: "athletics", suffix: "러닝 챌린지" },
 ] as const;
 
 const completedDates = ["2026.05.15", "2026.05.08", "2026.04.29", "2026.04.20"];
@@ -61,6 +62,7 @@ const stamps: PassportStamp[] = regions.flatMap((region, regionIndex) =>
       regionEn: region.en,
       sportKo: sport.ko,
       sportEn: sport.en,
+      courseName: `${region.landmarks[sportIndex]} ${sport.suffix}`,
       image: `/stampbook-stamps/${fileName}`,
       date: completedDates[id - 1],
       status,
@@ -119,7 +121,7 @@ function StampEntry({ stamp }: { stamp: PassportStamp }) {
 
       <div className="mt-3">
         <h3 className="text-sm font-bold text-[#2d2b24]">
-          {stamp.regionKo} {stamp.sportKo} 스탬프
+          {stamp.courseName}
         </h3>
         <p className="mt-1 text-[10px] font-bold tracking-[0.14em] text-[#9a8c70]">
           {stamp.regionEn} · {stamp.sportEn}
