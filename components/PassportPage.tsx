@@ -1,99 +1,194 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AppIcon, type AppIconName } from "./AppIcon";
+import { AppIcon } from "./AppIcon";
 
 type StampStatus = "completed" | "available" | "locked";
 
 type PassportStamp = {
   id: number;
-  city: string;
-  title: string;
-  location: string;
+  regionKo: string;
+  regionEn: string;
+  sportKo: string;
+  sportEn: string;
+  image: string;
   date?: string;
   status: StampStatus;
-  icon: AppIconName;
-  color: string;
 };
 
-const stamps: PassportStamp[] = [
-  { id: 1, city: "SOKCHO", title: "설악산 트레일 챌린지", location: "속초·고성", date: "2026.05.15", status: "completed", icon: "mountain", color: "#087453" },
-  { id: 2, city: "PYEONGCHANG", title: "오대산 선재길 힐링 트레킹", location: "평창", date: "2026.05.08", status: "completed", icon: "activity", color: "#b64e32" },
-  { id: 3, city: "YANGYANG", title: "양양 서핑 입문 코스", location: "양양", date: "2026.04.29", status: "completed", icon: "waves", color: "#2274a5" },
-  { id: 4, city: "PYEONGCHANG", title: "평창 MTB 익스트림", location: "평창", date: "2026.04.20", status: "completed", icon: "medal", color: "#7046a2" },
-  { id: 5, city: "GANGNEUNG", title: "강릉 해변 러닝 코스", location: "강릉", status: "available", icon: "flame", color: "#b56a2d" },
-  { id: 6, city: "INJE", title: "내린천 래프팅 어드벤처", location: "인제", status: "available", icon: "waves", color: "#297b8e" },
-  { id: 7, city: "CHUNCHEON", title: "춘천 호반 라이딩", location: "춘천", status: "available", icon: "person", color: "#417b54" },
-  { id: 8, city: "JEONGSEON", title: "하이원 하늘길 트레킹", location: "정선", status: "available", icon: "mountain", color: "#8b613d" },
-  { id: 9, city: "GOSEONG", title: "고성 통일전망대 라이딩", location: "고성", status: "locked", icon: "map", color: "#77736a" },
-  { id: 10, city: "DONGHAE", title: "동해 무릉계곡 트레킹", location: "동해", status: "locked", icon: "mountain", color: "#77736a" },
-  { id: 11, city: "SAMCHEOK", title: "삼척 해안 자전거길", location: "삼척", status: "locked", icon: "person", color: "#77736a" },
-  { id: 12, city: "HONGCHEON", title: "홍천강 카약 챌린지", location: "홍천", status: "locked", icon: "waves", color: "#77736a" },
-  { id: 13, city: "WONJU", title: "원주 소금산 출렁다리", location: "원주", status: "locked", icon: "activity", color: "#77736a" },
-  { id: 14, city: "TAEBAEK", title: "태백산 정상 챌린지", location: "태백", status: "locked", icon: "mountain", color: "#77736a" },
-  { id: 15, city: "CHEORWON", title: "철원 한탄강 주상절리", location: "철원", status: "locked", icon: "mapPin", color: "#77736a" },
-  { id: 16, city: "HWACHEON", title: "화천 산소길 라이딩", location: "화천", status: "locked", icon: "person", color: "#77736a" },
-  { id: 17, city: "YANGGU", title: "양구 펀치볼 트레킹", location: "양구", status: "locked", icon: "mountain", color: "#77736a" },
-  { id: 18, city: "YEONGWOL", title: "영월 별마로 천문대", location: "영월", status: "locked", icon: "cloudSun", color: "#77736a" },
-];
+const regions = [
+  { ko: "춘천", en: "CHUNCHEON", slug: "chuncheon" },
+  { ko: "원주", en: "WONJU", slug: "wonju" },
+  { ko: "강릉", en: "GANGNEUNG", slug: "gangneung" },
+  { ko: "동해", en: "DONGHAE", slug: "donghae" },
+  { ko: "태백", en: "TAEBAEK", slug: "taebaek" },
+  { ko: "속초", en: "SOKCHO", slug: "sokcho" },
+  { ko: "삼척", en: "SAMCHEOK", slug: "samcheok" },
+  { ko: "홍천", en: "HONGCHEON", slug: "hongcheon" },
+  { ko: "횡성", en: "HOENGSEONG", slug: "hoengseong" },
+  { ko: "영월", en: "YEONGWOL", slug: "yeongwol" },
+  { ko: "평창", en: "PYEONGCHANG", slug: "pyeongchang" },
+  { ko: "정선", en: "JEONGSEON", slug: "jeongseon" },
+  { ko: "철원", en: "CHEORWON", slug: "cheorwon" },
+  { ko: "화천", en: "HWACHEON", slug: "hwacheon" },
+  { ko: "양구", en: "YANGGU", slug: "yanggu" },
+  { ko: "인제", en: "INJE", slug: "inje" },
+  { ko: "고성", en: "GOSEONG", slug: "goseong" },
+  { ko: "양양", en: "YANGYANG", slug: "yangyang" },
+] as const;
+
+const sports = [
+  { ko: "산악", en: "MOUNTAIN", slug: "mountain" },
+  { ko: "수상", en: "WATER", slug: "water" },
+  { ko: "설상", en: "SNOW", slug: "snow" },
+  { ko: "올림픽", en: "OLYMPIC", slug: "olympic" },
+  { ko: "육상", en: "ATHLETICS", slug: "athletics" },
+] as const;
+
+const completedDates = ["2026.05.15", "2026.05.08", "2026.04.29", "2026.04.20"];
+
+const stamps: PassportStamp[] = regions.flatMap((region, regionIndex) =>
+  sports.map((sport, sportIndex) => {
+    const id = regionIndex * sports.length + sportIndex + 1;
+    const status: StampStatus = id <= 4 ? "completed" : id <= 8 ? "available" : "locked";
+    const fileName = `${String(id).padStart(2, "0")}-${region.slug}-${sport.slug}.svg`;
+
+    return {
+      id,
+      regionKo: region.ko,
+      regionEn: region.en,
+      sportKo: sport.ko,
+      sportEn: sport.en,
+      image: `/stamps/${fileName}`,
+      date: completedDates[id - 1],
+      status,
+    };
+  }),
+);
+
+const statusLabels: Record<StampStatus, string> = {
+  completed: "인증 완료",
+  available: "인증 가능",
+  locked: "미개방",
+};
+
+const PAGE_SIZE = 10;
+const completedCount = stamps.filter((stamp) => stamp.status === "completed").length;
+const availableCount = stamps.filter((stamp) => stamp.status === "available").length;
+const lockedCount = stamps.filter((stamp) => stamp.status === "locked").length;
 
 const filters: Array<{ value: "all" | StampStatus; label: string; count: number }> = [
-  { value: "all", label: "전체", count: 18 },
-  { value: "completed", label: "인증 완료", count: 4 },
-  { value: "available", label: "인증 가능", count: 4 },
-  { value: "locked", label: "미개방", count: 10 },
+  { value: "all", label: "전체", count: stamps.length },
+  { value: "completed", label: statusLabels.completed, count: completedCount },
+  { value: "available", label: statusLabels.available, count: availableCount },
+  { value: "locked", label: statusLabels.locked, count: lockedCount },
 ];
 
-const PAGE_SIZE = 6;
-
-function StampMark({ stamp }: { stamp: PassportStamp }) {
+function StampEntry({ stamp }: { stamp: PassportStamp }) {
   const isLocked = stamp.status === "locked";
-  const isAvailable = stamp.status === "available";
 
   return (
-    <div className={`relative mx-auto w-full max-w-[205px] ${stamp.id % 2 === 0 ? "rotate-[1.5deg]" : "-rotate-[1.5deg]"}`}>
-      <div
-        className={`rounded-[20px] border-[4px] p-1.5 ${isLocked ? "border-dashed opacity-35" : ""}`}
-        style={{ borderColor: stamp.color }}
-      >
-        <div className="rounded-[13px] border-2 px-3 py-3" style={{ borderColor: stamp.color }}>
-          <div className="flex items-center justify-between text-[8px] font-bold tracking-[0.28em]" style={{ color: stamp.color }}>
-            <span>GANGWON</span>
-            <span>#{String(stamp.id).padStart(2, "0")}</span>
-          </div>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <strong className="text-[22px] tracking-[0.08em]" style={{ color: stamp.color }}>{stamp.city}</strong>
-            <AppIcon name={isLocked ? "bookmark" : stamp.icon} className="size-6" style={{ color: stamp.color }} />
-          </div>
-          <div className="mt-1 flex items-center justify-between border-t pt-1.5 text-[8px] font-bold tracking-[0.16em]" style={{ borderColor: stamp.color, color: stamp.color }}>
-            <span>{isAvailable ? "READY" : isLocked ? "COMING SOON" : "VERIFIED"}</span>
-            <span>KOR · 2026</span>
-          </div>
-        </div>
+    <article className={`relative text-center ${isLocked ? "opacity-45 grayscale" : ""}`}>
+      <div className="relative mx-auto aspect-[5/3] w-full max-w-[220px] overflow-hidden rounded-xl bg-white shadow-[0_7px_18px_rgba(82,68,37,0.12)]">
+        <Image
+          src={stamp.image}
+          alt={`${stamp.regionKo} ${stamp.sportKo} 스탬프`}
+          fill
+          sizes="(max-width: 640px) 42vw, (max-width: 1024px) 28vw, 190px"
+          className="object-contain"
+        />
+        {isLocked && (
+          <span className="absolute inset-0 flex items-center justify-center bg-[#f5f1df]/15">
+            <span className="flex size-9 items-center justify-center rounded-full bg-[#2d2b24]/70 text-white">
+              <AppIcon name="lock" className="size-4" />
+            </span>
+          </span>
+        )}
       </div>
-      {isAvailable && (
-        <span className="absolute -right-2 -top-2 rounded-full bg-[#c49a52] px-2 py-1 text-[9px] font-bold text-[#171d2b] shadow">
-          인증 가능
-        </span>
-      )}
-    </div>
+
+      <div className="mt-3">
+        <h3 className="text-sm font-bold text-[#2d2b24]">
+          {stamp.regionKo} {stamp.sportKo} 스탬프
+        </h3>
+        <p className="mt-1 text-[10px] font-bold tracking-[0.14em] text-[#9a8c70]">
+          {stamp.regionEn} · {stamp.sportEn}
+        </p>
+        <p
+          className={`mt-1.5 text-xs font-semibold ${
+            stamp.status === "completed"
+              ? "text-[#24805d]"
+              : stamp.status === "available"
+                ? "text-[#b07b31]"
+                : "text-[#9d9584]"
+          }`}
+        >
+          {stamp.date ?? statusLabels[stamp.status]}
+        </p>
+      </div>
+    </article>
   );
 }
 
-function StampEntry({ stamp }: { stamp: PassportStamp }) {
+function PassportHeader() {
   return (
-    <article className={`text-center ${stamp.status === "locked" ? "opacity-55" : ""}`}>
-      <StampMark stamp={stamp} />
-      <h3 className="mt-4 text-sm font-bold text-[#2d2b24]">{stamp.title}</h3>
-      <p className="mt-1 flex items-center justify-center gap-1 text-xs text-[#8b826d]">
-        <AppIcon name="mapPin" className="size-3" />
-        {stamp.location}
-      </p>
-      <p className={`mt-1.5 text-xs font-semibold ${stamp.status === "completed" ? "text-[#24805d]" : "text-[#a0957d]"}`}>
-        {stamp.date ?? (stamp.status === "available" ? "방문 인증을 기다리고 있어요" : "추후 공개 예정")}
-      </p>
-    </article>
+    <header className="bg-[linear-gradient(135deg,#0b1220_0%,#111a2a_55%,#0c1422_100%)]">
+      <div className="mx-auto max-w-[1320px] px-5 pb-9 pt-7 sm:px-8 sm:pb-11 sm:pt-9">
+        <Link
+          href="/mypage"
+          className="inline-flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white/80"
+        >
+          <AppIcon name="chevronLeft" className="size-4" />
+          내 패스포트로
+        </Link>
+
+        <div className="mt-8 flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+          <div>
+            <div className="flex items-center gap-5">
+              <span className="flex size-16 shrink-0 items-center justify-center rounded-full border border-[#d5ae66]/60 bg-[#d5ae66]/10 text-[#d5ae66] sm:size-[72px]">
+                <AppIcon name="mountain" className="size-8" />
+              </span>
+              <div>
+                <h1 className="text-3xl font-black tracking-[-0.03em] text-white sm:text-[40px]">
+                  SPORTS PASSPORT
+                </h1>
+                <p className="mt-1 text-sm tracking-[0.18em] text-white/35">강원 스포츠 패스포트</p>
+              </div>
+            </div>
+
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/35">
+              <span>
+                소지인 <strong className="ml-2 text-white/80">패스포트 회원</strong>
+              </span>
+              <span className="hidden h-4 w-px bg-white/15 sm:block" />
+              <span>
+                발급일 <strong className="ml-2 font-medium text-white/65">2026.01.01</strong>
+              </span>
+            </div>
+          </div>
+
+          <div className="grid w-full grid-cols-3 gap-2.5 lg:w-auto lg:gap-4">
+            {[
+              { value: completedCount, suffix: ` / ${stamps.length}`, label: "인증 도장" },
+              { value: 1, suffix: "개", label: "보유 리워드" },
+              { value: availableCount, suffix: "개", label: "인증 가능" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="flex min-h-[94px] min-w-0 flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.045] px-3 text-center sm:min-w-[128px]"
+              >
+                <p className="text-2xl font-light text-white sm:text-3xl">
+                  {stat.value}
+                  <span className="ml-1 text-xs text-white/30">{stat.suffix}</span>
+                </p>
+                <p className="mt-2 text-xs text-white/35">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -116,20 +211,30 @@ export function PassportPage() {
 
   return (
     <div className="min-h-screen bg-[#111827] text-white">
-      <div className="border-b border-white/5 bg-[#0d1422]">
-        <div className="mx-auto flex max-w-[1320px] gap-12 px-5 sm:px-8">
+      <PassportHeader />
+
+      <div className="border-y border-white/5 bg-[#111827]">
+        <div className="mx-auto flex max-w-[1320px] gap-10 px-5 sm:px-8">
           <button
             type="button"
             onClick={() => setTab("stamps")}
-            className={`flex h-[68px] items-center gap-2 border-b-2 px-2 text-sm font-bold transition-colors ${tab === "stamps" ? "border-[#d5ae66] text-[#d5ae66]" : "border-transparent text-white/30 hover:text-white/60"}`}
+            className={`flex h-[64px] items-center gap-2 border-b-2 px-2 text-sm font-bold transition-colors ${
+              tab === "stamps"
+                ? "border-[#d5ae66] text-[#d5ae66]"
+                : "border-transparent text-white/30 hover:text-white/60"
+            }`}
           >
             도장 수집
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">4</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{completedCount}</span>
           </button>
           <button
             type="button"
             onClick={() => setTab("rewards")}
-            className={`flex h-[68px] items-center gap-2 border-b-2 px-2 text-sm font-bold transition-colors ${tab === "rewards" ? "border-[#d5ae66] text-[#d5ae66]" : "border-transparent text-white/30 hover:text-white/60"}`}
+            className={`flex h-[64px] items-center gap-2 border-b-2 px-2 text-sm font-bold transition-colors ${
+              tab === "rewards"
+                ? "border-[#d5ae66] text-[#d5ae66]"
+                : "border-transparent text-white/30 hover:text-white/60"
+            }`}
           >
             리워드
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">1</span>
@@ -137,18 +242,7 @@ export function PassportPage() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-[1320px] px-4 py-10 sm:px-8 sm:py-14">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold tracking-[0.2em] text-[#d5ae66]">MY SPORTS PASSPORT</p>
-            <h1 className="mt-2 text-3xl font-bold">강원 스포츠 패스포트</h1>
-          </div>
-          <Link href="/mypage" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm text-white/65 transition-colors hover:border-white/30 hover:text-white">
-            <AppIcon name="chevronLeft" className="size-4" />
-            마이페이지
-          </Link>
-        </div>
-
+      <main className="mx-auto max-w-[1320px] px-4 py-9 sm:px-8 sm:py-11">
         {tab === "stamps" ? (
           <>
             <div className="flex flex-wrap gap-2.5">
@@ -157,52 +251,80 @@ export function PassportPage() {
                   key={item.value}
                   type="button"
                   onClick={() => selectFilter(item.value)}
-                  className={`rounded-full border px-5 py-2.5 text-sm transition-colors ${filter === item.value ? "border-[#d5ae66] bg-[#d5ae66] text-[#171d2b]" : "border-white/10 bg-white/[0.04] text-white/45 hover:border-white/20 hover:text-white/70"}`}
+                  className={`rounded-full border px-5 py-2.5 text-sm transition-colors ${
+                    filter === item.value
+                      ? "border-[#d5ae66] bg-[#d5ae66] text-[#171d2b]"
+                      : "border-white/10 bg-white/[0.04] text-white/45 hover:border-white/20 hover:text-white/70"
+                  }`}
                 >
                   {item.label}
-                  <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${filter === item.value ? "bg-black/10" : "bg-white/5"}`}>{item.count}</span>
+                  <span
+                    className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                      filter === item.value ? "bg-black/10" : "bg-white/5"
+                    }`}
+                  >
+                    {item.count}
+                  </span>
                 </button>
               ))}
             </div>
 
-            <section className="mt-10 overflow-hidden rounded-[22px] bg-[#f5f1df] text-[#2d2b24] shadow-[0_22px_50px_rgba(0,0,0,0.35)]">
-              <div className="flex items-center justify-between border-b border-[#c5a35f] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.035)_0,rgba(146,126,76,0.035)_2px,transparent_2px,transparent_14px)] px-6 py-5 sm:px-10">
+            <section className="mt-8 overflow-hidden rounded-[22px] bg-[#f5f1df] text-[#2d2b24] shadow-[0_22px_50px_rgba(0,0,0,0.35)]">
+              <div className="flex items-center justify-between border-b border-[#c5a35f] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.035)_0,rgba(146,126,76,0.035)_2px,transparent_2px,transparent_14px)] px-5 py-5 sm:px-9">
                 <div className="flex items-center gap-3">
                   <span className="flex size-9 items-center justify-center rounded-full border border-[#b89a59] text-[#a38343]">
                     <AppIcon name="mountain" className="size-5" />
                   </span>
                   <div>
-                    <p className="text-[11px] font-bold tracking-[0.3em] text-[#34845f]">GANGWON SPORTS PASSPORT</p>
-                    <p className="mt-1 text-[10px] tracking-[0.18em] text-[#9e8d68]">강원 스포츠 패스포트 · 방문인증</p>
+                    <p className="text-[10px] font-bold tracking-[0.23em] text-[#34845f] sm:text-[11px]">
+                      GANGWON SPORTS PASSPORT
+                    </p>
+                    <p className="mt-1 text-[9px] tracking-[0.14em] text-[#9e8d68] sm:text-[10px]">
+                      강원 스포츠 패스포트 · 방문 인증
+                    </p>
                   </div>
                 </div>
-                <div className="text-right text-[10px] tracking-[0.12em] text-[#9e8d68]">
-                  <strong className="text-[#6f634a]">{String(page).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}</strong>
-                  <p className="mt-1">홍길동 · HONG GIL DONG</p>
+                <div className="text-right text-[10px] tracking-[0.1em] text-[#9e8d68]">
+                  <strong className="text-[#6f634a]">
+                    {String(page).padStart(2, "0")} / {String(pageCount).padStart(2, "0")}
+                  </strong>
+                  <p className="mt-1 hidden sm:block">PASSPORT MEMBER</p>
                 </div>
               </div>
 
-              <div className="min-h-[650px] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.025)_0,rgba(146,126,76,0.025)_1px,transparent_1px,transparent_13px)] px-5 py-12 sm:px-10 lg:px-16">
+              <div className="min-h-[560px] bg-[repeating-linear-gradient(135deg,rgba(146,126,76,0.025)_0,rgba(146,126,76,0.025)_1px,transparent_1px,transparent_13px)] px-4 py-10 sm:px-8 lg:px-10">
                 {visibleStamps.length > 0 ? (
-                  <div className="grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-                    {visibleStamps.map((stamp) => <StampEntry key={stamp.id} stamp={stamp} />)}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-7 lg:grid-cols-5">
+                    {visibleStamps.map((stamp) => (
+                      <StampEntry key={stamp.id} stamp={stamp} />
+                    ))}
                   </div>
                 ) : (
-                  <div className="flex min-h-[500px] flex-col items-center justify-center text-[#9e947f]">
+                  <div className="flex min-h-[460px] flex-col items-center justify-center text-[#9e947f]">
                     <AppIcon name="award" className="size-12" />
                     <p className="mt-4 font-semibold">해당 상태의 도장이 없습니다.</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between border-t border-[#d5c79f] px-6 py-4 text-xs text-[#8e8269] sm:px-10">
-                <button type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} className="inline-flex items-center gap-1 disabled:opacity-25">
+              <div className="flex items-center justify-between border-t border-[#d5c79f] px-5 py-4 text-xs text-[#8e8269] sm:px-9">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  className="inline-flex items-center gap-1 disabled:opacity-25"
+                >
                   <AppIcon name="chevronLeft" className="size-4" />
-                  이전 페이지
+                  이전
                 </button>
                 <span>{filteredStamps.length}개의 도장</span>
-                <button type="button" disabled={page >= pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))} className="inline-flex items-center gap-1 disabled:opacity-25">
-                  다음 페이지
+                <button
+                  type="button"
+                  disabled={page >= pageCount}
+                  onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+                  className="inline-flex items-center gap-1 disabled:opacity-25"
+                >
+                  다음
                   <AppIcon name="chevronRight" className="size-4" />
                 </button>
               </div>
@@ -216,16 +338,25 @@ export function PassportPage() {
               </span>
               <p className="mt-6 text-xs font-bold tracking-[0.2em] text-[#d5ae66]">AVAILABLE REWARD</p>
               <h2 className="mt-2 text-2xl font-bold">강원 Explorer 리워드</h2>
-              <p className="mt-3 text-sm leading-6 text-white/55">도장 4개 수집을 완료해 강원 스포츠 웰컴 키트 교환권이 열렸습니다.</p>
-              <button type="button" className="mt-7 h-11 w-full rounded-xl bg-[#d5ae66] text-sm font-bold text-[#171d2b]">리워드 확인하기</button>
+              <p className="mt-3 text-sm leading-6 text-white/55">
+                도장 4개 수집을 완료해 강원 스포츠 한정 세트 교환권이 열렸습니다.
+              </p>
+              <button
+                type="button"
+                className="mt-7 h-11 w-full rounded-xl bg-[#d5ae66] text-sm font-bold text-[#171d2b]"
+              >
+                리워드 확인하기
+              </button>
             </article>
             <article className="rounded-[22px] border border-white/10 bg-white/[0.04] p-7">
               <span className="flex size-12 items-center justify-center rounded-full bg-white/10 text-white/40">
                 <AppIcon name="trophy" className="size-6" />
               </span>
-              <p className="mt-6 text-xs font-bold tracking-[0.2em] text-white/30">NEXT REWARD</p>
+              <p className="mt-6 text-xs font-bold tracking-[0.2em] text-white/30">LOCKED REWARD</p>
               <h2 className="mt-2 text-2xl font-bold text-white/65">스포츠 마스터 리워드</h2>
-              <p className="mt-3 text-sm leading-6 text-white/35">도장 10개를 모으면 지역 스포츠 체험 할인권이 열립니다.</p>
+              <p className="mt-3 text-sm leading-6 text-white/35">
+                도장 10개를 모으면 지역 스포츠 체험 할인권이 열립니다.
+              </p>
               <div className="mt-7 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full w-[40%] rounded-full bg-[#d5ae66]/70" />
               </div>
