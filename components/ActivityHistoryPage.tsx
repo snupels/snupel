@@ -1,9 +1,14 @@
 "use client";
 
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
+import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
+import course2 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
+import course3 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
+import course4 from "@/imports/LandingPage/8e9a5a4d4cc419ba26665781de8936f2c62517a7.png";
 
 type ActivityStatus = "인증 완료" | "도장 획득" | "저장";
 
@@ -14,16 +19,18 @@ type MissionActivity = {
   place: string;
   status: ActivityStatus;
   icon: AppIconName;
+  image: StaticImageData;
 };
 
 const fallbackActivities: MissionActivity[] = [
-  { id: "fallback-1", date: "2026.05.15", title: "설악산 트레일 챌린지", place: "속초 · 고성", status: "인증 완료", icon: "checkCircle" },
-  { id: "fallback-2", date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award" },
-  { id: "fallback-3", date: "2026.05.02", title: "평창 MTB 익스트림", place: "평창", status: "저장", icon: "bookmark" },
-  { id: "fallback-4", date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle" },
+  { id: "fallback-1", date: "2026.05.15", title: "설악산 트레일 챌린지", place: "속초 · 고성", status: "인증 완료", icon: "checkCircle", image: course1 },
+  { id: "fallback-2", date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award", image: course2 },
+  { id: "fallback-3", date: "2026.05.02", title: "평창 MTB 익스트림", place: "평창", status: "저장", icon: "bookmark", image: course3 },
+  { id: "fallback-4", date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course4 },
 ];
 
 const filters: Array<"전체" | ActivityStatus> = ["전체", "인증 완료", "도장 획득", "저장"];
+const feedImages = [course1, course2, course3, course4];
 
 function formatActivityDate(value: string) {
   const date = new Date(value);
@@ -41,6 +48,7 @@ function formatActivityDate(value: string) {
 export function ActivityHistoryPage() {
   const [activities, setActivities] = useState(fallbackActivities);
   const [filter, setFilter] = useState<"전체" | ActivityStatus>("전체");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!api.hasToken()) return;
@@ -51,13 +59,14 @@ export function ActivityHistoryPage() {
         if (items.length === 0) return;
         setActivities(
           items
-            .map((item) => ({
+            .map((item, index) => ({
               id: `activity-${item.id}`,
               date: formatActivityDate(item.createdAt),
               title: item.sportName ?? item.placeName ?? `스포츠 미션 #${item.id}`,
               place: [item.region, item.placeName].filter(Boolean).join(" · ") || "강원특별자치도",
               status: "인증 완료" as const,
               icon: "checkCircle" as const,
+              image: feedImages[index % feedImages.length],
             }))
             .sort((a, b) => b.date.localeCompare(a.date)),
         );
@@ -65,10 +74,19 @@ export function ActivityHistoryPage() {
       .catch(() => undefined);
   }, []);
 
-  const visibleActivities = useMemo(
-    () => activities.filter((activity) => filter === "전체" || activity.status === filter),
-    [activities, filter],
-  );
+  const visibleActivities = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
+    return activities.filter((activity) => {
+      const matchesFilter = filter === "전체" || activity.status === filter;
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        [activity.title, activity.place, activity.status]
+          .join(" ")
+          .toLocaleLowerCase("ko-KR")
+          .includes(normalizedQuery);
+      return matchesFilter && matchesQuery;
+    });
+  }, [activities, filter, query]);
   const completedCount = activities.filter((activity) => activity.status === "인증 완료").length;
   const stampCount = activities.filter((activity) => activity.status === "도장 획득").length;
   const uniquePlaces = new Set(activities.map((activity) => activity.place)).size;
@@ -106,8 +124,20 @@ export function ActivityHistoryPage() {
           </div>
         </header>
 
-        <section className="mt-8">
-          <div className="flex flex-wrap gap-2">
+        <section className="mx-auto mt-8 max-w-[780px]">
+          <div className="relative">
+            <AppIcon name="search" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#89958e]" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="코스명, 지역, 인증 상태 검색"
+              aria-label="인증 활동 검색"
+              className="h-13 w-full rounded-2xl border border-[#d7e2db] bg-white pl-12 pr-4 text-sm outline-none transition-all placeholder:text-[#9aa49e] focus:border-[#008f45] focus:ring-4 focus:ring-[#008f45]/10"
+            />
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
             {filters.map((item) => {
               const count = item === "전체" ? activities.length : activities.filter((activity) => activity.status === item).length;
               return (
@@ -127,52 +157,83 @@ export function ActivityHistoryPage() {
             })}
           </div>
 
-          <div className="mt-6 overflow-hidden rounded-[24px] border border-[#dce5df] bg-white shadow-[0_8px_26px_rgba(23,32,51,0.06)]">
+          <div className="mt-4 flex items-center justify-between text-sm text-[#7c8781]">
+            <p>인증 활동 <strong className="text-[#172033]">{visibleActivities.length}개</strong></p>
+            {(query || filter !== "전체") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setFilter("전체");
+                }}
+                className="cursor-pointer font-semibold text-[#008f45] hover:text-[#006d35]"
+              >
+                검색 초기화
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 space-y-5">
             {visibleActivities.length > 0 ? (
-              <div className="divide-y divide-[#edf1ee]">
-                {visibleActivities.map((activity) => {
-                  const completed = activity.status === "인증 완료";
-                  const stamped = activity.status === "도장 획득";
-                  return (
-                    <article key={activity.id} className="flex gap-4 px-5 py-6 transition-colors hover:bg-[#f8fbf9] sm:gap-6 sm:px-8">
-                      <span className={`flex size-11 shrink-0 items-center justify-center rounded-full ${
+              visibleActivities.map((activity) => {
+                const completed = activity.status === "인증 완료";
+                const stamped = activity.status === "도장 획득";
+                return (
+                  <article key={activity.id} className="overflow-hidden rounded-[24px] border border-[#dce5df] bg-white shadow-[0_8px_26px_rgba(23,32,51,0.06)]">
+                    <header className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#008f45] text-sm font-bold text-white">강원</span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold">강원 스포츠 패스포트</p>
+                          <p className="mt-0.5 text-xs text-[#8a9490]">{activity.date}</p>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
                         completed
                           ? "bg-[#e5f5eb] text-[#008f45]"
                           : stamped
-                            ? "bg-[#fff5d9] text-[#d99f00]"
-                            : "bg-[#eef1ef] text-[#78847d]"
+                            ? "bg-[#fff5d9] text-[#c28e00]"
+                            : "bg-[#eef1ef] text-[#6d7872]"
+                      }`}>
+                        {activity.status}
+                      </span>
+                    </header>
+
+                    <div className="relative aspect-[16/8] overflow-hidden bg-[#e8eeea]">
+                      <Image src={activity.image} alt={`${activity.title} 활동 사진`} fill sizes="(max-width: 780px) 100vw, 780px" className="object-cover transition-transform duration-500 hover:scale-[1.02]" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      <span className={`absolute bottom-4 left-4 flex size-11 items-center justify-center rounded-full shadow-lg ${
+                        completed
+                          ? "bg-[#008f45] text-white"
+                          : stamped
+                            ? "bg-[#ffc438] text-[#493600]"
+                            : "bg-white text-[#637069]"
                       }`}>
                         <AppIcon name={activity.icon} className="size-5" />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
-                          <div>
-                            <p className="text-xs font-medium text-[#8a9490]">{activity.date}</p>
-                            <h2 className="mt-2 text-lg font-bold">{activity.title}</h2>
-                          </div>
-                          <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
-                            completed
-                              ? "bg-[#e5f5eb] text-[#008f45]"
-                              : stamped
-                                ? "bg-[#fff5d9] text-[#c28e00]"
-                                : "bg-[#eef1ef] text-[#6d7872]"
-                          }`}>
-                            {activity.status}
-                          </span>
-                        </div>
-                        <p className="mt-3 flex items-center gap-1.5 text-sm text-[#6f7a74]">
-                          <AppIcon name="mapPin" className="size-4" />
-                          {activity.place}
-                        </p>
+                    </div>
+
+                    <div className="px-5 py-5 sm:px-6">
+                      <h2 className="text-xl font-bold tracking-[-0.02em]">{activity.title}</h2>
+                      <p className="mt-3 flex items-center gap-1.5 text-sm text-[#6f7a74]">
+                        <AppIcon name="mapPin" className="size-4 text-[#008f45]" />
+                        {activity.place}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between border-t border-[#edf1ee] pt-4 text-sm">
+                        <span className="inline-flex items-center gap-2 font-semibold text-[#008f45]">
+                          <AppIcon name={completed ? "checkCircle" : stamped ? "award" : "bookmark"} className="size-4" />
+                          {completed ? "미션 인증 기록" : stamped ? "도장 획득 기록" : "저장한 미션"}
+                        </span>
+                        <span className="text-xs text-[#9aa49e]">GANGWON 2026</span>
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
+                    </div>
+                  </article>
+                );
+              })
             ) : (
-              <div className="flex min-h-[280px] flex-col items-center justify-center text-[#8b9690]">
+              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-[#dce5df] bg-white text-[#8b9690]">
                 <AppIcon name="clipboard" className="size-11" />
-                <p className="mt-4 font-semibold">해당 상태의 활동이 없습니다.</p>
+                <p className="mt-4 font-semibold">검색 결과가 없습니다.</p>
               </div>
             )}
           </div>
