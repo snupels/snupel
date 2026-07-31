@@ -123,7 +123,7 @@ export function ActivityHistoryPage() {
           </div>
         </header>
 
-        <section className="mx-auto mt-8 max-w-[780px]">
+        <section className="mt-8">
           <div className="relative">
             <AppIcon name="search" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#89958e]" />
             <input
@@ -172,22 +172,22 @@ export function ActivityHistoryPage() {
             )}
           </div>
 
-          <div className="mt-4 space-y-5">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {visibleActivities.length > 0 ? (
               visibleActivities.map((activity) => {
                 const completed = activity.status === "인증 완료";
                 const stamped = activity.status === "도장 획득";
                 return (
-                  <article key={activity.id} className="overflow-hidden rounded-[24px] border border-[#dce5df] bg-white shadow-[0_8px_26px_rgba(23,32,51,0.06)]">
-                    <header className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#008f45] text-sm font-bold text-white">강원</span>
+                  <article key={activity.id} className="overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)]">
+                    <header className="flex items-center justify-between gap-2 px-3 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#008f45] text-[10px] font-bold text-white">강원</span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold">강원 스포츠 패스포트</p>
-                          <p className="mt-0.5 text-xs text-[#8a9490]">{activity.date}</p>
+                          <p className="truncate text-xs font-bold">강원 스포츠 패스포트</p>
+                          <p className="mt-0.5 text-[10px] text-[#8a9490]">{activity.date}</p>
                         </div>
                       </div>
-                      <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
                         completed
                           ? "bg-[#e5f5eb] text-[#008f45]"
                           : stamped
@@ -198,39 +198,38 @@ export function ActivityHistoryPage() {
                       </span>
                     </header>
 
-                    <div className="relative aspect-[16/8] overflow-hidden bg-[#e8eeea]">
-                      <Image src={activity.image} alt={`${activity.title} 활동 사진`} fill sizes="(max-width: 780px) 100vw, 780px" className="object-cover transition-transform duration-500 hover:scale-[1.02]" />
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[#e8eeea]">
+                      <Image src={activity.image} alt={`${activity.title} 활동 사진`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 270px" className="object-cover transition-transform duration-500 hover:scale-[1.03]" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                      <span className={`absolute bottom-4 left-4 flex size-11 items-center justify-center rounded-full shadow-lg ${
+                      <span className={`absolute bottom-3 left-3 flex size-9 items-center justify-center rounded-full shadow-lg ${
                         completed
                           ? "bg-[#008f45] text-white"
                           : stamped
                             ? "bg-[#ffc438] text-[#493600]"
                             : "bg-white text-[#637069]"
                       }`}>
-                        <AppIcon name={activity.icon} className="size-5" />
+                        <AppIcon name={activity.icon} className="size-4" />
                       </span>
                     </div>
 
-                    <div className="px-5 py-5 sm:px-6">
-                      <h2 className="text-xl font-bold tracking-[-0.02em]">{activity.title}</h2>
-                      <p className="mt-3 flex items-center gap-1.5 text-sm text-[#6f7a74]">
-                        <AppIcon name="mapPin" className="size-4 text-[#008f45]" />
+                    <div className="px-4 py-4">
+                      <h2 className="line-clamp-2 min-h-10 text-[15px] font-bold leading-5 tracking-[-0.02em]">{activity.title}</h2>
+                      <p className="mt-2 flex items-center gap-1.5 truncate text-xs text-[#6f7a74]">
+                        <AppIcon name="mapPin" className="size-3.5 shrink-0 text-[#008f45]" />
                         {activity.place}
                       </p>
-                      <div className="mt-5 flex items-center justify-between border-t border-[#edf1ee] pt-4 text-sm">
-                        <span className="inline-flex items-center gap-2 font-semibold text-[#008f45]">
-                          <AppIcon name={completed ? "checkCircle" : stamped ? "award" : "bookmark"} className="size-4" />
+                      <div className="mt-3 border-t border-[#edf1ee] pt-3 text-xs">
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-[#008f45]">
+                          <AppIcon name={completed ? "checkCircle" : stamped ? "award" : "bookmark"} className="size-3.5" />
                           {completed ? "미션 인증 기록" : stamped ? "도장 획득 기록" : "저장한 미션"}
                         </span>
-                        <span className="text-xs text-[#9aa49e]">GANGWON 2026</span>
                       </div>
                     </div>
                   </article>
                 );
               })
             ) : (
-              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-[#dce5df] bg-white text-[#8b9690]">
+              <div className="col-span-full flex min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-[#dce5df] bg-white text-[#8b9690]">
                 <AppIcon name="clipboard" className="size-11" />
                 <p className="mt-4 font-semibold">검색 결과가 없습니다.</p>
               </div>
