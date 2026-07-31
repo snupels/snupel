@@ -8,7 +8,6 @@ import { AppIcon, type AppIconName } from "./AppIcon";
 import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 import course2 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
 import course3 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
-import course4 from "@/imports/LandingPage/8e9a5a4d4cc419ba26665781de8936f2c62517a7.png";
 
 type ActivityStatus = "인증 완료" | "도장 획득" | "저장";
 
@@ -26,11 +25,11 @@ const fallbackActivities: MissionActivity[] = [
   { id: "fallback-1", date: "2026.05.15", title: "설악산 트레일 챌린지", place: "속초 · 고성", status: "인증 완료", icon: "checkCircle", image: course1 },
   { id: "fallback-2", date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award", image: course2 },
   { id: "fallback-3", date: "2026.05.02", title: "평창 MTB 익스트림", place: "평창", status: "저장", icon: "bookmark", image: course3 },
-  { id: "fallback-4", date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course4 },
+  { id: "fallback-4", date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course1 },
 ];
 
 const filters: Array<"전체" | ActivityStatus> = ["전체", "인증 완료", "도장 획득", "저장"];
-const feedImages = [course1, course2, course3, course4];
+const feedImages = [course1, course2, course3];
 
 function formatActivityDate(value: string) {
   const date = new Date(value);

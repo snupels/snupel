@@ -42,7 +42,7 @@ const recommendations: Array<{ title: string; place: string; level: string; time
 ];
 
 const STAMP_BOOK_URL = "https://sportspassport.kr/stampbook/";
-const ACTIVITY_HISTORY_URL = "https://sportspassport.kr/activity-history/";
+const ACTIVITY_HISTORY_URL = "https://sportspassport.kr/activity-feed/";
 
 function openStampBook() {
   window.location.assign(STAMP_BOOK_URL);
