@@ -84,13 +84,13 @@ export function MyPassportPage() {
             <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">MY PASSPORT</span>
             <h1 className="mt-5 text-4xl font-bold tracking-[-0.04em] sm:text-5xl">홍길동님의<br />강원 스포츠 패스포트</h1>
             <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 도장을 한눈에 확인하세요.</p>
-            <p className="mt-3 text-sm text-white/75">지금까지 <strong className="text-[#ffd044]">7개</strong>의 도장을 모았어요. 다음 리워드까지 <strong className="text-[#ffd044]">3개</strong> 남았습니다.</p>
+            <p className="mt-3 text-sm text-white/75">배지를 달성하면 디지털 배지가 즉시 지급되며, 배지 6개부터 획득한 실물 배지 세트를 받을 수 있어요.</p>
             <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white">내 도장북 보기</button></div>
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
             <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">Level 2 Explorer</span>
-            <dl className="mt-7 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-white/60">모은 도장</dt><dd className="text-xl font-bold text-[#ffc438]">7개</dd></div><div className="flex justify-between"><dt className="text-white/60">다음 리워드까지</dt><dd className="text-xl font-bold">3개</dd></div></dl>
+            <dl className="mt-7 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-white/60">획득 배지</dt><dd className="text-xl font-bold text-[#ffc438]">{collectedBadgeIds.length}개</dd></div><div className="flex justify-between"><dt className="text-white/60">실물 배지 6종까지</dt><dd className="text-xl font-bold">{Math.max(0, 6 - collectedBadgeIds.length)}개</dd></div></dl>
             <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs text-white/50">최근 인증</p><p className="mt-1 text-sm font-bold">설악산 트레일 챌린지</p></div>
           </aside>
         </div>

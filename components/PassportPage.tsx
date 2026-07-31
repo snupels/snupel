@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { BADGE_REWARD_MILESTONES } from "@/lib/badgeRewards";
+import { DEFAULT_COLLECTED_BADGE_IDS } from "@/lib/badgeCatalog";
 import { AppIcon } from "./AppIcon";
 
 type StampStatus = "completed" | "available" | "locked";
@@ -88,6 +90,7 @@ const stampRotations = [
 const completedCount = stamps.filter((stamp) => stamp.status === "completed").length;
 const availableCount = stamps.filter((stamp) => stamp.status === "available").length;
 const lockedCount = stamps.filter((stamp) => stamp.status === "locked").length;
+const collectedBadgeCount = DEFAULT_COLLECTED_BADGE_IDS.length;
 
 const filters: Array<{ value: "all" | StampStatus; label: string; count: number }> = [
   { value: "all", label: "전체", count: stamps.length },
@@ -182,7 +185,7 @@ function PassportHeader() {
           <div className="grid w-full grid-cols-3 gap-2.5 lg:w-auto lg:gap-4">
             {[
               { value: completedCount, suffix: ` / ${stamps.length}`, label: "인증 도장" },
-              { value: 1, suffix: "개", label: "보유 리워드" },
+              { value: collectedBadgeCount, suffix: "개", label: "획득 배지" },
               { value: availableCount, suffix: "개", label: "인증 가능" },
             ].map((stat) => (
               <div
@@ -248,7 +251,7 @@ export function PassportPage() {
             }`}
           >
             리워드
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">1</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{BADGE_REWARD_MILESTONES.length}</span>
           </button>
         </div>
       </div>
@@ -342,37 +345,48 @@ export function PassportPage() {
             </section>
           </>
         ) : (
-          <section className="grid gap-6 sm:grid-cols-2">
-            <article className="rounded-[22px] border border-[#d5ae66]/30 bg-[linear-gradient(145deg,#2a2530,#161e2e)] p-7 shadow-xl">
-              <span className="flex size-12 items-center justify-center rounded-full bg-[#d5ae66] text-[#171d2b]">
-                <AppIcon name="gift" className="size-6" />
-              </span>
-              <p className="mt-6 text-xs font-bold tracking-[0.2em] text-[#d5ae66]">AVAILABLE REWARD</p>
-              <h2 className="mt-2 text-2xl font-bold">강원 Explorer 리워드</h2>
-              <p className="mt-3 text-sm leading-6 text-white/55">
-                도장 4개 수집을 완료해 강원 스포츠 한정 세트 교환권이 열렸습니다.
-              </p>
-              <button
-                type="button"
-                className="mt-7 h-11 w-full rounded-xl bg-[#d5ae66] text-sm font-bold text-[#171d2b]"
-              >
-                리워드 확인하기
-              </button>
-            </article>
-            <article className="rounded-[22px] border border-white/10 bg-white/[0.04] p-7">
-              <span className="flex size-12 items-center justify-center rounded-full bg-white/10 text-white/40">
-                <AppIcon name="trophy" className="size-6" />
-              </span>
-              <p className="mt-6 text-xs font-bold tracking-[0.2em] text-white/30">LOCKED REWARD</p>
-              <h2 className="mt-2 text-2xl font-bold text-white/65">스포츠 마스터 리워드</h2>
-              <p className="mt-3 text-sm leading-6 text-white/35">
-                도장 10개를 모으면 지역 스포츠 체험 할인권이 열립니다.
-              </p>
-              <div className="mt-7 h-2 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-[40%] rounded-full bg-[#d5ae66]/70" />
-              </div>
-              <p className="mt-2 text-right text-xs text-white/30">4 / 10</p>
-            </article>
+          <section>
+            <div>
+              <p className="text-xs font-bold tracking-[0.2em] text-[#d5ae66]">BADGE REWARDS</p>
+              <h2 className="mt-2 text-3xl font-bold">배지를 모을수록 커지는 리워드</h2>
+              <p className="mt-3 text-sm text-white/45">현재 획득한 배지 {collectedBadgeCount}개 · 전체 배지 12개</p>
+            </div>
+            <div className="mt-8 grid gap-5 lg:grid-cols-3">
+              {BADGE_REWARD_MILESTONES.map((reward) => {
+                const achieved = collectedBadgeCount >= reward.threshold;
+                const progress = Math.min(100, (collectedBadgeCount / reward.threshold) * 100);
+                const remaining = Math.max(0, reward.threshold - collectedBadgeCount);
+
+                return (
+                  <article
+                    key={reward.threshold}
+                    className={`rounded-[22px] border p-7 ${
+                      achieved
+                        ? "border-[#d5ae66]/40 bg-[linear-gradient(145deg,#2a2530,#161e2e)] shadow-xl"
+                        : "border-white/10 bg-white/[0.04]"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <span className={`flex size-12 items-center justify-center rounded-full ${achieved ? "bg-[#d5ae66] text-[#171d2b]" : "bg-white/10 text-white/40"}`}>
+                        <AppIcon name={reward.threshold === 1 ? "award" : "gift"} className="size-6" />
+                      </span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${achieved ? "bg-[#d5ae66]/15 text-[#d5ae66]" : "bg-white/5 text-white/35"}`}>
+                        {achieved ? "달성 완료" : `${remaining}개 남음`}
+                      </span>
+                    </div>
+                    <p className={`mt-6 text-xs font-bold tracking-[0.14em] ${achieved ? "text-[#d5ae66]" : "text-white/30"}`}>
+                      배지 {reward.threshold}개 달성 · {reward.fulfillment}
+                    </p>
+                    <h3 className={`mt-2 text-xl font-bold ${achieved ? "text-white" : "text-white/65"}`}>{reward.title}</h3>
+                    <p className={`mt-3 min-h-12 text-sm leading-6 ${achieved ? "text-white/55" : "text-white/35"}`}>{reward.description}</p>
+                    <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full bg-[#d5ae66]" style={{ width: `${progress}%` }} />
+                    </div>
+                    <p className="mt-2 text-right text-xs text-white/35">{Math.min(collectedBadgeCount, reward.threshold)} / {reward.threshold}</p>
+                  </article>
+                );
+              })}
+            </div>
           </section>
         )}
       </main>
