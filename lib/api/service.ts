@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   activityCreateSchema,
   activityPatchSchema,
+  activityExploreResponseSchema,
   activityResponseSchema,
   authProviderSchema,
   authResponseSchema,
@@ -15,13 +16,26 @@ import {
   collectedStampResponseSchema,
   courseCreateSchema,
   coursePatchSchema,
+  courseRecommendationRequestSchema,
+  courseRecommendationResponseSchema,
   courseResponseSchema,
+  eventsExploreQuerySchema,
   loginRequestSchema,
   oauthAuthorizeResponseSchema,
   oauthLoginRequestSchema,
   passportInputSchema,
   passportResponseSchema,
+  missionProgressSchema,
+  rejectSubmissionSchema,
   signupRequestSchema,
+  sportsExploreQuerySchema,
+  stampSubmissionCreateSchema,
+  stampSubmissionResponseSchema,
+  submissionStatusSchema,
+  uploadUrlRequestSchema,
+  uploadUrlResponseSchema,
+  weatherQuerySchema,
+  weatherResponseSchema,
   type ActivityCreate,
   type ActivityPatch,
   type AuthProvider,
@@ -31,10 +45,17 @@ import {
   type CollectedStampPatch,
   type CourseCreate,
   type CoursePatch,
+  type CourseRecommendationRequest,
+  type EventsExploreQuery,
   type LoginRequest,
   type OAuthLoginRequest,
   type PassportInput,
   type SignupRequest,
+  type SportsExploreQuery,
+  type StampSubmissionCreate,
+  type SubmissionStatus,
+  type UploadUrlRequest,
+  type WeatherQuery,
 } from "./dto";
 import { request } from "./repository";
 
@@ -70,6 +91,22 @@ function saveToken(auth: { accessToken: string }) {
   return auth;
 }
 
+function queryString(input: Record<string, unknown>) {
+  const params = new URLSearchParams();
+  Object.entries(input).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  });
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+function pageQuery(page = 1, size = 20) {
+  return queryString({ page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size) });
+}
+
+const positiveIntSchema = z.number().int().positive();
+const pageSizeSchema = positiveIntSchema.max(100);
+
 export const api = {
   health: () => request("/health", { schema: z.record(z.string(), z.string()) }),
   signup: (input: SignupRequest) => request("/auth/signup", { method: "POST", body: signupRequestSchema.parse(input), schema: authResponseSchema }).then(saveToken),
@@ -91,4 +128,48 @@ export const api = {
   passports: resource<PassportInput, PassportInput, z.infer<typeof passportResponseSchema>>("/passports", passportInputSchema, passportInputSchema, passportResponseSchema),
   collectedBadges: resource<CollectedBadgeCreate, CollectedBadgePatch, z.infer<typeof collectedBadgeResponseSchema>>("/collected-badges", collectedBadgeCreateSchema, collectedBadgePatchSchema, collectedBadgeResponseSchema),
   collectedStamps: resource<CollectedStampCreate, CollectedStampPatch, z.infer<typeof collectedStampResponseSchema>>("/collected-stamps", collectedStampCreateSchema, collectedStampPatchSchema, collectedStampResponseSchema),
+  sports: {
+    list: (input: SportsExploreQuery = {}) => {
+      const query = sportsExploreQuerySchema.parse(input);
+      return request(`/sports${queryString(query)}`, { schema: z.array(activityExploreResponseSchema) });
+    },
+  },
+  events: {
+    list: (input: EventsExploreQuery = {}) => {
+      const query = eventsExploreQuerySchema.parse(input);
+      return request(`/events${queryString(query)}`, { schema: z.array(activityExploreResponseSchema) });
+    },
+  },
+  weather: (input: WeatherQuery) => {
+    const query = weatherQuerySchema.parse(input);
+    return request(`/weather${queryString(query)}`, { schema: weatherResponseSchema });
+  },
+  courseRecommendations: (input: CourseRecommendationRequest) => withToken(
+    "/course-recommendations",
+    courseRecommendationResponseSchema,
+    "POST",
+    courseRecommendationRequestSchema.parse(input),
+  ),
+  passportMissions: (passportId: number, page = 1, size = 20) => withToken(
+    `/passports/${itemIdSchema.parse(passportId)}/missions${pageQuery(page, size)}`,
+    z.array(missionProgressSchema),
+  ),
+  stampSubmissions: {
+    list: (page = 1, size = 20) => withToken(`/stamp-submissions${pageQuery(page, size)}`, z.array(stampSubmissionResponseSchema)),
+    create: (input: StampSubmissionCreate) => withToken("/stamp-submissions", stampSubmissionResponseSchema, "POST", stampSubmissionCreateSchema.parse(input)),
+    createUploadUrl: (input: UploadUrlRequest) => withToken("/stamp-submissions/upload-url", uploadUrlResponseSchema, "POST", uploadUrlRequestSchema.parse(input)),
+  },
+  adminStampSubmissions: {
+    list: (status: SubmissionStatus = "pending", page = 1, size = 20) => withToken(
+      `/admin/stamp-submissions${queryString({ status: submissionStatusSchema.parse(status), page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size) })}`,
+      z.array(stampSubmissionResponseSchema),
+    ),
+    approve: (id: number) => withToken(`/admin/stamp-submissions/${itemIdSchema.parse(id)}/approve`, stampSubmissionResponseSchema, "POST"),
+    reject: (id: number, reason: string) => withToken(
+      `/admin/stamp-submissions/${itemIdSchema.parse(id)}/reject`,
+      stampSubmissionResponseSchema,
+      "POST",
+      rejectSubmissionSchema.parse({ reason }),
+    ),
+  },
 };

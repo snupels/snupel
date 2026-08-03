@@ -132,13 +132,61 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
 const cardImages = [image1, image2, image3, image4];
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
 
+function sportCategory(sportName: string | null) {
+  const sport = sportName?.toLowerCase() ?? "";
+  if (["hiking", "trekking", "trail", "trail_running", "mtb"].some((value) => sport.includes(value))) return "산악스포츠";
+  if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return "빙상스포츠";
+  if (["surf", "rafting", "kayak", "water", "sailing"].some((value) => sport.includes(value))) return "수상스포츠";
+  if (["running", "marathon", "walking", "athletics"].some((value) => sport.includes(value))) return "육상스포츠";
+  if (["olympic", "legacy"].some((value) => sport.includes(value))) return "올림픽레거시";
+  return "스포츠";
+}
+
+function sportIcon(category: string): AppIconName {
+  if (category === "산악스포츠") return "mountain";
+  if (category === "빙상스포츠") return "snowflake";
+  if (category === "수상스포츠") return "waves";
+  if (category === "육상스포츠") return "person";
+  if (category === "올림픽레거시") return "olympicRings";
+  return "activity";
+}
+
+function activityDate(startsAt?: string | null, endsAt?: string | null) {
+  const format = (value: string) => value.slice(0, 10).replaceAll("-", ".");
+  if (startsAt && endsAt) return `${format(startsAt)} ~ ${format(endsAt)}`;
+  return startsAt ? format(startsAt) : "일정 확인 중";
+}
+
 async function loadCards(page: PortalPageKey): Promise<PageConfig["cards"]> {
+  if (page === "sports") {
+    return (await api.sports.list({ page: 1, size: 100 })).map((activity, index) => {
+      const category = sportCategory(activity.sportName);
+      return {
+        image: cardImages[index % cardImages.length],
+        tag: category,
+        title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
+        description: activity.summary ?? `${activity.sportName ?? "강원 스포츠"} 활동을 즐겨보세요.`,
+        meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
+        icon: sportIcon(category),
+      };
+    });
+  }
+  if (page === "events") {
+    return (await api.events.list({ page: 1, size: 100 })).map((activity, index) => ({
+      image: cardImages[index % cardImages.length],
+      tag: activity.category === "festival" ? "축제" : "이벤트",
+      title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
+      description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",
+      meta: `${activityDate(activity.startsAt, activity.endsAt)} · ${activity.sigun ?? activity.region ?? "강원"}`,
+      icon: "calendar" as const,
+    }));
+  }
   if (page === "courses") {
     return (await api.courses.list()).map((course, index) => ({
       image: cardImages[index % cardImages.length],
       tag: themeLabels[course.theme],
-      title: `${themeLabels[course.theme]} 코스 #${course.id}`,
-      description: course.recommendedCompanion ? `${course.recommendedCompanion}와 함께하기 좋은 코스` : "추천 스포츠 코스",
+      title: course.title ?? `${themeLabels[course.theme]} 코스 #${course.id}`,
+      description: course.description ?? (course.recommendedCompanion ? `${course.recommendedCompanion}와 함께하기 좋은 코스` : "추천 스포츠 코스"),
       meta: course.estimatedDurationMinutes ? `약 ${course.estimatedDurationMinutes}분` : "소요 시간 미정",
       icon: "map" as const,
     }));
@@ -154,9 +202,7 @@ async function loadCards(page: PortalPageKey): Promise<PageConfig["cards"]> {
     }));
   }
 
-  const categories = page === "sports" ? ["sports"] : ["event", "festival"];
   return (await api.activities.list())
-    .filter((activity) => categories.includes(activity.category))
     .map((activity, index) => ({
       image: cardImages[index % cardImages.length],
       tag: activity.category === "sports" ? "스포츠" : activity.category === "event" ? "이벤트" : "축제",
@@ -186,7 +232,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const [apiMessage, setApiMessage] = useState("");
 
   useEffect(() => {
-    if (!api.hasToken()) return;
+    const publicPage = page === "sports" || page === "events";
+    if (!publicPage && !api.hasToken()) return;
     loadCards(page)
       .then((cards) => {
         setRemoteCards(cards);

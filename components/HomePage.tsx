@@ -1,7 +1,8 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
@@ -59,7 +60,7 @@ const heroChallenges: Array<{
   },
 ];
 
-const events: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string }> = [
+const fallbackEvents: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string }> = [
   { image: eventImage1, tag: "트레일런", title: "양양 서프 트레일 2026", date: "2026.05.16 ~ 06.18", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage2, tag: "MTB", title: "청산 MTB 페스티벌 2026", date: "2026.05.17", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage3, tag: "축제", title: "인제 내린천 래프팅 축제", date: "2026.06.20 ~ 06.22", reward: "래프팅 체험 스탬프" },
@@ -75,9 +76,37 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string 
 
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
+  const [temperature, setTemperature] = useState(24);
+  const [weatherDetail, setWeatherDetail] = useState("강수 확률 확인 중");
+  const [eventCards, setEventCards] = useState(fallbackEvents);
   const heroChallenge = heroChallenges[heroIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
   const showNextHero = () => setHeroIndex((current) => (current + 1) % heroChallenges.length);
+
+  useEffect(() => {
+    api.weather({ latitude: 37.7519, longitude: 128.8761 })
+      .then((weather) => {
+        if (weather.temperatureC !== null) setTemperature(Math.round(weather.temperatureC));
+        setWeatherDetail([
+          weather.sky,
+          weather.precipitationProbability === null ? null : `강수 확률 ${weather.precipitationProbability}%`,
+        ].filter(Boolean).join(" · ") || "기상 정보 확인 중");
+      })
+      .catch(() => undefined);
+
+    api.events.list({ page: 1, size: 4 })
+      .then((items) => {
+        if (items.length === 0) return;
+        setEventCards(items.map((item, index) => ({
+          image: [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
+          tag: item.category === "festival" ? "축제" : "이벤트",
+          title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
+          date: item.startsAt ? item.startsAt.slice(0, 10).replaceAll("-", ".") : "일정 확인 중",
+          reward: item.hasMission ? "패스포트 미션 참여 가능" : (item.sigun ?? item.region ?? "강원특별자치도"),
+        })));
+      })
+      .catch(() => undefined);
+  }, []);
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
@@ -90,11 +119,11 @@ export default function HomePage() {
               <p className="text-xs font-medium text-[#687385]">강릉시 오늘의 날씨</p>
               <div className="mt-2 flex items-center gap-2 text-[#162033]">
                 <AppIcon name="cloudSun" className="size-8 text-[#f4b400]" />
-                <strong className="text-3xl">24°</strong>
+                <strong className="text-3xl">{temperature}°</strong>
               </div>
-              <p className="mt-2 text-xs text-[#687385]">최고 28° · 최저 20°C</p>
+              <p className="mt-2 text-xs text-[#687385]">{weatherDetail}</p>
               <p className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#f3d76c] bg-[#fff9df] px-2.5 py-2 text-[11px] text-[#9b6900]">
-                <AppIcon name="activity" className="size-3.5" /> 미세먼지 ‘보통’ 예상
+                <AppIcon name="activity" className="size-3.5" /> 강릉 실시간 기상 정보
               </p>
             </aside>
 
@@ -169,7 +198,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <div className="flex items-center justify-between"><h2 className="text-xl font-bold">지금 강원에서 열리는 행사</h2><button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-[#008f45]">전체보기<AppIcon name="arrowRight" /></button></div>
           <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {events.map((event) => <article key={event.title} className="overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>)}
+            {eventCards.map((event) => <article key={event.title} className="overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>)}
           </div>
         </div>
       </section>
