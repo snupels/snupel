@@ -23,6 +23,7 @@ import {
   loginRequestSchema,
   oauthAuthorizeResponseSchema,
   oauthLoginRequestSchema,
+  openMeteoResponseSchema,
   passportInputSchema,
   passportResponseSchema,
   missionProgressSchema,
@@ -57,7 +58,7 @@ import {
   type UploadUrlRequest,
   type WeatherQuery,
 } from "./dto";
-import { request } from "./repository";
+import { request, requestUrl } from "./repository";
 
 const TOKEN_KEY = "sportspassport-access-token";
 const itemIdSchema = z.number().int().positive();
@@ -143,6 +144,18 @@ export const api = {
   weather: (input: WeatherQuery) => {
     const query = weatherQuerySchema.parse(input);
     return request(`/weather${queryString(query)}`, { schema: weatherResponseSchema });
+  },
+  openMeteoWeather: (input: WeatherQuery) => {
+    const coordinates = weatherQuerySchema.parse(input);
+    const params = new URLSearchParams({
+      latitude: String(coordinates.latitude),
+      longitude: String(coordinates.longitude),
+      current: "temperature_2m,relative_humidity_2m,weather_code",
+      daily: "weather_code,temperature_2m_max,temperature_2m_min",
+      forecast_days: "1",
+      timezone: "Asia/Seoul",
+    });
+    return requestUrl(`https://api.open-meteo.com/v1/forecast?${params}`, { schema: openMeteoResponseSchema });
   },
   courseRecommendations: (input: CourseRecommendationRequest) => withToken(
     "/course-recommendations",

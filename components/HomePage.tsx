@@ -77,20 +77,25 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string 
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [temperature, setTemperature] = useState(24);
-  const [weatherDetail, setWeatherDetail] = useState("강수 확률 확인 중");
+  const [temperatureRange, setTemperatureRange] = useState("최고 28° · 최저 20°C");
+  const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
   const [eventCards, setEventCards] = useState(fallbackEvents);
   const heroChallenge = heroChallenges[heroIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
   const showNextHero = () => setHeroIndex((current) => (current + 1) % heroChallenges.length);
 
   useEffect(() => {
-    api.weather({ latitude: 37.7519, longitude: 128.8761 })
+    api.openMeteoWeather({ latitude: 37.7519, longitude: 128.8761 })
       .then((weather) => {
-        if (weather.temperatureC !== null) setTemperature(Math.round(weather.temperatureC));
-        setWeatherDetail([
-          weather.sky,
-          weather.precipitationProbability === null ? null : `강수 확률 ${weather.precipitationProbability}%`,
-        ].filter(Boolean).join(" · ") || "기상 정보 확인 중");
+        const weatherLabels: Record<number, string> = {
+          0: "맑음", 1: "대체로 맑음", 2: "부분적으로 흐림", 3: "흐림",
+          45: "안개", 48: "서리 안개", 51: "약한 이슬비", 53: "이슬비", 55: "강한 이슬비",
+          61: "약한 비", 63: "비", 65: "강한 비", 71: "약한 눈", 73: "눈", 75: "강한 눈",
+          80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
+        };
+        setTemperature(Math.round(weather.current.temperature_2m));
+        setTemperatureRange(`최고 ${Math.round(weather.daily.temperature_2m_max[0])}° · 최저 ${Math.round(weather.daily.temperature_2m_min[0])}°C`);
+        setWeatherDetail(`${weatherLabels[weather.current.weather_code] ?? "날씨 확인 중"} · 습도 ${weather.current.relative_humidity_2m}%`);
       })
       .catch(() => undefined);
 
@@ -121,10 +126,11 @@ export default function HomePage() {
                 <AppIcon name="cloudSun" className="size-8 text-[#f4b400]" />
                 <strong className="text-3xl">{temperature}°</strong>
               </div>
-              <p className="mt-2 text-xs text-[#687385]">{weatherDetail}</p>
+              <p className="mt-2 text-xs text-[#687385]">{temperatureRange}</p>
               <p className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#f3d76c] bg-[#fff9df] px-2.5 py-2 text-[11px] text-[#9b6900]">
-                <AppIcon name="activity" className="size-3.5" /> 강릉 실시간 기상 정보
+                <AppIcon name="activity" className="size-3.5" /> {weatherDetail}
               </p>
+              <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="mt-2 block text-right text-[9px] text-[#87918c] underline-offset-2 hover:underline">Weather data by Open-Meteo.com</a>
             </aside>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">

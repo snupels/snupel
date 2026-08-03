@@ -177,6 +177,20 @@ export const weatherResponseSchema = z.strictObject({
   sky: z.string().nullable(),
   precipitationType: z.string().nullable(),
 });
+export const openMeteoResponseSchema = z.object({
+  current: z.object({
+    time: z.string(),
+    temperature_2m: z.number(),
+    relative_humidity_2m: z.number(),
+    weather_code: z.number().int(),
+  }),
+  daily: z.object({
+    time: z.array(z.string()),
+    weather_code: z.array(z.number().int()),
+    temperature_2m_max: z.array(z.number()),
+    temperature_2m_min: z.array(z.number()),
+  }),
+});
 
 export const courseRecommendationRequestSchema = z.strictObject({
   theme: courseThemeSchema,
@@ -258,6 +272,7 @@ export type SportsExploreQuery = z.input<typeof sportsExploreQuerySchema>;
 export type EventsExploreQuery = z.input<typeof eventsExploreQuerySchema>;
 export type WeatherQuery = z.infer<typeof weatherQuerySchema>;
 export type WeatherResponse = z.infer<typeof weatherResponseSchema>;
+export type OpenMeteoResponse = z.infer<typeof openMeteoResponseSchema>;
 export type CourseRecommendationRequest = z.infer<typeof courseRecommendationRequestSchema>;
 export type CourseRecommendationResponse = z.infer<typeof courseRecommendationResponseSchema>;
 export type MissionProgress = z.infer<typeof missionProgressSchema>;

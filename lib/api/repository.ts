@@ -19,7 +19,11 @@ type RequestOptions<T> = {
 };
 
 export async function request<T>(path: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  return requestUrl(`${API_BASE_URL}${path}`, { method, body, token, schema });
+}
+
+export async function requestUrl<T>(url: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
+  const response = await fetch(url, {
     method,
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
