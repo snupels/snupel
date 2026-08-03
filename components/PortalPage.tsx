@@ -34,7 +34,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     description: "지역과 종목, 난이도를 기준으로 지금 즐길 수 있는 스포츠를 찾아보세요.",
     icon: "mountain",
     action: { label: "맞춤 코스 보기", href: "/courses" },
-    stats: [{ value: "38", label: "스포츠 종목" }, { value: "120", label: "추천 장소" }, { value: "18", label: "강원 지역" }],
+    stats: [],
     sectionTitle: "지금 인기 있는 스포츠",
     sectionDescription: "계절과 지역을 고려해 가장 반응이 좋은 활동을 골랐습니다.",
     cards: [
@@ -304,9 +304,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             </div>
             <Link href={config.action.href} className="relative inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#00a94f] px-6 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">{config.action.label}<AppIcon name="arrowRight" /></Link>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {config.stats.length > 0 && <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {config.stats.map((stat) => <div key={stat.label} className="rounded-2xl border border-[#dfe8e2] bg-white px-6 py-5 shadow-sm"><strong className="text-2xl text-[#008f45]">{stat.value}</strong><span className="ml-2 text-sm text-[#6f7a87]">{stat.label}</span></div>)}
-          </div>
+          </div>}
         </div>
       </section>
 
