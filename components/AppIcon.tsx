@@ -35,6 +35,27 @@ import {
   type LucideProps,
 } from "lucide-react";
 
+function OlympicRings({ className, ...props }: LucideProps) {
+  return (
+    <svg
+      viewBox="0 0 32 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+      {...props}
+    >
+      <circle cx="6" cy="7" r="4.5" />
+      <circle cx="16" cy="7" r="4.5" />
+      <circle cx="26" cy="7" r="4.5" />
+      <circle cx="11" cy="13" r="4.5" />
+      <circle cx="21" cy="13" r="4.5" />
+    </svg>
+  );
+}
+
 const icons = {
   activity: Activity,
   arrowRight: ArrowRight,
@@ -59,6 +80,7 @@ const icons = {
   medal: Medal,
   mountain: Mountain,
   newspaper: Newspaper,
+  olympicRings: OlympicRings,
   person: PersonStanding,
   phone: Phone,
   search: Search,

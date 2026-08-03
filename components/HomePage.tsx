@@ -1,4 +1,7 @@
+"use client";
+
 import Image, { type StaticImageData } from "next/image";
+import { useState } from "react";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
@@ -11,7 +14,49 @@ const categories: Array<{ icon: AppIconName; title: string; description: string 
   { icon: "snowflake", title: "빙상 스포츠", description: "스키 · 스노보드" },
   { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트" },
   { icon: "person", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹" },
-  { icon: "trophy", title: "올림픽 레거시", description: "스키점프 · 경기장 투어" },
+  { icon: "olympicRings", title: "올림픽 레거시", description: "스키점프 · 경기장 투어" },
+];
+
+const heroChallenges: Array<{
+  image: StaticImageData;
+  tag: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+}> = [
+  {
+    image: heroImage,
+    tag: "진행중",
+    title: "2026 강원 트레일 챌린지",
+    description: "푸른 산을 달리고, 고성봉을 오르며 강원의 자연을 온몸으로 만끽하세요.",
+    date: "2026.06.03 ~ 2026.08.31",
+    location: "강원특별자치도 산악지역 전역",
+  },
+  {
+    image: eventImage2,
+    tag: "참가 모집중",
+    title: "평창 MTB 익스트림 2026",
+    description: "평창의 시원한 고원과 숲길을 가르며 짜릿한 라이딩에 도전해 보세요.",
+    date: "2026.06.20 ~ 2026.08.16",
+    location: "평창군 MTB 코스 일대",
+  },
+  {
+    image: eventImage3,
+    tag: "진행중",
+    title: "인제 내린천 워터 챌린지",
+    description: "내린천의 힘찬 물살을 따라 강원의 여름을 가장 역동적으로 즐겨보세요.",
+    date: "2026.07.01 ~ 2026.08.31",
+    location: "인제군 내린천 일대",
+  },
+  {
+    image: eventImage4,
+    tag: "참가 모집중",
+    title: "강릉 올림픽 레거시 투어",
+    description: "동계올림픽의 감동이 남아 있는 경기장을 걸으며 특별한 도장을 모아보세요.",
+    date: "2026.06.13 ~ 2026.10.31",
+    location: "강릉 올림픽파크 및 경기장",
+  },
 ];
 
 const events: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string }> = [
@@ -29,11 +74,16 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string 
 ];
 
 export default function HomePage() {
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroChallenge = heroChallenges[heroIndex];
+  const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
+  const showNextHero = () => setHeroIndex((current) => (current + 1) % heroChallenges.length);
+
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
       <section className="bg-gradient-to-b from-[#e8f0eb] via-[#f3f7f4] to-[#f3f7f4] px-4 pb-14 pt-8 sm:px-6 lg:px-8">
         <div className="relative mx-auto min-h-[500px] max-w-[1280px] overflow-hidden rounded-[28px] bg-[#244839] shadow-[0_20px_60px_rgba(21,55,40,0.18)]">
-          <Image src={heroImage} alt="설악산 능선 전경" fill preload sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" />
+          <Image key={heroChallenge.title} src={heroChallenge.image} alt={`${heroChallenge.title} 배경`} fill preload sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,35,27,0.78)_0%,rgba(10,35,27,0.48)_48%,rgba(10,35,27,0.65)_100%)]" />
           <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
             <aside className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
@@ -48,19 +98,35 @@ export default function HomePage() {
               </p>
             </aside>
 
-            <div className="order-1 max-w-2xl text-white lg:order-2">
-              <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">진행중</span>
-              <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl lg:text-[44px] lg:leading-[1.18]">2026 강원 트레일 챌린지</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/90 sm:text-base">푸른 산을 달리고, 고성봉을 오르며 강원의 자연을 온몸으로 만끽하세요.</p>
+            <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
+              <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">{heroChallenge.tag}</span>
+              <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl lg:text-[44px] lg:leading-[1.18]">{heroChallenge.title}</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{heroChallenge.description}</p>
               <div className="mt-6 space-y-2 text-sm text-white/90">
-                <p className="flex items-center gap-2"><AppIcon name="calendar" className="size-4" />2026.06.03 ~ 2026.08.31</p>
-                <p className="flex items-center gap-2"><AppIcon name="mapPin" className="size-4" />강원특별자치도 산악지역 전역</p>
+                <p className="flex items-center gap-2"><AppIcon name="calendar" className="size-4" />{heroChallenge.date}</p>
+                <p className="flex items-center gap-2"><AppIcon name="mapPin" className="size-4" />{heroChallenge.location}</p>
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">챌린지 참여하기<AppIcon name="arrowRight" /></button>
                 <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 bg-white/15 px-5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">내 탐험 찾기<AppIcon name="map" /></button>
               </div>
-              <div className="mt-6 flex items-center gap-3 text-sm text-white/90"><button type="button" aria-label="이전 슬라이드" className="rounded-full bg-white/15 p-1.5"><AppIcon name="chevronLeft" /></button><span>1 / 4</span><button type="button" aria-label="다음 슬라이드" className="rounded-full bg-white/15 p-1.5"><AppIcon name="chevronRight" /></button></div>
+              <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
+                <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
+                <span className="min-w-9 text-center">{heroIndex + 1} / {heroChallenges.length}</span>
+                <button type="button" onClick={showNextHero} aria-label="다음 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronRight" /></button>
+                <div className="ml-1 flex gap-1.5" aria-label="챌린지 선택">
+                  {heroChallenges.map((challenge, index) => (
+                    <button
+                      key={challenge.title}
+                      type="button"
+                      onClick={() => setHeroIndex(index)}
+                      aria-label={`${index + 1}번째 챌린지 보기`}
+                      aria-current={heroIndex === index ? "true" : undefined}
+                      className={`h-1.5 cursor-pointer rounded-full transition-all ${heroIndex === index ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
             <aside className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
