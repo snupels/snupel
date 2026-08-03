@@ -142,6 +142,17 @@ export default function HomePage() {
   }, [weatherRegion.latitude, weatherRegion.longitude]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setTemperature(null);
+      setTemperatureRange("날씨 불러오는 중");
+      setWeatherDetail("날씨 정보 확인 중");
+      setWeatherRegionIndex((current) => (current + 1) % gangwonWeatherRegions.length);
+    }, 8000);
+
+    return () => window.clearTimeout(timer);
+  }, [weatherRegionIndex]);
+
+  useEffect(() => {
     api.events.list({ page: 1, size: 4 })
       .then((items) => {
         if (items.length === 0) return;
