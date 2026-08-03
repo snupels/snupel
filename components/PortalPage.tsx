@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -131,6 +131,7 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
 
 const cardImages = [image1, image2, image3, image4];
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
+const sportsPageSize = 20;
 
 function sportCategory(sportName: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
@@ -157,12 +158,12 @@ function activityDate(startsAt?: string | null, endsAt?: string | null) {
   return startsAt ? format(startsAt) : "일정 확인 중";
 }
 
-async function loadCards(page: PortalPageKey): Promise<PageConfig["cards"]> {
+async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig["cards"]> {
   if (page === "sports") {
-    return (await api.sports.list({ page: 1, size: 100 })).map((activity, index) => {
+    return (await api.sports.list({ page: dataPage, size: sportsPageSize })).map((activity, index) => {
       const category = sportCategory(activity.sportName);
       return {
-        image: cardImages[index % cardImages.length],
+        image: cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
         tag: category,
         title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
         description: activity.summary ?? `${activity.sportName ?? "강원 스포츠"} 활동을 즐겨보세요.`,
@@ -230,6 +231,12 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const pageFilters = filterGroups[page] ?? [];
   const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
   const [apiMessage, setApiMessage] = useState("");
+  const [sportsPage, setSportsPage] = useState(1);
+  const [hasMoreSports, setHasMoreSports] = useState(true);
+  const [loadingMoreSports, setLoadingMoreSports] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const sportsSentinelRef = useRef<HTMLDivElement>(null);
+  const sportsLoadingRef = useRef(false);
 
   useEffect(() => {
     const publicPage = page === "sports" || page === "events";
@@ -237,10 +244,43 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     loadCards(page)
       .then((cards) => {
         setRemoteCards(cards);
+        if (page === "sports") {
+          setSportsPage(1);
+          setHasMoreSports(cards.length === sportsPageSize);
+          setLoadMoreError(false);
+        }
         setApiMessage(cards.length ? "" : "등록된 데이터가 없습니다.");
       })
       .catch(() => setApiMessage("데이터를 불러오지 못했습니다."));
   }, [page]);
+
+  useEffect(() => {
+    const sentinel = sportsSentinelRef.current;
+    if (page !== "sports" || remoteCards === null || !hasMoreSports || loadMoreError || !sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0]?.isIntersecting || sportsLoadingRef.current) return;
+
+      const nextPage = sportsPage + 1;
+      sportsLoadingRef.current = true;
+      setLoadingMoreSports(true);
+      loadCards("sports", nextPage)
+        .then((newCards) => {
+          setRemoteCards((current) => [...(current ?? []), ...newCards]);
+          setSportsPage(nextPage);
+          setHasMoreSports(newCards.length === sportsPageSize);
+          setLoadMoreError(false);
+        })
+        .catch(() => setLoadMoreError(true))
+        .finally(() => {
+          sportsLoadingRef.current = false;
+          setLoadingMoreSports(false);
+        });
+    }, { rootMargin: "320px 0px" });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMoreSports, loadMoreError, page, remoteCards, sportsPage]);
 
   const cards = (remoteCards ?? config.cards).filter((card) => {
     const query = activeFilters.q?.toLowerCase();
@@ -294,8 +334,15 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           </div>}
           {apiMessage && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map((card) => <article key={card.title} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
+            {cards.map((card, index) => <article key={`${card.title}-${index}`} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
           </div>
+          {page === "sports" && remoteCards !== null && (
+            <div ref={sportsSentinelRef} className="flex min-h-24 items-center justify-center" aria-live="polite">
+              {loadingMoreSports && <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#008f45]"><span className="size-4 animate-spin rounded-full border-2 border-[#b9dac5] border-t-[#008f45]" />스포츠를 더 불러오는 중...</span>}
+              {!hasMoreSports && !loadMoreError && <span className="text-sm text-[#7a867f]">모든 스포츠를 확인했습니다.</span>}
+              {loadMoreError && <button type="button" onClick={() => setLoadMoreError(false)} className="cursor-pointer rounded-xl border border-[#b9d5c3] bg-white px-4 py-2 text-sm font-semibold text-[#008f45] hover:bg-[#f0f8f3]">다시 불러오기</button>}
+            </div>
+          )}
         </div>
       </section>
 
