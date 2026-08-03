@@ -119,7 +119,7 @@ const sports = [
   { label: "빙상스포츠", value: "빙상스포츠", icon: "snowflake" as AppIconName },
   { label: "수상스포츠", value: "수상스포츠", icon: "waves" as AppIconName },
   { label: "육상스포츠", value: "육상스포츠", icon: "person" as AppIconName },
-  { label: "올림픽레거시", value: "올림픽레거시", icon: "trophy" as AppIconName },
+  { label: "올림픽레거시", value: "올림픽레거시", icon: "olympicRings" as AppIconName },
 ];
 
 const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
