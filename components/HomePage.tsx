@@ -74,31 +74,74 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string 
   { icon: "clipboard", title: "여행 정보", description: "숙박 · 교통 · 식당 가이드" },
 ];
 
+const gangwonWeatherRegions = [
+  { name: "춘천시", latitude: 37.8813, longitude: 127.7298 },
+  { name: "원주시", latitude: 37.3422, longitude: 127.9202 },
+  { name: "강릉시", latitude: 37.7519, longitude: 128.8761 },
+  { name: "동해시", latitude: 37.5247, longitude: 129.1143 },
+  { name: "태백시", latitude: 37.1641, longitude: 128.9856 },
+  { name: "속초시", latitude: 38.207, longitude: 128.5918 },
+  { name: "삼척시", latitude: 37.4499, longitude: 129.1652 },
+  { name: "홍천군", latitude: 37.6972, longitude: 127.8887 },
+  { name: "횡성군", latitude: 37.4917, longitude: 127.985 },
+  { name: "영월군", latitude: 37.1836, longitude: 128.4617 },
+  { name: "평창군", latitude: 37.3705, longitude: 128.3903 },
+  { name: "정선군", latitude: 37.3807, longitude: 128.6609 },
+  { name: "철원군", latitude: 38.1467, longitude: 127.3134 },
+  { name: "화천군", latitude: 38.1062, longitude: 127.7082 },
+  { name: "양구군", latitude: 38.11, longitude: 127.9898 },
+  { name: "인제군", latitude: 38.0697, longitude: 128.1707 },
+  { name: "고성군", latitude: 38.3806, longitude: 128.4679 },
+  { name: "양양군", latitude: 38.0754, longitude: 128.619 },
+] as const;
+
+const weatherLabels: Record<number, string> = {
+  0: "맑음", 1: "대체로 맑음", 2: "부분적으로 흐림", 3: "흐림",
+  45: "안개", 48: "서리 안개", 51: "약한 이슬비", 53: "이슬비", 55: "강한 이슬비",
+  61: "약한 비", 63: "비", 65: "강한 비", 71: "약한 눈", 73: "눈", 75: "강한 눈",
+  80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
+};
+
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
-  const [temperature, setTemperature] = useState(24);
-  const [temperatureRange, setTemperatureRange] = useState("최고 28° · 최저 20°C");
+  const [weatherRegionIndex, setWeatherRegionIndex] = useState(2);
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
   const [eventCards, setEventCards] = useState(fallbackEvents);
   const heroChallenge = heroChallenges[heroIndex];
+  const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
   const showNextHero = () => setHeroIndex((current) => (current + 1) % heroChallenges.length);
+  const changeWeatherRegion = (direction: -1 | 1) => {
+    setTemperature(null);
+    setTemperatureRange("날씨 불러오는 중");
+    setWeatherDetail("날씨 정보 확인 중");
+    setWeatherRegionIndex((current) => (current + direction + gangwonWeatherRegions.length) % gangwonWeatherRegions.length);
+  };
 
   useEffect(() => {
-    api.openMeteoWeather({ latitude: 37.7519, longitude: 128.8761 })
+    let cancelled = false;
+
+    api.openMeteoWeather({ latitude: weatherRegion.latitude, longitude: weatherRegion.longitude })
       .then((weather) => {
-        const weatherLabels: Record<number, string> = {
-          0: "맑음", 1: "대체로 맑음", 2: "부분적으로 흐림", 3: "흐림",
-          45: "안개", 48: "서리 안개", 51: "약한 이슬비", 53: "이슬비", 55: "강한 이슬비",
-          61: "약한 비", 63: "비", 65: "강한 비", 71: "약한 눈", 73: "눈", 75: "강한 눈",
-          80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
-        };
+        if (cancelled) return;
         setTemperature(Math.round(weather.current.temperature_2m));
         setTemperatureRange(`최고 ${Math.round(weather.daily.temperature_2m_max[0])}° · 최저 ${Math.round(weather.daily.temperature_2m_min[0])}°C`);
         setWeatherDetail(`${weatherLabels[weather.current.weather_code] ?? "날씨 확인 중"} · 습도 ${weather.current.relative_humidity_2m}%`);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (cancelled) return;
+        setTemperatureRange("날씨를 불러오지 못했습니다");
+        setWeatherDetail("잠시 후 다시 확인해 주세요");
+      });
 
+    return () => {
+      cancelled = true;
+    };
+  }, [weatherRegion.latitude, weatherRegion.longitude]);
+
+  useEffect(() => {
     api.events.list({ page: 1, size: 4 })
       .then((items) => {
         if (items.length === 0) return;
@@ -121,10 +164,15 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,35,27,0.78)_0%,rgba(10,35,27,0.48)_48%,rgba(10,35,27,0.65)_100%)]" />
           <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
             <aside className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
-              <p className="text-xs font-medium text-[#687385]">강릉시 오늘의 날씨</p>
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" onClick={() => changeWeatherRegion(-1)} aria-label="이전 지역 날씨" className="cursor-pointer rounded-full p-1 text-[#687385] transition hover:bg-[#edf3ef] hover:text-[#008f45]"><AppIcon name="chevronLeft" className="size-4" /></button>
+                <p className="text-center text-xs font-semibold text-[#687385]">{weatherRegion.name} 오늘의 날씨</p>
+                <button type="button" onClick={() => changeWeatherRegion(1)} aria-label="다음 지역 날씨" className="cursor-pointer rounded-full p-1 text-[#687385] transition hover:bg-[#edf3ef] hover:text-[#008f45]"><AppIcon name="chevronRight" className="size-4" /></button>
+              </div>
               <div className="mt-2 flex items-center gap-2 text-[#162033]">
                 <AppIcon name="cloudSun" className="size-8 text-[#f4b400]" />
-                <strong className="text-3xl">{temperature}°</strong>
+                <strong className="text-3xl">{temperature === null ? "--" : temperature}°</strong>
+                <span className="ml-auto text-[10px] font-medium text-[#8a9590]">{weatherRegionIndex + 1} / {gangwonWeatherRegions.length}</span>
               </div>
               <p className="mt-2 text-xs text-[#687385]">{temperatureRange}</p>
               <p className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#f3d76c] bg-[#fff9df] px-2.5 py-2 text-[11px] text-[#9b6900]">
