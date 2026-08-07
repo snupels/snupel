@@ -347,8 +347,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       </section>
 
       <section className="bg-[#f3f7f4] py-12">
-        <div className="mx-auto grid max-w-[1180px] gap-5 px-4 sm:px-6 md:grid-cols-3">
-          {[{ icon: "map" as const, title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요." }, { icon: "calendar" as const, title: "일정에 저장", text: "관심 활동과 행사를 내 일정에 모아보세요." }, { icon: "award" as const, title: "패스포트 연결", text: "참여 기록을 인증하고 도장과 혜택을 받으세요." }].map((item) => <div key={item.title} className="rounded-2xl border border-[#dfe8e2] bg-white p-6"><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></div>)}
+        <div className="mx-auto grid max-w-[780px] gap-5 px-4 sm:grid-cols-2 sm:px-6">
+          {[{ icon: "calendar" as const, title: "일정에 저장", text: "관심 활동과 행사를 내 일정에 모아보세요." }, { icon: "instagram" as const, title: "강원 스포츠 패스포트 인스타", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요." }].map((item) => <div key={item.title} className="rounded-2xl border border-[#dfe8e2] bg-white p-6"><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></div>)}
         </div>
       </section>
     </div>

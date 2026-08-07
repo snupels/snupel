@@ -69,10 +69,7 @@ const fallbackEvents: Array<{ image: StaticImageData; tag: string; title: string
 ];
 
 const quickLinks: Array<{ icon: AppIconName; title: string; description: string }> = [
-  { icon: "newspaper", title: "스포츠 뉴스", description: "강원 스포츠 최신 소식" },
-  { icon: "map", title: "코스 지도", description: "지역별 코스 안내" },
-  { icon: "trophy", title: "대회 일정", description: "2026 대회 전체 일정" },
-  { icon: "clipboard", title: "여행 정보", description: "숙박 · 교통 · 식당 가이드" },
+  { icon: "instagram", title: "강원 스포츠 패스포트 인스타", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요." },
 ];
 
 const gangwonWeatherRegions = [
@@ -270,7 +267,7 @@ export default function HomePage() {
       </section>
 
       <section className="bg-white py-12">
-        <div className="mx-auto grid max-w-[1180px] gap-5 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-[580px] gap-5 px-4 sm:px-6">
           {quickLinks.map((link) => <button key={link.title} type="button" className="flex items-center gap-4 rounded-2xl border border-[#e1e8e3] p-5 text-left transition hover:border-[#9ac4aa] hover:shadow-md"><span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={link.icon} className="size-5" /></span><span><strong className="block text-sm">{link.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{link.description}</span></span></button>)}
         </div>
       </section>
