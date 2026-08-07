@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -10,12 +11,12 @@ import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4b
 import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
 import eventImage4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
 
-const categories: Array<{ icon: AppIconName; title: string; description: string }> = [
-  { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝" },
-  { icon: "snowflake", title: "빙상 스포츠", description: "스키 · 스노보드" },
-  { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트" },
-  { icon: "person", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹" },
-  { icon: "olympicRings", title: "올림픽 레거시", description: "스키점프 · 경기장 투어" },
+const categories: Array<{ icon: AppIconName; title: string; description: string; filter: string }> = [
+  { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝", filter: "산악스포츠" },
+  { icon: "snowflake", title: "빙상 스포츠", description: "스키 · 스노보드", filter: "빙상스포츠" },
+  { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트", filter: "수상스포츠" },
+  { icon: "person", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠" },
+  { icon: "olympicRings", title: "올림픽 레거시", description: "스키점프 · 경기장 투어", filter: "올림픽레거시" },
 ];
 
 const heroChallenges: Array<{
@@ -254,7 +255,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <h2 className="text-lg font-bold">이번 주말, 나에게 맞는 강원 스포츠 코스는?</h2>
           <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {categories.map((category) => <button key={category.title} type="button" className="group rounded-2xl border border-transparent p-4 text-center transition hover:border-[#cfe3d6] hover:bg-[#f3f7f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]"><span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#e8f3ec] text-[#008f45] transition group-hover:bg-[#008f45] group-hover:text-white"><AppIcon name={category.icon} className="size-6" /></span><strong className="mt-3 block text-sm">{category.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{category.description}</span></button>)}
+            {categories.map((category) => <Link key={category.title} href={{ pathname: "/sports", query: { sport: category.filter } }} className="group rounded-2xl border border-transparent p-4 text-center transition hover:border-[#cfe3d6] hover:bg-[#f3f7f4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]"><span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#e8f3ec] text-[#008f45] transition group-hover:bg-[#008f45] group-hover:text-white"><AppIcon name={category.icon} className="size-6" /></span><strong className="mt-3 block text-sm">{category.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{category.description}</span></Link>)}
           </div>
         </div>
       </section>
