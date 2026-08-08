@@ -70,7 +70,7 @@ function EventDetailContent() {
             <Image src={detailImage(event)} alt={`${title} 대표 이미지`} fill priority sizes="(max-width: 1100px) 100vw, 1100px" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#102c22]/85 via-[#102c22]/20 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10">
-              <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">이벤트</span>
+              <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{event.sportName ? "스포츠 행사" : "이벤트"}</span>
               <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{title}</h1>
             </div>
           </div>

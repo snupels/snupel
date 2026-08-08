@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
         hostname: "www.gangwon.to",
         pathname: "/upload/board/**",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.imweb.me",
+      },
+      {
+        protocol: "https",
+        hostname: "cc2026wtpc.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.hongcheonrun.net",
+      },
+      {
+        protocol: "https",
+        hostname: "image.chosun.com",
+      },
     ],
   },
 };

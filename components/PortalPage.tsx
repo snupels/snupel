@@ -182,7 +182,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
   if (page === "events") {
     return (await api.events.list({ page: 1, size: 100 })).map((activity, index) => ({
       image: activity.representativeImageUrl ?? cardImages[index % cardImages.length],
-      tag: activity.category === "festival" ? "축제" : "이벤트",
+      tag: activity.sportName ? "스포츠 행사" : activity.category === "festival" ? "축제" : "이벤트",
       title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
       description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",
       meta: `${activityDate(activity.startsAt, activity.endsAt)} · ${activity.sigun ?? activity.region ?? "강원"}`,

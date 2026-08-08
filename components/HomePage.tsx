@@ -186,7 +186,7 @@ export default function HomePage() {
         if (items.length === 0) return;
         setEventCards(items.map((item, index) => ({
           image: item.representativeImageUrl ?? [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
-          tag: item.category === "festival" ? "축제" : "이벤트",
+          tag: item.sportName ? "스포츠 행사" : item.category === "festival" ? "축제" : "이벤트",
           title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
           date: item.startsAt ? item.startsAt.slice(0, 10).replaceAll("-", ".") : "일정 확인 중",
           reward: item.hasMission ? "패스포트 미션 참여 가능" : (item.sigun ?? item.region ?? "강원특별자치도"),
