@@ -6,6 +6,7 @@ import {
   activityResponseSchema,
   authProviderSchema,
   authResponseSchema,
+  authUserSchema,
   badgeInputSchema,
   badgeResponseSchema,
   collectedBadgeCreateSchema,
@@ -40,6 +41,7 @@ import {
   type ActivityCreate,
   type ActivityPatch,
   type AuthProvider,
+  type AuthUser,
   type CollectedBadgeCreate,
   type CollectedBadgePatch,
   type CollectedStampCreate,
@@ -61,6 +63,7 @@ import {
 import { request, requestUrl } from "./repository";
 
 const TOKEN_KEY = "sportspassport-access-token";
+const USER_KEY = "sportspassport-auth-user";
 const itemIdSchema = z.number().int().positive();
 const emptySchema = z.undefined();
 
@@ -87,9 +90,22 @@ function resource<TCreate, TPatch, TResponse>(
   };
 }
 
-function saveToken(auth: { accessToken: string }) {
+function saveToken(auth: { accessToken: string; user: AuthUser }) {
   sessionStorage.setItem(TOKEN_KEY, auth.accessToken);
+  sessionStorage.setItem(USER_KEY, JSON.stringify(auth.user));
   return auth;
+}
+
+function currentUser() {
+  if (typeof window === "undefined") return undefined;
+  const saved = sessionStorage.getItem(USER_KEY);
+  if (!saved) return undefined;
+  try {
+    return authUserSchema.parse(JSON.parse(saved));
+  } catch {
+    sessionStorage.removeItem(USER_KEY);
+    return undefined;
+  }
 }
 
 function queryString(input: Record<string, unknown>) {
@@ -122,7 +138,11 @@ export const api = {
     schema: authResponseSchema,
   }).then(saveToken),
   hasToken: () => Boolean(token()),
-  logout: () => sessionStorage.removeItem(TOKEN_KEY),
+  currentUser,
+  logout: () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+  },
   badges: resource("/badges", badgeInputSchema, badgeInputSchema, badgeResponseSchema),
   activities: resource<ActivityCreate, ActivityPatch, z.infer<typeof activityResponseSchema>>("/activities", activityCreateSchema, activityPatchSchema, activityResponseSchema),
   courses: resource<CourseCreate, CoursePatch, z.infer<typeof courseResponseSchema>>("/courses", courseCreateSchema, coursePatchSchema, courseResponseSchema),

@@ -110,6 +110,7 @@ export default function HomePage() {
   const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
   const [eventCards, setEventCards] = useState(fallbackEvents);
+  const [passportProfile, setPassportProfile] = useState({ displayName: "로그인 필요", stampCount: 0 });
   const heroChallenge = heroChallenges[heroIndex];
   const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
@@ -152,6 +153,20 @@ export default function HomePage() {
 
     return () => window.clearTimeout(timer);
   }, [weatherRegionIndex]);
+
+  useEffect(() => {
+    const user = api.currentUser();
+    if (!api.hasToken()) return;
+    const displayName = user?.email.split("@")[0] || "패스포트 회원";
+
+    Promise.all([api.passports.list(), api.collectedStamps.list()])
+      .then(([passports, stamps]) => {
+        const passportIds = new Set(passports.filter((passport) => !user || passport.userId === user.id).map((passport) => passport.id));
+        const stampCount = passportIds.size > 0 ? stamps.filter((stamp) => passportIds.has(stamp.passportId)).length : stamps.length;
+        setPassportProfile({ displayName, stampCount });
+      })
+      .catch(() => setPassportProfile((current) => ({ ...current, displayName })));
+  }, []);
 
   useEffect(() => {
     api.events.list({ page: 1, size: 4 })
@@ -225,18 +240,16 @@ export default function HomePage() {
             </div>
 
             <aside className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
-              <div className="flex items-center justify-between text-xs font-semibold"><span>나의 패스포트</span><button type="button" className="text-[#008f45]">더보기</button></div>
+              <h2 className="text-xs font-semibold">나의 패스포트</h2>
               <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">
-                <p className="text-[10px] text-white/80">2026 강원 스포츠 패스포트</p>
-                <span className="mx-auto mt-3 flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
-                <strong className="mt-2 block text-sm">스노우 파인</strong>
+                <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
+                <strong className="mt-2 block text-base">{passportProfile.displayName}</strong>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]">
-                <div className="rounded-lg bg-[#f3f5f4] p-2"><strong className="block text-sm text-[#008f45]">2/6</strong>방문</div>
-                <div className="rounded-lg bg-[#f3f5f4] p-2"><strong className="block text-sm text-[#008f45]">1/3</strong>미션</div>
-                <div className="rounded-lg bg-[#f3f5f4] p-2"><strong className="block text-sm text-[#008f45]">0/6</strong>달성</div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[10px]">
+                <div className="rounded-lg bg-[#f3f5f4] p-3"><span className="block text-[#7a8491]">현재 등급</span><strong className="mt-1 block text-sm text-[#008f45]">스노우 파인</strong></div>
+                <div className="rounded-lg bg-[#f3f5f4] p-3"><span className="block text-[#7a8491]">보유 스탬프</span><strong className="mt-1 block text-sm text-[#008f45]">{passportProfile.stampCount}개</strong></div>
               </div>
-              <button type="button" className="mt-3 h-9 w-full rounded-lg bg-[#008f45] text-xs font-semibold text-white">패스포트 보기</button>
+              <Link href="/passport" className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-[#008f45] text-xs font-semibold text-white transition hover:bg-[#00783a]">패스포트 보기</Link>
             </aside>
           </div>
         </div>

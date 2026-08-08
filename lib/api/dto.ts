@@ -30,11 +30,12 @@ export const oauthLoginRequestSchema = z.strictObject({
   redirectUri: z.url(),
   state: z.string().min(1),
 });
+export const authUserSchema = z.strictObject({ id: positiveInt, email: z.email() });
 export const authResponseSchema = z.strictObject({
   accessToken: z.string(),
   tokenType: z.string().default("Bearer"),
   expiresIn: positiveInt,
-  user: z.strictObject({ id: positiveInt, email: z.email() }),
+  user: authUserSchema,
 });
 export const oauthAuthorizeResponseSchema = z.strictObject({
   provider: authProviderSchema,
@@ -247,6 +248,7 @@ export const stampSubmissionResponseSchema = z.object({
 export const rejectSubmissionSchema = z.strictObject({ reason: z.string().min(1).max(1000) });
 
 export type AuthProvider = z.infer<typeof authProviderSchema>;
+export type AuthUser = z.infer<typeof authUserSchema>;
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type OAuthLoginRequest = z.infer<typeof oauthLoginRequestSchema>;
