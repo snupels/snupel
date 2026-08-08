@@ -89,7 +89,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     description: "대회, 체험 행사, 지역 축제 일정을 한곳에서 확인하고 참여하세요.",
     icon: "calendar",
     action: { label: "미션과 함께 보기", href: "/missions" },
-    stats: [{ value: "16", label: "이번 달 행사" }, { value: "9", label: "참가 모집 중" }, { value: "6", label: "무료 체험" }],
+    stats: [],
     sectionTitle: "다가오는 행사",
     sectionDescription: "접수 상태와 일정이 확인된 행사만 보여드립니다.",
     cards: [
