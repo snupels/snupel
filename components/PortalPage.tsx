@@ -31,7 +31,7 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData; tag: string; title: string; description: string; meta: string; icon: AppIconName }>;
+  cards: Array<{ image: StaticImageData; tag: string; title: string; description: string; meta: string; icon: AppIconName; href?: string }>;
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -57,7 +57,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     description: "스포츠와 지역 명소를 자연스럽게 연결한 일정으로 계획 부담을 줄였습니다.",
     icon: "map",
     action: { label: "스포츠부터 찾기", href: "/sports" },
-    stats: [{ value: "24", label: "추천 코스" }, { value: "7", label: "테마" }, { value: "4.8", label: "평균 만족도" }],
+    stats: [],
     sectionTitle: "추천 맞춤 코스",
     sectionDescription: "소요 시간과 난이도가 명확한 코스만 모았습니다.",
     cards: [
@@ -187,6 +187,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
       description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",
       meta: `${activityDate(activity.startsAt, activity.endsAt)} · ${activity.sigun ?? activity.region ?? "강원"}`,
       icon: "calendar" as const,
+      href: `/events/detail?id=${activity.id}`,
     }));
   }
   if (page === "courses") {
@@ -341,7 +342,10 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           </div>}
           {apiMessage && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map((card, index) => <article key={`${card.title}-${index}`} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>)}
+            {cards.map((card, index) => {
+              const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;
+              return card.href ? <Link key={`${card.title}-${index}`} href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div key={`${card.title}-${index}`}>{content}</div>;
+            })}
           </div>
           {page === "sports" && remoteCards !== null && (
             <div ref={sportsSentinelRef} className="flex min-h-24 items-center justify-center" aria-live="polite">

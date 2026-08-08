@@ -61,7 +61,7 @@ const heroChallenges: Array<{
   },
 ];
 
-const fallbackEvents: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string }> = [
+const fallbackEvents: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string; href?: string }> = [
   { image: eventImage1, tag: "트레일런", title: "양양 서프 트레일 2026", date: "2026.05.16 ~ 06.18", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage2, tag: "MTB", title: "청산 MTB 페스티벌 2026", date: "2026.05.17", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage3, tag: "축제", title: "인제 내린천 래프팅 축제", date: "2026.06.20 ~ 06.22", reward: "래프팅 체험 스탬프" },
@@ -190,6 +190,7 @@ export default function HomePage() {
           title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
           date: item.startsAt ? item.startsAt.slice(0, 10).replaceAll("-", ".") : "일정 확인 중",
           reward: item.hasMission ? "패스포트 미션 참여 가능" : (item.sigun ?? item.region ?? "강원특별자치도"),
+          href: `/events/detail?id=${item.id}`,
         })));
       })
       .catch(() => undefined);
@@ -293,9 +294,12 @@ export default function HomePage() {
 
       <section className="bg-[#f3f7f4] py-12">
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
-          <div className="flex items-center justify-between"><h2 className="text-xl font-bold">지금 강원에서 열리는 행사</h2><button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-[#008f45]">전체보기<AppIcon name="arrowRight" /></button></div>
+          <div className="flex items-center justify-between"><h2 className="text-xl font-bold">지금 강원에서 열리는 행사</h2><Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-[#008f45]">전체보기<AppIcon name="arrowRight" /></Link></div>
           <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {eventCards.map((event) => <article key={event.title} className="overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>)}
+            {eventCards.map((event) => {
+              const card = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt={`${event.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>;
+              return event.href ? <Link key={event.title} href={event.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{card}</Link> : <div key={event.title}>{card}</div>;
+            })}
           </div>
         </div>
       </section>
