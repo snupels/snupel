@@ -61,7 +61,7 @@ const heroChallenges: Array<{
   },
 ];
 
-const fallbackEvents: Array<{ image: StaticImageData; tag: string; title: string; date: string; reward: string; href?: string }> = [
+const fallbackEvents: Array<{ image: StaticImageData | string; tag: string; title: string; date: string; reward: string; href?: string }> = [
   { image: eventImage1, tag: "트레일런", title: "양양 서프 트레일 2026", date: "2026.05.16 ~ 06.18", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage2, tag: "MTB", title: "청산 MTB 페스티벌 2026", date: "2026.05.17", reward: "MTB 코스 완주 스탬프" },
   { image: eventImage3, tag: "축제", title: "인제 내린천 래프팅 축제", date: "2026.06.20 ~ 06.22", reward: "래프팅 체험 스탬프" },
@@ -185,7 +185,7 @@ export default function HomePage() {
       .then((items) => {
         if (items.length === 0) return;
         setEventCards(items.map((item, index) => ({
-          image: [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
+          image: item.representativeImageUrl ?? [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
           tag: item.category === "festival" ? "축제" : "이벤트",
           title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
           date: item.startsAt ? item.startsAt.slice(0, 10).replaceAll("-", ".") : "일정 확인 중",

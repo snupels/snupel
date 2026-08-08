@@ -31,7 +31,7 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData; tag: string; title: string; description: string; meta: string; icon: AppIconName; href?: string }>;
+  cards: Array<{ image: StaticImageData | string; tag: string; title: string; description: string; meta: string; icon: AppIconName; href?: string }>;
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -181,7 +181,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
   }
   if (page === "events") {
     return (await api.events.list({ page: 1, size: 100 })).map((activity, index) => ({
-      image: cardImages[index % cardImages.length],
+      image: activity.representativeImageUrl ?? cardImages[index % cardImages.length],
       tag: activity.category === "festival" ? "축제" : "이벤트",
       title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
       description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",

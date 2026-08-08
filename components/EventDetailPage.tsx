@@ -14,19 +14,12 @@ import eventImage4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f4
 
 const fallbackImages: StaticImageData[] = [eventImage1, eventImage2, eventImage3, eventImage4];
 
-const featuredImages: Record<string, StaticImageData> = {
-  "featured-2026-gangwon-trail": eventImage1,
-  "featured-2026-pyeongchang-mtb": eventImage2,
-  "featured-2026-inje-water": eventImage3,
-  "featured-2026-gangneung-legacy": eventImage4,
-};
-
 function formatDate(value: string | null | undefined) {
   return value ? value.slice(0, 10).replaceAll("-", ".") : "일정 확인 중";
 }
 
 function detailImage(event: ActivityResponse) {
-  return (event.externalId && featuredImages[event.externalId]) || fallbackImages[(event.id - 1) % fallbackImages.length];
+  return event.representativeImageUrl || fallbackImages[(event.id - 1) % fallbackImages.length];
 }
 
 export function EventDetailPage() {
