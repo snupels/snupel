@@ -119,7 +119,7 @@ export default function HomePage() {
   const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
   const [eventCards, setEventCards] = useState(fallbackEvents);
-  const [passportProfile, setPassportProfile] = useState({ displayName: "로그인 필요", stampCount: 0, level: "Level 1 Beginner" });
+  const [passportProfile, setPassportProfile] = useState({ displayName: "", stampCount: 0, level: "Level 1 Beginner", authenticated: false });
   const heroChallenge = heroChallenges[heroIndex];
   const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
@@ -175,9 +175,9 @@ export default function HomePage() {
         const stampCount = passportIds.size > 0 ? stamps.filter((stamp) => passportIds.has(stamp.passportId)).length : stamps.length;
         const missionResults = await Promise.allSettled(userPassports.map((passport) => api.passportMissions(passport.id, 1, 100)));
         const completedFirstMission = missionResults.some((result) => result.status === "fulfilled" && result.value.some((mission) => mission.completed));
-        setPassportProfile({ displayName, stampCount, level: resolvePassportLevel(stampCount, completedFirstMission) });
+        setPassportProfile({ displayName, stampCount, level: resolvePassportLevel(stampCount, completedFirstMission), authenticated: true });
       })
-      .catch(() => setPassportProfile((current) => ({ ...current, displayName })));
+      .catch(() => setPassportProfile((current) => ({ ...current, displayName, authenticated: true })));
   }, []);
 
   useEffect(() => {
@@ -252,16 +252,22 @@ export default function HomePage() {
 
             <aside className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
               <h2 className="text-xs font-semibold">나의 패스포트</h2>
-              <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">
-                <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
-                <strong className="mt-2 block text-base">{passportProfile.displayName}</strong>
-                <span className="mt-1 block text-xs font-medium text-white/75">{passportProfile.level}</span>
-              </div>
-              <div className="mt-3 rounded-lg bg-[#f3f5f4] p-3 text-center">
-                <span className="block text-[10px] text-[#7a8491]">보유 스탬프</span>
-                <strong className="mt-1 block text-lg text-[#008f45]">{passportProfile.stampCount}개</strong>
-              </div>
-              <Link href="/passport" className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-[#008f45] text-xs font-semibold text-white transition hover:bg-[#00783a]">패스포트 보기</Link>
+              {passportProfile.authenticated ? <>
+                <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">
+                  <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
+                  <strong className="mt-2 block text-base">{passportProfile.displayName}</strong>
+                  <span className="mt-1 block text-xs font-medium text-white/75">{passportProfile.level}</span>
+                </div>
+                <div className="mt-3 rounded-lg bg-[#f3f5f4] p-3 text-center">
+                  <span className="block text-[10px] text-[#7a8491]">보유 스탬프</span>
+                  <strong className="mt-1 block text-lg text-[#008f45]">{passportProfile.stampCount}개</strong>
+                </div>
+                <Link href="/passport" className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-[#008f45] text-xs font-semibold text-white transition hover:bg-[#00783a]">패스포트 보기</Link>
+              </> : <Link href="/login" className="mt-3 flex min-h-44 flex-col items-center justify-center rounded-xl bg-[#008f45] p-4 text-center text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2">
+                <span className="flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="lock" className="size-6" /></span>
+                <strong className="mt-3 text-base">로그인 필요</strong>
+                <span className="mt-1 text-xs text-white/75">로그인하고 내 패스포트를 확인하세요</span>
+              </Link>}
             </aside>
           </div>
         </div>
