@@ -73,7 +73,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     description: "스포츠 참여와 지역 방문을 기록하고 도장과 리워드를 모아보세요.",
     icon: "award",
     action: { label: "내 패스포트", href: "/mypage" },
-    stats: [{ value: "12", label: "진행 중 미션" }, { value: "7", label: "획득 도장" }, { value: "2", label: "받은 리워드" }],
+    stats: [],
     sectionTitle: "이번 달 추천 미션",
     sectionDescription: "처음 참여해도 완료 조건을 쉽게 이해할 수 있는 미션입니다.",
     cards: [
