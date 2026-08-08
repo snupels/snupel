@@ -103,6 +103,15 @@ const weatherLabels: Record<number, string> = {
   80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
 };
 
+function resolvePassportLevel(stampCount: number, completedFirstMission: boolean) {
+  if (stampCount >= 20) return "Level 6 Legend";
+  if (stampCount >= 15) return "Level 5 Champion";
+  if (stampCount >= 7) return "Level 4 Adventure Pro";
+  if (stampCount >= 5) return "Level 3 Challenger";
+  if (completedFirstMission) return "Level 2 Explorer";
+  return "Level 1 Beginner";
+}
+
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [weatherRegionIndex, setWeatherRegionIndex] = useState(2);
@@ -110,7 +119,7 @@ export default function HomePage() {
   const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
   const [eventCards, setEventCards] = useState(fallbackEvents);
-  const [passportProfile, setPassportProfile] = useState({ displayName: "로그인 필요", stampCount: 0 });
+  const [passportProfile, setPassportProfile] = useState({ displayName: "로그인 필요", stampCount: 0, level: "Level 1 Beginner" });
   const heroChallenge = heroChallenges[heroIndex];
   const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
@@ -160,10 +169,13 @@ export default function HomePage() {
     const displayName = user?.email.split("@")[0] || "패스포트 회원";
 
     Promise.all([api.passports.list(), api.collectedStamps.list()])
-      .then(([passports, stamps]) => {
-        const passportIds = new Set(passports.filter((passport) => !user || passport.userId === user.id).map((passport) => passport.id));
+      .then(async ([passports, stamps]) => {
+        const userPassports = passports.filter((passport) => !user || passport.userId === user.id);
+        const passportIds = new Set(userPassports.map((passport) => passport.id));
         const stampCount = passportIds.size > 0 ? stamps.filter((stamp) => passportIds.has(stamp.passportId)).length : stamps.length;
-        setPassportProfile({ displayName, stampCount });
+        const missionResults = await Promise.allSettled(userPassports.map((passport) => api.passportMissions(passport.id, 1, 100)));
+        const completedFirstMission = missionResults.some((result) => result.status === "fulfilled" && result.value.some((mission) => mission.completed));
+        setPassportProfile({ displayName, stampCount, level: resolvePassportLevel(stampCount, completedFirstMission) });
       })
       .catch(() => setPassportProfile((current) => ({ ...current, displayName })));
   }, []);
@@ -218,7 +230,6 @@ export default function HomePage() {
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
                 <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">챌린지 참여하기<AppIcon name="arrowRight" /></button>
-                <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/25 bg-white/15 px-5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">내 탐험 찾기<AppIcon name="map" /></button>
               </div>
               <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
                 <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
@@ -244,10 +255,11 @@ export default function HomePage() {
               <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">
                 <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
                 <strong className="mt-2 block text-base">{passportProfile.displayName}</strong>
+                <span className="mt-1 block text-xs font-medium text-white/75">{passportProfile.level}</span>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[10px]">
-                <div className="rounded-lg bg-[#f3f5f4] p-3"><span className="block text-[#7a8491]">현재 등급</span><strong className="mt-1 block text-sm text-[#008f45]">스노우 파인</strong></div>
-                <div className="rounded-lg bg-[#f3f5f4] p-3"><span className="block text-[#7a8491]">보유 스탬프</span><strong className="mt-1 block text-sm text-[#008f45]">{passportProfile.stampCount}개</strong></div>
+              <div className="mt-3 rounded-lg bg-[#f3f5f4] p-3 text-center">
+                <span className="block text-[10px] text-[#7a8491]">보유 스탬프</span>
+                <strong className="mt-1 block text-lg text-[#008f45]">{passportProfile.stampCount}개</strong>
               </div>
               <Link href="/passport" className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-[#008f45] text-xs font-semibold text-white transition hover:bg-[#00783a]">패스포트 보기</Link>
             </aside>
