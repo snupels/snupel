@@ -78,11 +78,6 @@ function EventDetailContent() {
   const location = event.address ?? event.sigun ?? event.region ?? "강원특별자치도";
   const posterImage = detailImage(event);
   const closePoster = () => setPosterOpen(false);
-  const closePosterOnPointerDown = (pointerEvent: React.PointerEvent<HTMLButtonElement>) => {
-    pointerEvent.preventDefault();
-    pointerEvent.stopPropagation();
-    closePoster();
-  };
 
   return (
     <>
@@ -93,8 +88,8 @@ function EventDetailContent() {
           <div className="relative aspect-[16/8] min-h-[320px] overflow-hidden bg-[#102019]">
             <Image src={posterImage} alt="" fill sizes="(max-width: 1100px) 100vw, 1100px" className="scale-110 object-cover opacity-30 blur-xl" />
             <Image src={posterImage} alt={`${title} 포스터`} fill preload sizes="(max-width: 1100px) 100vw, 1100px" className="object-contain" />
-            <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute inset-0 z-10 cursor-zoom-in rounded-t-[28px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-6px] focus-visible:outline-white">
-              <span className="absolute right-5 top-5 rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur">포스터 크게 보기</span>
+            <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute right-5 top-5 z-30 cursor-zoom-in rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur transition hover:bg-[#102c22] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white">
+              포스터 크게 보기
             </button>
             <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[#102c22]/90 via-transparent to-transparent" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-7 text-white sm:p-10">
@@ -125,10 +120,10 @@ function EventDetailContent() {
     </main>
     {posterOpen && (
       <div role="dialog" aria-modal="true" aria-label={`${title} 고화질 포스터`} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-6">
-        <button type="button" aria-label="포스터 닫기" onPointerDown={closePosterOnPointerDown} onClick={closePoster} className="absolute inset-0 cursor-zoom-out" />
+        <button type="button" aria-label="포스터 닫기" onClick={closePoster} className="absolute inset-0 cursor-zoom-out" />
         <div className="relative z-10 h-full w-full max-w-[1500px]">
           <Image src={posterImage} alt={`${title} 고화질 포스터`} fill sizes="100vw" className="object-contain" />
-          <button type="button" onPointerDown={closePosterOnPointerDown} onClick={closePoster} className="absolute right-2 top-2 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</button>
+          <button type="button" onClick={closePoster} className="absolute right-2 top-2 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</button>
           {typeof posterImage === "string" && (
             <a href={posterImage} target="_blank" rel="noopener noreferrer" className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-black/75 px-5 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:bottom-4">원본 이미지 열기</a>
           )}
