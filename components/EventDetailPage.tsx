@@ -119,9 +119,8 @@ function EventDetailContent() {
       </div>
     </main>
     {posterOpen && (
-      <div role="dialog" aria-modal="true" aria-label={`${title} 고화질 포스터`} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-6">
-        <button type="button" aria-label="포스터 닫기" onClick={closePoster} className="absolute inset-0 cursor-zoom-out" />
-        <div className="relative z-10 h-full w-full max-w-[1500px]">
+      <div role="dialog" aria-modal="true" aria-label={`${title} 고화질 포스터`} onClick={closePoster} className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-3 sm:p-6">
+        <div className="relative h-full w-full max-w-[1500px] cursor-default" onClick={(mouseEvent) => mouseEvent.stopPropagation()}>
           <Image src={posterImage} alt={`${title} 고화질 포스터`} fill sizes="100vw" className="object-contain" />
           <button type="button" onClick={closePoster} className="absolute right-2 top-2 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</button>
           {typeof posterImage === "string" && (
