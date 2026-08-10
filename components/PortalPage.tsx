@@ -180,7 +180,10 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     });
   }
   if (page === "events") {
-    return (await api.events.list({ page: 1, size: 100 })).map((activity, index) => ({
+    const events = await api.events.list({ page: 1, size: 100 });
+    return [...events]
+      .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
+      .map((activity, index) => ({
       image: activity.representativeImageUrl ?? cardImages[index % cardImages.length],
       tag: activity.sportName ? "스포츠 행사" : activity.category === "festival" ? "축제" : "이벤트",
       title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
@@ -188,7 +191,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
       meta: `${activityDate(activity.startsAt, activity.endsAt)} · ${activity.sigun ?? activity.region ?? "강원"}`,
       icon: "calendar" as const,
       href: `/events/detail?id=${activity.id}`,
-    }));
+      }));
   }
   if (page === "courses") {
     return (await api.courses.list()).map((course, index) => ({

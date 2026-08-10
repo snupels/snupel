@@ -181,10 +181,13 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    api.events.list({ page: 1, size: 4 })
+    api.events.list({ page: 1, size: 100 })
       .then((items) => {
         if (items.length === 0) return;
-        setEventCards(items.map((item, index) => ({
+        const sportsFirst = [...items]
+          .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
+          .slice(0, 4);
+        setEventCards(sportsFirst.map((item, index) => ({
           image: item.representativeImageUrl ?? [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
           tag: item.sportName ? "스포츠 행사" : item.category === "festival" ? "축제" : "이벤트",
           title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
