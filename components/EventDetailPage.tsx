@@ -77,6 +77,12 @@ function EventDetailContent() {
   const title = event.placeName ?? `강원 행사 #${event.id}`;
   const location = event.address ?? event.sigun ?? event.region ?? "강원특별자치도";
   const posterImage = detailImage(event);
+  const closePoster = () => setPosterOpen(false);
+  const closePosterOnPointerDown = (pointerEvent: React.PointerEvent<HTMLButtonElement>) => {
+    pointerEvent.preventDefault();
+    pointerEvent.stopPropagation();
+    closePoster();
+  };
 
   return (
     <>
@@ -119,10 +125,10 @@ function EventDetailContent() {
     </main>
     {posterOpen && (
       <div role="dialog" aria-modal="true" aria-label={`${title} 고화질 포스터`} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 sm:p-6">
-        <button type="button" aria-label="포스터 닫기" onClick={() => setPosterOpen(false)} className="absolute inset-0 cursor-zoom-out" />
+        <button type="button" aria-label="포스터 닫기" onPointerDown={closePosterOnPointerDown} onClick={closePoster} className="absolute inset-0 cursor-zoom-out" />
         <div className="relative z-10 h-full w-full max-w-[1500px]">
           <Image src={posterImage} alt={`${title} 고화질 포스터`} fill sizes="100vw" className="object-contain" />
-          <button type="button" onClick={() => setPosterOpen(false)} className="absolute right-2 top-2 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</button>
+          <button type="button" onPointerDown={closePosterOnPointerDown} onClick={closePoster} className="absolute right-2 top-2 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</button>
           {typeof posterImage === "string" && (
             <a href={posterImage} target="_blank" rel="noopener noreferrer" className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-black/75 px-5 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:bottom-4">원본 이미지 열기</a>
           )}
