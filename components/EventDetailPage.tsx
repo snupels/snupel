@@ -88,7 +88,7 @@ function EventDetailContent() {
           <div className="relative aspect-[16/8] min-h-[320px] overflow-hidden bg-[#102019]">
             <Image src={posterImage} alt="" fill sizes="(max-width: 1100px) 100vw, 1100px" className="scale-110 object-cover opacity-30 blur-xl" />
             <Image src={posterImage} alt={`${title} 포스터`} fill preload sizes="(max-width: 1100px) 100vw, 1100px" className="object-contain" />
-            <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute right-5 top-5 z-30 cursor-zoom-in rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur transition hover:bg-[#102c22] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white">
+            <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute left-5 top-5 z-30 cursor-zoom-in rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur transition hover:bg-[#102c22] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white">
               포스터 크게 보기
             </button>
             <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[#102c22]/90 via-transparent to-transparent" />
