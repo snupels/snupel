@@ -206,7 +206,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
         tag: category,
         secondaryTag: categories[1],
         title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
-        description: activity.summary ?? `${activity.sportName ?? "강원 스포츠"} 활동을 즐겨보세요.`,
+        description: activity.summary ?? `${activity.sigun ?? "강원"} · ${category}`,
         meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
         icon: sportIcon(category),
       };
