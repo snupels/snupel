@@ -265,6 +265,7 @@ export function PortalPage({ page }: { page: PortalPageKey }) {
 function PortalPageContent({ page }: { page: PortalPageKey }) {
   const searchParams = useSearchParams();
   const activeFilters = Object.fromEntries(searchParams.entries());
+  const activeSportFilters = searchParams.getAll("sport").filter(Boolean);
   const preferenceValues = Object.fromEntries(
     [...searchParams.keys()].map((key) => {
       const values = searchParams.getAll(key);
@@ -348,9 +349,12 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   const cards = (remoteCards ?? config.cards).filter((card) => {
     const query = activeFilters.q?.toLowerCase();
+    const matchesSport = activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
+      card.title.includes(sport) || card.tag.includes(sport) || card.secondaryTag?.includes(sport)
+    ));
     return (!query || `${card.title} ${card.description} ${card.meta}`.toLowerCase().includes(query))
       && (!activeFilters.region || card.meta.includes(activeFilters.region))
-      && (!activeFilters.sport || card.title.includes(activeFilters.sport) || card.tag.includes(activeFilters.sport) || card.secondaryTag?.includes(activeFilters.sport));
+      && matchesSport;
   });
 
   return (
@@ -387,11 +391,23 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               <span className="w-20 shrink-0 text-xs font-semibold text-[#778279]">{group.label}</span>
               <div className="flex min-w-0 gap-2 overflow-x-auto pb-1">
                 {group.items.map((item) => {
-                  const active = (activeFilters[group.key] ?? "") === item.value;
-                  const query = Object.fromEntries(Object.entries(activeFilters).filter(([key, value]) => key !== group.key && value));
-                  if (item.value) query[group.key] = item.value;
-                  const href = Object.keys(query).length ? { pathname: `/${page}`, query } : `/${page}`;
-                  return <Link key={item.label} href={href} aria-current={active ? "page" : undefined} className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition ${active ? "border-[#008f45] bg-[#008f45] text-white" : "border-[#dfe6e1] bg-white text-[#5f6b63] hover:border-[#8db69b] hover:text-[#008f45]"}`}><AppIcon name={item.icon} />{item.label}</Link>;
+                  const multiSelect = group.key === "sport";
+                  const active = multiSelect
+                    ? item.value ? activeSportFilters.includes(item.value) : activeSportFilters.length === 0
+                    : (activeFilters[group.key] ?? "") === item.value;
+                  const nextParams = new URLSearchParams(searchParams.toString());
+                  nextParams.delete(group.key);
+                  if (multiSelect && item.value) {
+                    const nextSports = active
+                      ? activeSportFilters.filter((sport) => sport !== item.value)
+                      : [...activeSportFilters, item.value];
+                    nextSports.forEach((sport) => nextParams.append("sport", sport));
+                  } else if (!multiSelect && item.value) {
+                    nextParams.set(group.key, item.value);
+                  }
+                  const query = nextParams.toString();
+                  const href = query ? `/${page}?${query}` : `/${page}`;
+                  return <Link key={item.label} href={href} aria-label={`${item.label}${active ? " 선택됨" : ""}`} className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition ${active ? "border-[#008f45] bg-[#008f45] text-white" : "border-[#dfe6e1] bg-white text-[#5f6b63] hover:border-[#8db69b] hover:text-[#008f45]"}`}><AppIcon name={item.icon} />{item.label}</Link>;
                 })}
               </div>
             </div>)}
