@@ -144,7 +144,7 @@ function sportCategory(sportName: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
   if (["hiking", "trekking", "trail", "trail_running", "mtb"].some((value) => sport.includes(value))) return "산악스포츠";
   if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return "빙상스포츠";
-  if (["surf", "rafting", "kayak", "water", "sailing"].some((value) => sport.includes(value))) return "수상스포츠";
+  if (["surf", "rafting", "kayak", "water", "sailing", "marine", "ocean", "yacht", "canoe", "wakeboard", "paddle", "sup", "snorkel", "scuba"].some((value) => sport.includes(value))) return "수상스포츠";
   if (["running", "marathon", "walking", "athletics"].some((value) => sport.includes(value))) return "육상스포츠";
   if (["olympic", "legacy"].some((value) => sport.includes(value))) return "올림픽레거시";
   return "스포츠";
