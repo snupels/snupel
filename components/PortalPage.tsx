@@ -159,6 +159,17 @@ function sportIcon(category: string): AppIconName {
   return "activity";
 }
 
+function tourApiSportImage(
+  imageUrl: string | null,
+  metadata: Record<string, unknown> | null | undefined,
+) {
+  const contentType = metadata?.contenttypeid;
+  return String(contentType ?? "") === "28"
+    && imageUrl?.startsWith("https://tong.visitkorea.or.kr/")
+    ? imageUrl
+    : undefined;
+}
+
 function activityDate(startsAt?: string | null, endsAt?: string | null) {
   const format = (value: string) => value.slice(0, 10).replaceAll("-", ".");
   if (startsAt && endsAt) return `${format(startsAt)} ~ ${format(endsAt)}`;
@@ -170,7 +181,8 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     return (await api.sports.list({ page: dataPage, size: sportsPageSize })).map((activity, index) => {
       const category = sportCategory(activity.sportName);
       return {
-        image: cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
+        image: tourApiSportImage(activity.representativeImageUrl, activity.metadata)
+          ?? cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
         tag: category,
         title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
         description: activity.summary ?? `${activity.sportName ?? "강원 스포츠"} 활동을 즐겨보세요.`,

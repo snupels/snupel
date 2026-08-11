@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "image.chosun.com",
       },
+      {
+        protocol: "https",
+        hostname: "tong.visitkorea.or.kr",
+        pathname: "/cms/**",
+      },
     ],
   },
 };
