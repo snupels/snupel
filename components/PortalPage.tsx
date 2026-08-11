@@ -252,8 +252,13 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   useEffect(() => {
     const publicPage = page === "sports" || page === "events";
     if (!publicPage && !api.hasToken()) return;
-    loadCards(page)
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+
+    const requestCards = () => loadCards(page)
       .then((cards) => {
+        if (cancelled) return;
         setRemoteCards(cards);
         if (page === "sports") {
           setSportsPage(1);
@@ -262,7 +267,22 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         }
         setApiMessage(cards.length ? "" : "등록된 데이터가 없습니다.");
       })
-      .catch(() => setApiMessage("데이터를 불러오지 못했습니다."));
+      .catch(() => {
+        if (cancelled) return;
+        attempts += 1;
+        if (attempts < 4) {
+          setApiMessage("데이터 연결을 다시 시도하고 있습니다.");
+          retryTimer = setTimeout(requestCards, 1500);
+          return;
+        }
+        setApiMessage("데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.");
+      });
+
+    void requestCards();
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [page]);
 
   useEffect(() => {
