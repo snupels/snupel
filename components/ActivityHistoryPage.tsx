@@ -13,19 +13,20 @@ type ActivityStatus = "인증 완료" | "도장 획득" | "저장";
 
 type MissionActivity = {
   id: string;
+  activityId?: number;
   date: string;
   title: string;
   place: string;
   status: ActivityStatus;
   icon: AppIconName;
-  image: StaticImageData;
+  image: StaticImageData | string;
 };
 
 const fallbackActivities: MissionActivity[] = [
   { id: "fallback-1", date: "2026.05.15", title: "설악산 트레일 챌린지", place: "속초 · 고성", status: "인증 완료", icon: "checkCircle", image: course1 },
-  { id: "fallback-2", date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award", image: course2 },
+  { id: "fallback-2", activityId: 719, date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award", image: course2 },
   { id: "fallback-3", date: "2026.05.02", title: "평창 MTB 익스트림", place: "평창", status: "저장", icon: "bookmark", image: course3 },
-  { id: "fallback-4", date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course1 },
+  { id: "fallback-4", activityId: 3634, date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course1 },
 ];
 
 const filters: Array<"전체" | ActivityStatus> = ["전체", "인증 완료", "도장 획득", "저장"];
@@ -44,6 +45,17 @@ function formatActivityDate(value: string) {
     .replace(/\.$/, "");
 }
 
+function activityDetailHref(activity: MissionActivity) {
+  const params = new URLSearchParams({
+    title: activity.title,
+    place: activity.place,
+    date: activity.date,
+    status: activity.status,
+  });
+  if (activity.activityId) params.set("id", String(activity.activityId));
+  return `/activity-feed/detail?${params.toString()}`;
+}
+
 export function ActivityHistoryPage() {
   const [activities, setActivities] = useState(fallbackActivities);
   const [filter, setFilter] = useState<"전체" | ActivityStatus>("전체");
@@ -60,12 +72,13 @@ export function ActivityHistoryPage() {
           items
             .map((item, index) => ({
               id: `activity-${item.id}`,
+              activityId: item.id,
               date: formatActivityDate(item.createdAt),
               title: item.sportName ?? item.placeName ?? `스포츠 미션 #${item.id}`,
               place: [item.region, item.placeName].filter(Boolean).join(" · ") || "강원특별자치도",
               status: "인증 완료" as const,
               icon: "checkCircle" as const,
-              image: feedImages[index % feedImages.length],
+              image: item.representativeImageUrl ?? feedImages[index % feedImages.length],
             }))
             .sort((a, b) => b.date.localeCompare(a.date)),
         );
@@ -178,7 +191,8 @@ export function ActivityHistoryPage() {
                 const completed = activity.status === "인증 완료";
                 const stamped = activity.status === "도장 획득";
                 return (
-                  <article key={activity.id} className="overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)]">
+                  <Link key={activity.id} href={activityDetailHref(activity)} className="group block cursor-pointer overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)] transition hover:-translate-y-1 hover:border-[#9bc6aa] hover:shadow-[0_12px_28px_rgba(23,70,48,0.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
+                  <article>
                     <header className="flex items-center justify-between gap-2 px-3 py-3">
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#008f45] text-[10px] font-bold text-white">강원</span>
@@ -199,7 +213,7 @@ export function ActivityHistoryPage() {
                     </header>
 
                     <div className="relative aspect-[4/3] overflow-hidden bg-[#e8eeea]">
-                      <Image src={activity.image} alt={`${activity.title} 활동 사진`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 270px" className="object-cover transition-transform duration-500 hover:scale-[1.03]" />
+                      <Image src={activity.image} alt={`${activity.title} 활동 사진`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 270px" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
                       <span className={`absolute bottom-3 left-3 flex size-9 items-center justify-center rounded-full shadow-lg ${
                         completed
@@ -218,14 +232,16 @@ export function ActivityHistoryPage() {
                         <AppIcon name="mapPin" className="size-3.5 shrink-0 text-[#008f45]" />
                         {activity.place}
                       </p>
-                      <div className="mt-3 border-t border-[#edf1ee] pt-3 text-xs">
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#edf1ee] pt-3 text-xs">
                         <span className="inline-flex items-center gap-1.5 font-semibold text-[#008f45]">
                           <AppIcon name={completed ? "checkCircle" : stamped ? "award" : "bookmark"} className="size-3.5" />
                           {completed ? "미션 인증 기록" : stamped ? "도장 획득 기록" : "저장한 미션"}
                         </span>
+                        <span className="inline-flex items-center gap-1 font-bold text-[#657169] transition group-hover:text-[#008f45]">상세보기<AppIcon name="arrowRight" className="size-3.5" /></span>
                       </div>
                     </div>
                   </article>
+                  </Link>
                 );
               })
             ) : (
