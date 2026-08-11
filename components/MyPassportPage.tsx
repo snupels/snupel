@@ -28,11 +28,11 @@ const stamps = [
 
 const badgePreviewIds = [2, 10, 5, 4, 1, 7];
 
-const activities: Array<{ date: string; text: string; icon: AppIconName; yellow?: boolean }> = [
-  { date: "2026.05.15", text: "설악산 트레일 챌린지 인증 완료", icon: "checkCircle" },
-  { date: "2026.05.10", text: "오대산 선재길 도장 획득", icon: "award", yellow: true },
-  { date: "2026.05.02", text: "평창 MTB 익스트림 저장", icon: "bookmark" },
-  { date: "2026.04.29", text: "양양 서핑 입문 코스 인증 완료", icon: "checkCircle" },
+const activities: Array<{ date: string; text: string; href: string; icon: AppIconName; yellow?: boolean }> = [
+  { date: "2026.05.15", text: "설악산 트레일 챌린지 인증 완료", href: "/activity-feed/detail?title=설악산+트레일+챌린지&place=속초+·+고성&date=2026.05.15&status=인증+완료", icon: "checkCircle" },
+  { date: "2026.05.10", text: "오대산 선재길 도장 획득", href: "/activity-feed/detail?id=719&title=오대산+선재길+힐링+트레킹&place=평창&date=2026.05.10&status=도장+획득", icon: "award", yellow: true },
+  { date: "2026.05.02", text: "평창 MTB 익스트림 저장", href: "/activity-feed/detail?title=평창+MTB+익스트림&place=평창&date=2026.05.02&status=저장", icon: "bookmark" },
+  { date: "2026.04.29", text: "양양 서핑 입문 코스 인증 완료", href: "/activity-feed/detail?id=3634&title=양양+서핑+입문+코스&place=양양&date=2026.04.29&status=인증+완료", icon: "checkCircle" },
 ];
 
 const recommendations: Array<{ title: string; place: string; level: string; time: string; image: StaticImageData }> = [
@@ -120,7 +120,7 @@ export function MyPassportPage() {
 
         <aside className="space-y-6">
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badgePreview.map((badge) => { const unlocked = collectedBadgeIds.includes(badge.id); return <div key={badge.name} className={`text-center ${unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>; })}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">{collectedBadgeCount}개</strong> · 전체 배지 {BADGE_CATALOG.length}개</p><Link href="/badges" className="mt-4 flex h-10 w-full items-center justify-center rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45] transition-colors hover:bg-[#f0f8f3]">전체 배지 보기 ({BADGE_CATALOG.length}개)</Link></section>
-          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">최근 방문 인증</h2><div className="mt-6 space-y-6">{activities.map((activity) => <div key={activity.date + activity.text} className="flex gap-3"><span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${activity.yellow ? "bg-[#fff5d9] text-[#d99f00]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={activity.icon} className="size-4" /></span><div><p className="text-xs text-[#8a9490]">{activity.date}</p><p className="mt-1 text-sm font-semibold leading-5">{activity.text}</p></div></div>)}</div><button type="button" onClick={openActivityHistory} className="mt-6 h-10 w-full cursor-pointer border-t border-[#edf0ee] pt-4 text-sm font-bold text-[#008f45] transition-colors hover:text-[#006d35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">전체 활동 보기</button></section>
+          <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">최근 방문 인증</h2><div className="mt-4 space-y-1">{activities.map((activity) => <a key={activity.date + activity.text} href={activity.href} className="group flex cursor-pointer gap-3 rounded-xl px-2 py-3 transition hover:bg-[#f0f8f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]"><span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${activity.yellow ? "bg-[#fff5d9] text-[#d99f00]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={activity.icon} className="size-4" /></span><div className="min-w-0 flex-1"><p className="text-xs text-[#8a9490]">{activity.date}</p><p className="mt-1 text-sm font-semibold leading-5 transition group-hover:text-[#008f45]">{activity.text}</p></div><AppIcon name="arrowRight" className="mt-3 size-4 shrink-0 text-[#9aa49e] transition group-hover:translate-x-0.5 group-hover:text-[#008f45]" /></a>)}</div><button type="button" onClick={openActivityHistory} className="mt-6 h-10 w-full cursor-pointer border-t border-[#edf0ee] pt-4 text-sm font-bold text-[#008f45] transition-colors hover:text-[#006d35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">전체 활동 보기</button></section>
         </aside>
       </section>
     </div>

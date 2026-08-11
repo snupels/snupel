@@ -191,7 +191,7 @@ export function ActivityHistoryPage() {
                 const completed = activity.status === "인증 완료";
                 const stamped = activity.status === "도장 획득";
                 return (
-                  <Link key={activity.id} href={activityDetailHref(activity)} className="group block cursor-pointer overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)] transition hover:-translate-y-1 hover:border-[#9bc6aa] hover:shadow-[0_12px_28px_rgba(23,70,48,0.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
+                  <a key={activity.id} href={activityDetailHref(activity)} className="group block cursor-pointer overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)] transition hover:-translate-y-1 hover:border-[#9bc6aa] hover:shadow-[0_12px_28px_rgba(23,70,48,0.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
                   <article>
                     <header className="flex items-center justify-between gap-2 px-3 py-3">
                       <div className="flex min-w-0 items-center gap-2">
@@ -241,7 +241,7 @@ export function ActivityHistoryPage() {
                       </div>
                     </div>
                   </article>
-                  </Link>
+                  </a>
                 );
               })
             ) : (
