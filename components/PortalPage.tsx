@@ -31,7 +31,7 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData | string; tag: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; credit?: string }>;
+  cards: Array<{ image: StaticImageData | string; tag: string; title: string; description: string; meta: string; icon: AppIconName; href?: string }>;
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -159,13 +159,6 @@ function sportIcon(category: string): AppIconName {
   return "activity";
 }
 
-function tourismPhotoCredit(metadata: Record<string, unknown> | null | undefined) {
-  const photo = metadata?.tourism_photo;
-  if (!photo || typeof photo !== "object") return undefined;
-  const values = photo as Record<string, unknown>;
-  return [values.provider, values.photographer].filter((value): value is string => typeof value === "string" && value.length > 0).join(" · ") || undefined;
-}
-
 function activityDate(startsAt?: string | null, endsAt?: string | null) {
   const format = (value: string) => value.slice(0, 10).replaceAll("-", ".");
   if (startsAt && endsAt) return `${format(startsAt)} ~ ${format(endsAt)}`;
@@ -177,13 +170,12 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     return (await api.sports.list({ page: dataPage, size: sportsPageSize })).map((activity, index) => {
       const category = sportCategory(activity.sportName);
       return {
-        image: activity.representativeImageUrl ?? cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
+        image: cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
         tag: category,
         title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
         description: activity.summary ?? `${activity.sportName ?? "강원 스포츠"} 활동을 즐겨보세요.`,
         meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
         icon: sportIcon(category),
-        credit: tourismPhotoCredit(activity.metadata),
       };
     });
   }
@@ -374,7 +366,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           {apiMessage && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map((card, index) => {
-              const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.credit && <span className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-1.5 text-[10px] text-white/90">사진: {card.credit}</span>}</div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;
+              const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3><p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;
               return card.href ? <Link key={`${card.title}-${index}`} href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div key={`${card.title}-${index}`}>{content}</div>;
             })}
           </div>
