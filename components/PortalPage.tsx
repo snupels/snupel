@@ -282,6 +282,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       return [key, values.length > 1 ? values : values[0]];
     }),
   );
+  const recommendationQuery = searchParams.toString();
+  const recommendationRequested = page === "courses" && searchParams.get("recommend") === "1";
+  const recommendationNeedsLogin = recommendationRequested && !api.hasToken();
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
   const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
@@ -295,6 +298,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   useEffect(() => {
     const publicPage = page === "sports" || page === "events";
+    if (page === "courses" && recommendationRequested) return;
     if (!publicPage && !api.hasToken()) return;
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -327,7 +331,63 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [page]);
+  }, [page, recommendationRequested]);
+
+  useEffect(() => {
+    if (page !== "courses" || !recommendationRequested) return;
+    if (!api.hasToken()) return;
+
+    const params = new URLSearchParams(recommendationQuery);
+    const selectedTheme = params.get("theme");
+    const theme = selectedTheme === "thrill" || selectedTheme === "photo_spot" || selectedTheme === "stamp"
+      ? selectedTheme
+      : "healing";
+    const availableMinutes = Number(params.get("availableMinutes"));
+    let cancelled = false;
+
+    api.courseRecommendations({
+      theme,
+      region: params.get("region") || "강원특별자치도",
+      sigun: params.get("sigun") || null,
+      sport: params.get("sport") || null,
+      availableMinutes: Number.isInteger(availableMinutes) && availableMinutes > 0 && availableMinutes <= 1440
+        ? availableMinutes
+        : 360,
+    }).then(async (recommendation) => {
+      const activities = await Promise.all(recommendation.stops.map((stop) => (
+        api.activities.get(stop.activityId).catch(() => null)
+      )));
+      if (cancelled) return;
+
+      const recommendedCards: PageConfig["cards"] = recommendation.stops.map((stop, index) => {
+        const activity = activities[index];
+        const category = sportCategory(activity?.sportName ?? params.get("sport"));
+        return {
+          image: tourApiSportImage(activity?.representativeImageUrl ?? null, activity?.metadata) ?? cardImages[index % cardImages.length],
+          tag: themeLabels[theme],
+          facilityTag: activity ? sportsFacilityType(activity) ?? undefined : undefined,
+          title: activity?.placeName ?? activity?.sportName ?? `추천 장소 #${stop.activityId}`,
+          description: stop.reason,
+          meta: [activity?.sigun ?? params.get("sigun"), `약 ${stop.estimatedMinutes}분`].filter(Boolean).join(" · "),
+          icon: sportIcon(category),
+          href: activity ? `/sports/detail?id=${activity.id}` : undefined,
+        };
+      });
+      setRemoteCards(recommendedCards);
+      setApiMessage(recommendedCards.length
+        ? `추천 일치도 ${recommendation.matchScore}% · ${recommendation.usedAi ? "AI 맞춤 추천" : "조건 기반 추천"}`
+        : "선택한 조건에 맞는 추천 코스가 없습니다. 지역이나 종목을 바꿔 다시 시도해 주세요.");
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setRemoteCards([]);
+      const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
+      setApiMessage(status === 401
+        ? "로그인 정보가 만료되었습니다. 다시 로그인한 뒤 추천받아 주세요."
+        : "맞춤 코스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    });
+
+    return () => { cancelled = true; };
+  }, [page, recommendationQuery, recommendationRequested]);
 
   useEffect(() => {
     const sentinel = sportsSentinelRef.current;
@@ -357,12 +417,12 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     return () => observer.disconnect();
   }, [hasMoreSports, loadMoreError, page, remoteCards, sportsPage]);
 
-  const cards = (remoteCards ?? config.cards).filter((card) => {
+  const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? config.cards).filter((card) => {
     const query = activeFilters.q?.toLowerCase();
-    const matchesSport = activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
+    const matchesSport = page === "courses" || activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
       card.title.includes(sport) || card.tag.includes(sport) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
     ));
-    const matchesRegion = activeRegionFilters.length === 0 || activeRegionFilters.some((region) => card.meta.includes(region));
+    const matchesRegion = page === "courses" || activeRegionFilters.length === 0 || activeRegionFilters.some((region) => card.meta.includes(region));
     return (!query || `${card.title} ${card.description} ${card.meta}`.toLowerCase().includes(query))
       && matchesRegion
       && matchesSport;
@@ -424,7 +484,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               </div>
             </div>)}
           </div>}
-          {apiMessage && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{apiMessage}</p>}
+          {(recommendationNeedsLogin || apiMessage) && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{recommendationNeedsLogin ? "맞춤 코스 추천은 로그인이 필요합니다. 상단의 로그인 버튼으로 로그인한 뒤 다시 추천받아 주세요." : apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map((card, index) => {
               const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5"><span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}<p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;

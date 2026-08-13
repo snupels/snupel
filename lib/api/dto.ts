@@ -196,6 +196,7 @@ export const openMeteoResponseSchema = z.object({
 export const courseRecommendationRequestSchema = z.strictObject({
   theme: courseThemeSchema,
   region: z.string().min(1).max(100),
+  sigun: z.string().max(100).nullable().optional(),
   sport: z.string().max(100).nullable().optional(),
   availableMinutes: positiveInt.max(1440),
 });
@@ -207,6 +208,7 @@ export const recommendedStopSchema = z.strictObject({
 export const courseRecommendationResponseSchema = z.strictObject({
   stops: z.array(recommendedStopSchema),
   usedAi: z.boolean(),
+  matchScore: z.number().int().min(0).max(100),
 });
 
 export const missionProgressSchema = z.strictObject({
