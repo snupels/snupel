@@ -69,7 +69,7 @@ const fallbackEvents: Array<{ image: StaticImageData | string; tag: string; titl
 ];
 
 const quickLinks: Array<{ icon: AppIconName; title: string; description: string; href?: string }> = [
-  { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요." },
+  { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "일정에 저장", description: "관심 활동과 행사를 내 일정에 모아보세요.", href: "https://calendar.google.com/calendar/u/0/r" },
   { icon: "clipboard", title: "여행 정보", description: "숙박 · 교통 · 식당 가이드" },
   { icon: "instagram", title: "Instargram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
@@ -312,6 +312,7 @@ export default function HomePage() {
           {quickLinks.map((link) => {
             const content = <><span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={link.icon} className="size-5" /></span><span><strong className="block text-sm">{link.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{link.description}</span></span></>;
             const className = "flex items-center gap-4 rounded-2xl border border-[#e1e8e3] p-5 text-left transition hover:border-[#9ac4aa] hover:shadow-md";
+            if (link.href?.startsWith("/")) return <Link key={link.title} href={link.href} className={`${className} cursor-pointer`}>{content}</Link>;
             return link.href ? <a key={link.title} href={link.href} target="_blank" rel="noopener noreferrer" className={`${className} cursor-pointer`}>{content}</a> : <button key={link.title} type="button" className={className}>{content}</button>;
           })}
         </div>

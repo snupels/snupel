@@ -41,6 +41,8 @@ jobs:
         run: npm run lint
 
       - name: Build static site
+        env:
+          NEXT_PUBLIC_KAKAO_MAP_APP_KEY: ${{ secrets.NEXT_PUBLIC_KAKAO_MAP_APP_KEY }}
         run: npm run build
 
       - name: Restore assets referenced by cached HTML

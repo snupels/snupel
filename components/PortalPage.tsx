@@ -17,7 +17,7 @@ import image4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332e
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
 
 const portalQuickLinks: Array<{ icon: AppIconName; title: string; text: string; href?: string }> = [
-  { icon: "map", title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요." },
+  { icon: "map", title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "일정에 저장", text: "관심 활동과 행사를 내 일정에 모아보세요.", href: "https://calendar.google.com/calendar/u/0/r" },
   { icon: "clipboard", title: "여행 정보", text: "숙박 · 교통 · 식당 가이드" },
   { icon: "instagram", title: "Instargram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
@@ -446,6 +446,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           {portalQuickLinks.map((item) => {
             const content = <><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></>;
             const className = "rounded-2xl border border-[#dfe8e2] bg-white p-6";
+            if (item.href?.startsWith("/")) return <Link key={item.title} href={item.href} className={`${className} cursor-pointer transition hover:border-[#9ac4aa] hover:shadow-md`}>{content}</Link>;
             return item.href ? <a key={item.title} href={item.href} target="_blank" rel="noopener noreferrer" className={`${className} cursor-pointer transition hover:border-[#9ac4aa] hover:shadow-md`}>{content}</a> : <div key={item.title} className={className}>{content}</div>;
           })}
         </div>
