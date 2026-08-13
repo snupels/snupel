@@ -12,7 +12,7 @@ import course2 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332
 import course3 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 
 const stats: Array<{ label: string; value: string; icon: AppIconName; accent?: boolean }> = [
-  { label: "모은 도장", value: "7개", icon: "award" },
+  { label: "모은 스탬프", value: "7개", icon: "award" },
   { label: "인증한 장소", value: "5곳", icon: "mapPin" },
   { label: "참여한 행사", value: "1개", icon: "calendar", accent: true },
   { label: "받은 리워드", value: "2개", icon: "gift" },
@@ -30,7 +30,7 @@ const badgePreviewIds = [2, 10, 5, 4, 1, 7];
 
 const activities: Array<{ date: string; text: string; href: string; icon: AppIconName; yellow?: boolean }> = [
   { date: "2026.05.15", text: "설악산 트레일 챌린지 인증 완료", href: "/activity-feed/detail?title=설악산+트레일+챌린지&place=속초+·+고성&date=2026.05.15&status=인증+완료", icon: "checkCircle" },
-  { date: "2026.05.10", text: "오대산 선재길 도장 획득", href: "/activity-feed/detail?id=719&title=오대산+선재길+힐링+트레킹&place=평창&date=2026.05.10&status=도장+획득", icon: "award", yellow: true },
+  { date: "2026.05.10", text: "오대산 선재길 스탬프 획득", href: "/activity-feed/detail?id=719&title=오대산+선재길+힐링+트레킹&place=평창&date=2026.05.10&status=스탬프+획득", icon: "award", yellow: true },
   { date: "2026.05.02", text: "평창 MTB 익스트림 저장", href: "/activity-feed/detail?title=평창+MTB+익스트림&place=평창&date=2026.05.02&status=저장", icon: "bookmark" },
   { date: "2026.04.29", text: "양양 서핑 입문 코스 인증 완료", href: "/activity-feed/detail?id=3634&title=양양+서핑+입문+코스&place=양양&date=2026.04.29&status=인증+완료", icon: "checkCircle" },
 ];
@@ -65,7 +65,7 @@ export function MyPassportPage() {
       api.activities.list(),
     ]).then(([, collectedStamps, collectedBadges, allActivities]) => {
       setLiveStats([
-        { label: "모은 도장", value: `${collectedStamps.length}개`, icon: "award" },
+        { label: "모은 스탬프", value: `${collectedStamps.length}개`, icon: "award" },
         { label: "인증한 장소", value: `${allActivities.filter((item) => item.placeName).length}곳`, icon: "mapPin" },
         { label: "참여한 행사", value: `${allActivities.filter((item) => item.category !== "sports").length}개`, icon: "calendar", accent: true },
         { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
@@ -88,9 +88,9 @@ export function MyPassportPage() {
           <div className="max-w-2xl text-white">
             <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">MY PASSPORT</span>
             <h1 className="mt-5 text-4xl font-bold tracking-[-0.04em] sm:text-5xl">홍길동님의<br />강원 스포츠 패스포트</h1>
-            <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 도장을 한눈에 확인하세요.</p>
+            <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 스탬프를 한눈에 확인하세요.</p>
             <p className="mt-3 text-sm text-white/75">배지를 달성하면 디지털 배지가 즉시 지급되며, 배지 6개부터 획득한 실물 배지 세트를 받을 수 있어요.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 도장북 보기</button></div>
+            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 스탬프북 보기</button></div>
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
@@ -108,13 +108,13 @@ export function MyPassportPage() {
       <section className="mx-auto grid max-w-[1180px] gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)]">
         <div className="space-y-6">
           <section id="stamp-book" className="rounded-[24px] border border-[#e0e7e2] bg-white p-6 sm:p-8">
-            <div className="flex items-end justify-between gap-4"><div><h2 className="text-2xl font-bold">나의 강원 도장북</h2><p className="mt-2 text-sm text-[#6f7a87]">방문 인증을 완료한 강원 스포츠 코스의 도장을 확인할 수 있어요.</p></div><button type="button" onClick={openStampBook} className="inline-flex cursor-pointer shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-sm font-bold text-[#008f45] transition-colors hover:bg-[#e7f4ec] hover:text-[#006d35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">전체보기<AppIcon name="arrowRight" className="size-4" /></button></div>
+            <div className="flex items-end justify-between gap-4"><div><h2 className="text-2xl font-bold">나의 강원 스탬프북</h2><p className="mt-2 text-sm text-[#6f7a87]">방문 인증을 완료한 강원 스포츠 코스의 스탬프를 확인할 수 있어요.</p></div><button type="button" onClick={openStampBook} className="inline-flex cursor-pointer shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-sm font-bold text-[#008f45] transition-colors hover:bg-[#e7f4ec] hover:text-[#006d35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">전체보기<AppIcon name="arrowRight" className="size-4" /></button></div>
             <div className="mt-7 space-y-3">{stamps.map((stamp) => <article key={stamp.title} className={`flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center ${stamp.complete ? "border-[#33a568] bg-[#eef9f2]" : "border-[#dde4df] bg-white"}`}><span className={`flex size-12 shrink-0 items-center justify-center rounded-full ${stamp.complete ? "bg-[#008f45] text-white" : "border border-dashed border-[#bac4cd] bg-[#f7f9f8] text-[#9aa6b2]"}`}><AppIcon name={stamp.complete ? "checkCircle" : "mapPin"} className="size-6" /></span><div className="min-w-0 flex-1"><h3 className="font-bold">{stamp.title}</h3><p className="mt-1 text-sm text-[#6f7a87]"><AppIcon name="mapPin" /> {stamp.place}{stamp.date && ` · ${stamp.date}`}</p><p className="mt-2 text-xs text-[#7c8781]">획득 배지: <span className="font-semibold text-[#d99f00]">{stamp.badge}</span></p></div><span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${stamp.complete ? "bg-[#008f45] text-white" : "border border-[#dfe5e1] text-[#59665f]"}`}>{stamp.complete ? "인증 완료" : "방문 인증 가능"}</span></article>)}</div>
           </section>
 
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6 sm:p-8">
-            <h2 className="text-2xl font-bold">지금 인증하러 가기 좋은 코스</h2><p className="mt-2 text-sm text-[#6f7a87]">새로운 도장을 모을 수 있는 추천 코스를 확인해보세요.</p>
-            <div className="mt-7 grid gap-5 sm:grid-cols-3">{recommendations.map((course) => <article key={course.title} className="overflow-hidden rounded-2xl border border-[#e0e7e2]"><div className="relative aspect-[4/3]"><Image src={course.image} alt="" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover" /><span className="absolute right-3 top-3 rounded-full bg-[#ffc438] px-3 py-1 text-xs font-bold">도장 획득 가능</span></div><div className="p-4"><h3 className="min-h-12 font-bold leading-6">{course.title}</h3><p className="mt-3 text-sm text-[#6f7a87]"><AppIcon name="mapPin" /> {course.place}</p><div className="mt-3 flex gap-2 text-xs"><span className="rounded-full bg-[#e9f6ee] px-2.5 py-1 text-[#008f45]">{course.level}</span><span className="rounded-full bg-[#f2f4f3] px-2.5 py-1 text-[#6f7a87]">{course.time}</span></div><Link href="/courses" className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white">코스 보기<AppIcon name="arrowRight" /></Link></div></article>)}</div>
+            <h2 className="text-2xl font-bold">지금 인증하러 가기 좋은 코스</h2><p className="mt-2 text-sm text-[#6f7a87]">새로운 스탬프를 모을 수 있는 추천 코스를 확인해보세요.</p>
+            <div className="mt-7 grid gap-5 sm:grid-cols-3">{recommendations.map((course) => <article key={course.title} className="overflow-hidden rounded-2xl border border-[#e0e7e2]"><div className="relative aspect-[4/3]"><Image src={course.image} alt="" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-cover" /><span className="absolute right-3 top-3 rounded-full bg-[#ffc438] px-3 py-1 text-xs font-bold">스탬프 획득 가능</span></div><div className="p-4"><h3 className="min-h-12 font-bold leading-6">{course.title}</h3><p className="mt-3 text-sm text-[#6f7a87]"><AppIcon name="mapPin" /> {course.place}</p><div className="mt-3 flex gap-2 text-xs"><span className="rounded-full bg-[#e9f6ee] px-2.5 py-1 text-[#008f45]">{course.level}</span><span className="rounded-full bg-[#f2f4f3] px-2.5 py-1 text-[#6f7a87]">{course.time}</span></div><Link href="/courses" className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white">코스 보기<AppIcon name="arrowRight" /></Link></div></article>)}</div>
           </section>
         </div>
 

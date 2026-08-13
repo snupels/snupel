@@ -184,7 +184,7 @@ function PassportHeader() {
 
           <div className="grid w-full grid-cols-3 gap-2.5 lg:w-auto lg:gap-4">
             {[
-              { value: completedCount, suffix: ` / ${stamps.length}`, label: "인증 도장" },
+              { value: completedCount, suffix: ` / ${stamps.length}`, label: "인증 스탬프" },
               { value: collectedBadgeCount, suffix: "개", label: "획득 배지" },
               { value: availableCount, suffix: "개", label: "인증 가능" },
             ].map((stat) => (
@@ -238,7 +238,7 @@ export function PassportPage() {
                 : "border-transparent text-white/30 hover:text-white/60"
             }`}
           >
-            도장 수집
+            스탬프 수집
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{completedCount}</span>
           </button>
           <button
@@ -316,7 +316,7 @@ export function PassportPage() {
                 ) : (
                   <div className="flex min-h-[460px] flex-col items-center justify-center text-[#9e947f]">
                     <AppIcon name="award" className="size-12" />
-                    <p className="mt-4 font-semibold">해당 상태의 도장이 없습니다.</p>
+                    <p className="mt-4 font-semibold">해당 상태의 스탬프가 없습니다.</p>
                   </div>
                 )}
               </div>
@@ -331,7 +331,7 @@ export function PassportPage() {
                   <AppIcon name="chevronLeft" className="size-4" />
                   이전
                 </button>
-                <span>{filteredStamps.length}개의 도장</span>
+                <span>{filteredStamps.length}개의 스탬프</span>
                 <button
                   type="button"
                   disabled={page >= pageCount}

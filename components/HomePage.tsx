@@ -55,7 +55,7 @@ const heroChallenges: Array<{
     image: eventImage4,
     tag: "참가 모집중",
     title: "강릉 올림픽 레거시 투어",
-    description: "동계올림픽의 감동이 남아 있는 경기장을 걸으며 특별한 도장을 모아보세요.",
+    description: "동계올림픽의 감동이 남아 있는 경기장을 걸으며 특별한 스탬프를 모아보세요.",
     date: "2026.06.13 ~ 2026.10.31",
     location: "강릉 올림픽파크 및 경기장",
   },

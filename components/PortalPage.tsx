@@ -70,17 +70,17 @@ const configs: Record<PortalPageKey, PageConfig> = {
   missions: {
     eyebrow: "패스포트 미션",
     title: "도전하고 인증하며 패스포트를 완성하세요",
-    description: "스포츠 참여와 지역 방문을 기록하고 도장과 리워드를 모아보세요.",
+    description: "스포츠 참여와 지역 방문을 기록하고 스탬프와 리워드를 모아보세요.",
     icon: "award",
     action: { label: "내 패스포트", href: "/mypage" },
     stats: [],
     sectionTitle: "이번 달 추천 미션",
     sectionDescription: "처음 참여해도 완료 조건을 쉽게 이해할 수 있는 미션입니다.",
     cards: [
-      { image: image1, tag: "주간", title: "트레일 10km 완주", description: "지정 트레일 코스에서 10km 이상 활동을 기록하세요.", meta: "보상 · 능선 도장", icon: "medal" },
+      { image: image1, tag: "주간", title: "트레일 10km 완주", description: "지정 트레일 코스에서 10km 이상 활동을 기록하세요.", meta: "보상 · 능선 스탬프", icon: "medal" },
       { image: image2, tag: "지역", title: "정선 스포츠 2곳 방문", description: "정선의 스포츠 명소 두 곳에서 방문 인증을 남기세요.", meta: "보상 · 500 포인트", icon: "mapPin" },
       { image: image3, tag: "체험", title: "수상 스포츠 첫 도전", description: "래프팅, 카약, 서핑 중 한 종목에 참여하세요.", meta: "보상 · 물결 배지", icon: "waves" },
-      { image: image4, tag: "월간", title: "강원 3개 지역 탐험", description: "서로 다른 세 지역에서 스포츠 활동을 완료하세요.", meta: "보상 · 탐험가 도장", icon: "trophy" },
+      { image: image4, tag: "월간", title: "강원 3개 지역 탐험", description: "서로 다른 세 지역에서 스포츠 활동을 완료하세요.", meta: "보상 · 탐험가 스탬프", icon: "trophy" },
     ],
   },
   events: {
@@ -102,17 +102,17 @@ const configs: Record<PortalPageKey, PageConfig> = {
   mypage: {
     eyebrow: "마이페이지",
     title: "홍길동님의 강원 스포츠 패스포트",
-    description: "방문 기록, 도장, 진행 중인 미션과 다음 리워드를 한눈에 확인하세요.",
+    description: "방문 기록, 스탬프, 진행 중인 미션과 다음 리워드를 한눈에 확인하세요.",
     icon: "trophy",
     action: { label: "새 미션 찾기", href: "/missions" },
-    stats: [{ value: "7", label: "모은 도장" }, { value: "5", label: "인증 장소" }, { value: "3", label: "다음 리워드까지" }],
+    stats: [{ value: "7", label: "모은 스탬프" }, { value: "5", label: "인증 장소" }, { value: "3", label: "다음 리워드까지" }],
     sectionTitle: "최근 활동",
     sectionDescription: "인증 기록과 이어서 도전할 활동을 정리했습니다.",
     cards: [
       { image: image1, tag: "완료", title: "설악산 트레일 챌린지", description: "10km 완주 기록이 패스포트에 반영되었습니다.", meta: "2026.06.12", icon: "medal" },
       { image: image2, tag: "진행 중", title: "정선 스포츠 2곳 방문", description: "한 곳을 인증했습니다. 한 곳이 더 남았습니다.", meta: "1 / 2 완료", icon: "mapPin" },
-      { image: image3, tag: "추천", title: "내린천 수상 스포츠", description: "현재 도장 조합과 가장 잘 맞는 다음 활동입니다.", meta: "리워드 +300", icon: "waves" },
-      { image: image4, tag: "리워드", title: "탐험가 레벨 2", description: "도장 세 개를 더 모으면 새로운 혜택이 열립니다.", meta: "진행률 70%", icon: "award" },
+      { image: image3, tag: "추천", title: "내린천 수상 스포츠", description: "현재 스탬프 조합과 가장 잘 맞는 다음 활동입니다.", meta: "리워드 +300", icon: "waves" },
+      { image: image4, tag: "리워드", title: "탐험가 레벨 2", description: "스탬프 세 개를 더 모으면 새로운 혜택이 열립니다.", meta: "진행률 70%", icon: "award" },
     ],
   },
 };

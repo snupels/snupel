@@ -9,7 +9,7 @@ import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8
 import course2 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
 import course3 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 
-type ActivityStatus = "인증 완료" | "도장 획득" | "저장";
+type ActivityStatus = "인증 완료" | "스탬프 획득" | "저장";
 
 type MissionActivity = {
   id: string;
@@ -24,12 +24,12 @@ type MissionActivity = {
 
 const fallbackActivities: MissionActivity[] = [
   { id: "fallback-1", date: "2026.05.15", title: "설악산 트레일 챌린지", place: "속초 · 고성", status: "인증 완료", icon: "checkCircle", image: course1 },
-  { id: "fallback-2", activityId: 719, date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "도장 획득", icon: "award", image: course2 },
+  { id: "fallback-2", activityId: 719, date: "2026.05.10", title: "오대산 선재길 힐링 트레킹", place: "평창", status: "스탬프 획득", icon: "award", image: course2 },
   { id: "fallback-3", date: "2026.05.02", title: "평창 MTB 익스트림", place: "평창", status: "저장", icon: "bookmark", image: course3 },
   { id: "fallback-4", activityId: 3634, date: "2026.04.29", title: "양양 서핑 입문 코스", place: "양양", status: "인증 완료", icon: "checkCircle", image: course1 },
 ];
 
-const filters: Array<"전체" | ActivityStatus> = ["전체", "인증 완료", "도장 획득", "저장"];
+const filters: Array<"전체" | ActivityStatus> = ["전체", "인증 완료", "스탬프 획득", "저장"];
 const feedImages = [course1, course2, course3];
 
 function formatActivityDate(value: string) {
@@ -100,7 +100,7 @@ export function ActivityHistoryPage() {
     });
   }, [activities, filter, query]);
   const completedCount = activities.filter((activity) => activity.status === "인증 완료").length;
-  const stampCount = activities.filter((activity) => activity.status === "도장 획득").length;
+  const stampCount = activities.filter((activity) => activity.status === "스탬프 획득").length;
   const uniquePlaces = new Set(activities.map((activity) => activity.place)).size;
 
   return (
@@ -124,7 +124,7 @@ export function ActivityHistoryPage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { value: completedCount, label: "인증 완료" },
-                { value: stampCount, label: "도장 획득" },
+                { value: stampCount, label: "스탬프 획득" },
                 { value: uniquePlaces, label: "활동 장소" },
               ].map((stat) => (
                 <div key={stat.label} className="min-w-[82px] rounded-2xl bg-white/10 px-3 py-4 text-center backdrop-blur sm:min-w-[100px]">
@@ -189,7 +189,7 @@ export function ActivityHistoryPage() {
             {visibleActivities.length > 0 ? (
               visibleActivities.map((activity) => {
                 const completed = activity.status === "인증 완료";
-                const stamped = activity.status === "도장 획득";
+                const stamped = activity.status === "스탬프 획득";
                 return (
                   <a key={activity.id} href={activityDetailHref(activity)} className="group block cursor-pointer overflow-hidden rounded-[18px] border border-[#dce5df] bg-white shadow-[0_6px_18px_rgba(23,32,51,0.06)] transition hover:-translate-y-1 hover:border-[#9bc6aa] hover:shadow-[0_12px_28px_rgba(23,70,48,0.13)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
                   <article>
@@ -235,7 +235,7 @@ export function ActivityHistoryPage() {
                       <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#edf1ee] pt-3 text-xs">
                         <span className="inline-flex items-center gap-1.5 font-semibold text-[#008f45]">
                           <AppIcon name={completed ? "checkCircle" : stamped ? "award" : "bookmark"} className="size-3.5" />
-                          {completed ? "미션 인증 기록" : stamped ? "도장 획득 기록" : "저장한 미션"}
+                          {completed ? "미션 인증 기록" : stamped ? "스탬프 획득 기록" : "저장한 미션"}
                         </span>
                         <span className="inline-flex items-center gap-1 font-bold text-[#657169] transition group-hover:text-[#008f45]">상세보기<AppIcon name="arrowRight" className="size-3.5" /></span>
                       </div>
