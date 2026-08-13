@@ -130,6 +130,7 @@ export function SportsMapPage() {
     const container = mapContainerRef.current;
     if (!maps || !container) return;
 
+    container.replaceChildren();
     const map = new maps.Map(container, {
       center: new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude),
       level: 10,
@@ -153,8 +154,8 @@ export function SportsMapPage() {
   }, [mappedActivities]);
 
   useEffect(() => {
-    if (sdkReady) initializeMap();
-  }, [initializeMap, sdkReady]);
+    if (sdkReady && !loading) initializeMap();
+  }, [initializeMap, loading, sdkReady]);
 
   function loadKakaoMap() {
     if (!window.kakao) {
