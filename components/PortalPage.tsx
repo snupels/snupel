@@ -209,6 +209,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
         description: activity.summary ?? `${activity.sigun ?? "강원"} · ${category}`,
         meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
         icon: sportIcon(category),
+        href: `/sports/detail?id=${activity.id}`,
       };
     });
   }
