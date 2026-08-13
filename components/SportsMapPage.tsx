@@ -7,22 +7,25 @@ import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
 
 type KakaoLatLng = object;
-type KakaoMap = object;
+type KakaoMap = {
+  setBounds(bounds: KakaoBounds): void;
+  setCenter(position: KakaoLatLng): void;
+  setLevel(level: number): void;
+};
 type KakaoMarker = object;
 type KakaoBounds = { extend(position: KakaoLatLng): void };
+type KakaoMarkerClusterer = { clear(): void };
 type Coordinates = { latitude: number; longitude: number };
 type MappedActivity = { activity: ActivityExploreResponse; coordinates: Coordinates };
 type KakaoAddressResult = { x: string; y: string };
 
 type KakaoMaps = {
   load(callback: () => void): void;
-  Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMap & {
-    setBounds(bounds: KakaoBounds): void;
-  };
+  Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMap;
   LatLng: new (latitude: number, longitude: number) => KakaoLatLng;
   LatLngBounds: new () => KakaoBounds;
   Marker: new (options: { map?: KakaoMap; position: KakaoLatLng; title: string }) => KakaoMarker;
-  MarkerClusterer: new (options: { map: KakaoMap; markers: KakaoMarker[]; averageCenter: boolean; minLevel: number }) => object;
+  MarkerClusterer: new (options: { map: KakaoMap; markers: KakaoMarker[]; averageCenter: boolean; minLevel: number }) => KakaoMarkerClusterer;
   InfoWindow: new (options: { content: HTMLElement; removable?: boolean }) => {
     open(map: KakaoMap, marker: KakaoMarker): void;
   };
@@ -94,6 +97,8 @@ function markerContent(activity: ActivityExploreResponse) {
 
 export function SportsMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const kakaoMapRef = useRef<KakaoMap | null>(null);
+  const markerClustererRef = useRef<KakaoMarkerClusterer | null>(null);
   const [activities, setActivities] = useState<ActivityExploreResponse[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("전체");
   const [loading, setLoading] = useState(true);
@@ -142,12 +147,22 @@ export function SportsMapPage() {
     const container = mapContainerRef.current;
     if (!maps || !container) return;
 
-    container.replaceChildren();
-    const map = new maps.Map(container, {
-      center: new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude),
-      level: 10,
-    });
-    if (mappedActivities.length === 0) return;
+    let map = kakaoMapRef.current;
+    if (!map) {
+      map = new maps.Map(container, {
+        center: new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude),
+        level: 10,
+      });
+      kakaoMapRef.current = map;
+    }
+
+    markerClustererRef.current?.clear();
+    markerClustererRef.current = null;
+    if (mappedActivities.length === 0) {
+      map.setCenter(new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude));
+      map.setLevel(10);
+      return;
+    }
 
     const bounds = new maps.LatLngBounds();
     const markers = mappedActivities.map(({ activity, coordinates }) => {
@@ -161,13 +176,19 @@ export function SportsMapPage() {
       bounds.extend(position);
       return marker;
     });
-    new maps.MarkerClusterer({ map, markers, averageCenter: true, minLevel: 7 });
+    markerClustererRef.current = new maps.MarkerClusterer({ map, markers, averageCenter: true, minLevel: 7 });
     map.setBounds(bounds);
   }, [mappedActivities]);
 
   useEffect(() => {
     if (sdkReady && !loading) initializeMap();
   }, [initializeMap, loading, sdkReady]);
+
+  useEffect(() => () => {
+    markerClustererRef.current?.clear();
+    markerClustererRef.current = null;
+    kakaoMapRef.current = null;
+  }, []);
 
   useEffect(() => {
     const maps = window.kakao?.maps;
