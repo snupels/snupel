@@ -14,7 +14,10 @@ type KakaoMap = {
 };
 type KakaoMarker = object;
 type KakaoBounds = { extend(position: KakaoLatLng): void };
-type KakaoMarkerClusterer = { clear(): void };
+type KakaoMarkerClusterer = {
+  addMarkers(markers: KakaoMarker[]): void;
+  clear(): void;
+};
 type Coordinates = { latitude: number; longitude: number };
 type MappedActivity = { activity: ActivityExploreResponse; coordinates: Coordinates };
 type KakaoAddressResult = { x: string; y: string };
@@ -156,8 +159,13 @@ export function SportsMapPage() {
       kakaoMapRef.current = map;
     }
 
-    markerClustererRef.current?.clear();
-    markerClustererRef.current = null;
+    let clusterer = markerClustererRef.current;
+    if (!clusterer) {
+      clusterer = new maps.MarkerClusterer({ map, markers: [], averageCenter: true, minLevel: 7 });
+      markerClustererRef.current = clusterer;
+    } else {
+      clusterer.clear();
+    }
     if (mappedActivities.length === 0) {
       map.setCenter(new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude));
       map.setLevel(10);
@@ -176,7 +184,7 @@ export function SportsMapPage() {
       bounds.extend(position);
       return marker;
     });
-    markerClustererRef.current = new maps.MarkerClusterer({ map, markers, averageCenter: true, minLevel: 7 });
+    clusterer.addMarkers(markers);
     map.setBounds(bounds);
   }, [mappedActivities]);
 
