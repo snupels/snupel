@@ -169,6 +169,9 @@ export function SportsMapPage() {
   useEffect(() => {
     if (!KAKAO_MAP_KEY || sdkReady) return;
     let attempts = 0;
+    const readinessTimeout = window.setTimeout(() => {
+      setMapMessage("카카오맵을 불러오지 못했습니다. 카카오 개발자 콘솔의 JavaScript SDK 도메인을 확인해주세요.");
+    }, 10000);
     const timer = window.setInterval(() => {
       attempts += 1;
       if (window.kakao?.maps) {
@@ -176,10 +179,12 @@ export function SportsMapPage() {
         loadKakaoMap();
       } else if (attempts >= 100) {
         window.clearInterval(timer);
-        setMapMessage("카카오맵을 불러오지 못했습니다. 카카오 개발자 콘솔의 JavaScript SDK 도메인을 확인해주세요.");
       }
     }, 100);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(readinessTimeout);
+    };
   }, [sdkReady]);
 
   return (
