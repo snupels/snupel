@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
+import { sportsFacilityType } from "@/lib/sportsFacility";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import fallbackImage from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 
@@ -34,20 +35,6 @@ function metadataText(
   if (!entry) return null;
   const value = String(entry[1]).trim();
   return value && value !== "0" && value.toLowerCase() !== "null" ? value : null;
-}
-
-function facilityType(activity: ActivityResponse) {
-  const metadata = activity.metadata;
-  const categoryCode = String(metadata?.cat3 ?? "").trim();
-  const registeredType = String(metadata?.type ?? "").trim();
-  const title = activity.placeName ?? "";
-
-  if (categoryCode === "A03021200") return "장비·의류 대여점";
-  if (["스키장", "골프장"].includes(registeredType)) return registeredType;
-  if (/(렌탈|대여)/i.test(title)) return "장비 대여점";
-  if (/(스쿨|학교|아카데미)/i.test(title)) return "스포츠 교육·체험 업체";
-
-  return null;
 }
 
 function DetailLoading() {
@@ -108,7 +95,7 @@ function SportsDetailContent() {
   const hours = metadataText(activity.metadata, ["opentime", "usetime", "운영시간", "이용시간"]);
   const fee = metadataText(activity.metadata, ["fee", "price", "요금", "입장료", "이용료"]);
   const parking = metadataText(activity.metadata, ["parking", "주차"]);
-  const type = facilityType(activity);
+  const type = sportsFacilityType(activity);
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
     ...(activity.sportName ? [{ label: "스포츠 종목", value: activity.sportName, icon: "medal" as AppIconName }] : []),
