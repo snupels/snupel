@@ -12,7 +12,7 @@ type KakaoMap = {
   setCenter(position: KakaoLatLng): void;
   setLevel(level: number): void;
 };
-type KakaoMarker = object;
+type KakaoMarker = { setMap(map: KakaoMap | null): void };
 type KakaoBounds = { extend(position: KakaoLatLng): void };
 type KakaoMarkerClusterer = {
   addMarkers(markers: KakaoMarker[]): void;
@@ -102,6 +102,7 @@ export function SportsMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const kakaoMapRef = useRef<KakaoMap | null>(null);
   const markerClustererRef = useRef<KakaoMarkerClusterer | null>(null);
+  const directMarkersRef = useRef<KakaoMarker[]>([]);
   const [activities, setActivities] = useState<ActivityExploreResponse[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("전체");
   const [loading, setLoading] = useState(true);
@@ -159,6 +160,9 @@ export function SportsMapPage() {
       kakaoMapRef.current = map;
     }
 
+    directMarkersRef.current.forEach((marker) => marker.setMap(null));
+    directMarkersRef.current = [];
+
     let clusterer = markerClustererRef.current;
     if (!clusterer) {
       clusterer = new maps.MarkerClusterer({ map, markers: [], averageCenter: true, minLevel: 7 });
@@ -176,6 +180,7 @@ export function SportsMapPage() {
     const markers = mappedActivities.map(({ activity, coordinates }) => {
       const position = new maps.LatLng(coordinates.latitude, coordinates.longitude);
       const marker = new maps.Marker({
+        map: selectedRegion === "전체" ? undefined : map,
         position,
         title: activity.placeName ?? activity.sportName ?? "스포츠 시설",
       });
@@ -184,15 +189,33 @@ export function SportsMapPage() {
       bounds.extend(position);
       return marker;
     });
-    clusterer.addMarkers(markers);
-    map.setBounds(bounds);
-  }, [mappedActivities]);
+    if (selectedRegion === "전체") {
+      clusterer.addMarkers(markers);
+      map.setBounds(bounds);
+    } else {
+      directMarkersRef.current = markers;
+      const center = mappedActivities.reduce(
+        (sum, item) => ({
+          latitude: sum.latitude + item.coordinates.latitude,
+          longitude: sum.longitude + item.coordinates.longitude,
+        }),
+        { latitude: 0, longitude: 0 },
+      );
+      map.setCenter(new maps.LatLng(
+        center.latitude / mappedActivities.length,
+        center.longitude / mappedActivities.length,
+      ));
+      map.setLevel(8);
+    }
+  }, [mappedActivities, selectedRegion]);
 
   useEffect(() => {
     if (sdkReady && !loading) initializeMap();
   }, [initializeMap, loading, sdkReady]);
 
   useEffect(() => () => {
+    directMarkersRef.current.forEach((marker) => marker.setMap(null));
+    directMarkersRef.current = [];
     markerClustererRef.current?.clear();
     markerClustererRef.current = null;
     kakaoMapRef.current = null;
