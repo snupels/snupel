@@ -88,7 +88,8 @@ export function SportsMapPage() {
   const [activities, setActivities] = useState<ActivityExploreResponse[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("전체");
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("스포츠 시설을 불러오는 중입니다.");
+  const [apiMessage, setApiMessage] = useState("스포츠 시설을 불러오는 중입니다.");
+  const [mapMessage, setMapMessage] = useState("");
   const [sdkReady, setSdkReady] = useState(false);
 
   useEffect(() => {
@@ -104,10 +105,10 @@ export function SportsMapPage() {
         if (!cancelled) {
           const unique = [...new Map(collected.map((item) => [item.id, item])).values()];
           setActivities(unique);
-          setMessage("");
+          setApiMessage("");
         }
       } catch {
-        if (!cancelled) setMessage("스포츠 시설 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+        if (!cancelled) setApiMessage("스포츠 시설 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -157,11 +158,29 @@ export function SportsMapPage() {
 
   function loadKakaoMap() {
     if (!window.kakao) {
-      setMessage("카카오맵을 불러오지 못했습니다. 도메인 등록과 JavaScript 키를 확인해주세요.");
       return;
     }
-    window.kakao.maps.load(() => setSdkReady(true));
+    window.kakao.maps.load(() => {
+      setMapMessage("");
+      setSdkReady(true);
+    });
   }
+
+  useEffect(() => {
+    if (!KAKAO_MAP_KEY || sdkReady) return;
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      if (window.kakao?.maps) {
+        window.clearInterval(timer);
+        loadKakaoMap();
+      } else if (attempts >= 100) {
+        window.clearInterval(timer);
+        setMapMessage("카카오맵을 불러오지 못했습니다. 카카오 개발자 콘솔의 JavaScript SDK 도메인을 확인해주세요.");
+      }
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [sdkReady]);
 
   return (
     <main className="min-h-screen bg-[#f3f7f4] pb-16">
@@ -172,7 +191,7 @@ export function SportsMapPage() {
           strategy="afterInteractive"
           onLoad={loadKakaoMap}
           onReady={loadKakaoMap}
-          onError={() => setMessage("카카오맵 SDK를 불러오지 못했습니다.")}
+          onError={() => setMapMessage("카카오맵 SDK를 불러오지 못했습니다.")}
         />
       )}
 
@@ -208,7 +227,8 @@ export function SportsMapPage() {
             카카오맵 JavaScript 키가 아직 배포 환경에 등록되지 않았습니다. GitHub Secret에 <strong>NEXT_PUBLIC_KAKAO_MAP_APP_KEY</strong>를 추가하면 지도가 표시됩니다.
           </div>
         )}
-        {message && <p className="mb-4 rounded-2xl bg-white px-5 py-4 text-sm text-[#68756d]">{message}</p>}
+        {apiMessage && <p className="mb-4 rounded-2xl bg-white px-5 py-4 text-sm text-[#68756d]">{apiMessage}</p>}
+        {mapMessage && <p className="mb-4 rounded-2xl border border-[#f1d58b] bg-[#fff9e8] px-5 py-4 text-sm text-[#725900]">{mapMessage}</p>}
 
         <div className="overflow-hidden rounded-[24px] border border-[#dce6df] bg-white shadow-[0_18px_50px_rgba(32,76,51,0.12)]">
           <div ref={mapContainerRef} className="h-[65vh] min-h-[480px] w-full" aria-label="강원 스포츠 시설 지도" />
