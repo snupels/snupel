@@ -10,6 +10,9 @@ type KakaoLatLng = object;
 type KakaoMap = object;
 type KakaoMarker = object;
 type KakaoBounds = { extend(position: KakaoLatLng): void };
+type Coordinates = { latitude: number; longitude: number };
+type MappedActivity = { activity: ActivityExploreResponse; coordinates: Coordinates };
+type KakaoAddressResult = { x: string; y: string };
 
 type KakaoMaps = {
   load(callback: () => void): void;
@@ -23,6 +26,12 @@ type KakaoMaps = {
   InfoWindow: new (options: { content: HTMLElement; removable?: boolean }) => {
     open(map: KakaoMap, marker: KakaoMarker): void;
   };
+  services: {
+    Status: { OK: string };
+    Geocoder: new () => {
+      addressSearch(address: string, callback: (results: KakaoAddressResult[], status: string) => void): void;
+    };
+  };
   event: { addListener(target: KakaoMarker, type: "click", listener: () => void): void };
 };
 
@@ -34,6 +43,7 @@ declare global {
 
 const KAKAO_MAP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
 const GANGWON_CENTER = { latitude: 37.8228, longitude: 128.1555 };
+const GEOCODE_CACHE_KEY = "gangwon-sports-map-geocodes-v1";
 const regions = [
   "전체",
   "춘천시",
@@ -90,6 +100,7 @@ export function SportsMapPage() {
   const [apiMessage, setApiMessage] = useState("스포츠 시설을 불러오는 중입니다.");
   const [mapMessage, setMapMessage] = useState("");
   const [sdkReady, setSdkReady] = useState(false);
+  const [geocodedCoordinates, setGeocodedCoordinates] = useState<Record<number, Coordinates>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -116,11 +127,15 @@ export function SportsMapPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const mappedActivities = useMemo(() => activities.filter((activity) => (
-    activity.latitude !== null
-    && activity.longitude !== null
-    && (selectedRegion === "전체" || normalizeRegion(activity.sigun || activity.region) === normalizeRegion(selectedRegion))
-  )), [activities, selectedRegion]);
+  const mappedActivities = useMemo(() => activities.flatMap((activity): MappedActivity[] => {
+    if (selectedRegion !== "전체" && normalizeRegion(activity.sigun || activity.region) !== normalizeRegion(selectedRegion)) return [];
+    const cached = geocodedCoordinates[activity.id];
+    const latitude = activity.latitude ?? cached?.latitude;
+    const longitude = activity.longitude ?? cached?.longitude;
+    return latitude === null || latitude === undefined || longitude === null || longitude === undefined
+      ? []
+      : [{ activity, coordinates: { latitude, longitude } }];
+  }), [activities, geocodedCoordinates, selectedRegion]);
 
   const initializeMap = useCallback(() => {
     const maps = window.kakao?.maps;
@@ -135,8 +150,8 @@ export function SportsMapPage() {
     if (mappedActivities.length === 0) return;
 
     const bounds = new maps.LatLngBounds();
-    const markers = mappedActivities.map((activity) => {
-      const position = new maps.LatLng(activity.latitude as number, activity.longitude as number);
+    const markers = mappedActivities.map(({ activity, coordinates }) => {
+      const position = new maps.LatLng(coordinates.latitude, coordinates.longitude);
       const marker = new maps.Marker({
         position,
         title: activity.placeName ?? activity.sportName ?? "스포츠 시설",
@@ -153,6 +168,63 @@ export function SportsMapPage() {
   useEffect(() => {
     if (sdkReady && !loading) initializeMap();
   }, [initializeMap, loading, sdkReady]);
+
+  useEffect(() => {
+    const maps = window.kakao?.maps;
+    const services = maps?.services;
+    if (!sdkReady || loading || !services) return;
+    const kakaoServices = services;
+    let cancelled = false;
+
+    async function geocodeMissingAddresses() {
+      const geocoder = new kakaoServices.Geocoder();
+      let cache: Record<string, Coordinates> = {};
+      try {
+        cache = JSON.parse(window.localStorage.getItem(GEOCODE_CACHE_KEY) ?? "{}");
+      } catch {
+        window.localStorage.removeItem(GEOCODE_CACHE_KEY);
+      }
+
+      const resolved: Record<number, Coordinates> = {};
+      const missing = activities.filter((activity) => (activity.latitude === null || activity.longitude === null) && activity.address);
+      const pending = missing.filter((activity) => {
+        const cacheKey = `${activity.id}:${activity.address}`;
+        const coordinates = cache[cacheKey];
+        if (coordinates) resolved[activity.id] = coordinates;
+        return !coordinates;
+      });
+
+      const searchAddress = (activity: ActivityExploreResponse) => new Promise<void>((resolve) => {
+        geocoder.addressSearch(activity.address as string, (results, status) => {
+          if (status === kakaoServices.Status.OK && results[0]) {
+            const coordinates = { latitude: Number(results[0].y), longitude: Number(results[0].x) };
+            if (Number.isFinite(coordinates.latitude) && Number.isFinite(coordinates.longitude)) {
+              resolved[activity.id] = coordinates;
+              cache[`${activity.id}:${activity.address}`] = coordinates;
+            }
+          }
+          resolve();
+        });
+      });
+
+      for (let index = 0; index < pending.length && !cancelled; index += 5) {
+        await Promise.all(pending.slice(index, index + 5).map(searchAddress));
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+      }
+
+      if (!cancelled) {
+        setGeocodedCoordinates(resolved);
+        try {
+          window.localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(cache));
+        } catch {
+          // The map still works when browser storage is unavailable.
+        }
+      }
+    }
+
+    void geocodeMissingAddresses();
+    return () => { cancelled = true; };
+  }, [activities, loading, sdkReady]);
 
   function loadKakaoMap() {
     if (!window.kakao) {
@@ -190,7 +262,7 @@ export function SportsMapPage() {
       {KAKAO_MAP_KEY && (
         <Script
           id="kakao-map-sdk"
-          src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=clusterer`}
+          src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=clusterer,services`}
           strategy="afterInteractive"
           onLoad={loadKakaoMap}
           onReady={loadKakaoMap}
