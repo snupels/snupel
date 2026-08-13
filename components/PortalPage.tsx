@@ -283,12 +283,13 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     }),
   );
   const recommendationQuery = searchParams.toString();
-  const recommendationRequested = page === "courses" && searchParams.get("recommend") === "1";
+  const recommendationRequested = page === "courses";
   const recommendationNeedsLogin = recommendationRequested && !api.hasToken();
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
   const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
   const [apiMessage, setApiMessage] = useState("");
+  const recommendationPending = recommendationRequested && !recommendationNeedsLogin && remoteCards === null && !apiMessage;
   const [sportsPage, setSportsPage] = useState(1);
   const [hasMoreSports, setHasMoreSports] = useState(true);
   const [loadingMoreSports, setLoadingMoreSports] = useState(false);
@@ -348,7 +349,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     api.courseRecommendations({
       theme,
       region: params.get("region") || "강원특별자치도",
-      sigun: params.get("sigun") || null,
+      sigun: params.get("sigun") || "강릉시",
       sport: params.get("sport") || null,
       availableMinutes: Number.isInteger(availableMinutes) && availableMinutes > 0 && availableMinutes <= 1440
         ? availableMinutes
@@ -417,7 +418,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     return () => observer.disconnect();
   }, [hasMoreSports, loadMoreError, page, remoteCards, sportsPage]);
 
-  const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? config.cards).filter((card) => {
+  const fallbackCards = page === "courses" ? [] : config.cards;
+  const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? fallbackCards).filter((card) => {
     const query = activeFilters.q?.toLowerCase();
     const matchesSport = page === "courses" || activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
       card.title.includes(sport) || card.tag.includes(sport) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
@@ -484,7 +486,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               </div>
             </div>)}
           </div>}
-          {(recommendationNeedsLogin || apiMessage) && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{recommendationNeedsLogin ? "맞춤 코스 추천은 로그인이 필요합니다. 상단의 로그인 버튼으로 로그인한 뒤 다시 추천받아 주세요." : apiMessage}</p>}
+          {(recommendationNeedsLogin || recommendationPending || apiMessage) && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{recommendationNeedsLogin ? "맞춤 코스 추천은 로그인이 필요합니다. 상단의 로그인 버튼으로 로그인한 뒤 다시 추천받아 주세요." : recommendationPending ? "강릉시 힐링 코스를 추천하고 있습니다." : apiMessage}</p>}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map((card, index) => {
               const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5"><span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}<p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p><p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;
