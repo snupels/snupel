@@ -196,24 +196,30 @@ function activityDate(startsAt?: string | null, endsAt?: string | null) {
   return startsAt ? format(startsAt) : "일정 확인 중";
 }
 
+const excludedSportPlaceNames = new Set([
+  "알펜시아리조트대관령스키역사관",
+]);
+
 async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig["cards"]> {
   if (page === "sports") {
-    return (await api.sports.list({ page: dataPage, size: sportsPageSize })).map((activity, index) => {
-      const categories = sportCategories(activity.sportName, activity.metadata);
-      const category = categories[0];
-      return {
-        image: tourApiSportImage(activity.representativeImageUrl, activity.metadata)
-          ?? cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
-        tag: category,
-        secondaryTag: categories[1],
-        facilityTag: sportsFacilityType(activity) ?? undefined,
-        title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
-        description: activity.summary ?? `${activity.sigun ?? "강원"} · ${category}`,
-        meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
-        icon: sportIcon(category),
-        href: `/sports/detail?id=${activity.id}`,
-      };
-    });
+    return (await api.sports.list({ page: dataPage, size: sportsPageSize }))
+      .filter((activity) => !excludedSportPlaceNames.has((activity.placeName ?? "").replace(/\s+/g, "")))
+      .map((activity, index) => {
+        const categories = sportCategories(activity.sportName, activity.metadata);
+        const category = categories[0];
+        return {
+          image: tourApiSportImage(activity.representativeImageUrl, activity.metadata)
+            ?? cardImages[((dataPage - 1) * sportsPageSize + index) % cardImages.length],
+          tag: category,
+          secondaryTag: categories[1],
+          facilityTag: sportsFacilityType(activity) ?? undefined,
+          title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
+          description: activity.summary ?? `${activity.sigun ?? "강원"} · ${category}`,
+          meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
+          icon: sportIcon(category),
+          href: `/sports/detail?id=${activity.id}`,
+        };
+      });
   }
   if (page === "events") {
     const events = await api.events.list({ page: 1, size: 100 });
