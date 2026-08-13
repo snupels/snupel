@@ -170,6 +170,7 @@ export function SportsMapPage() {
           id="kakao-map-sdk"
           src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=clusterer`}
           strategy="afterInteractive"
+          onLoad={loadKakaoMap}
           onReady={loadKakaoMap}
           onError={() => setMessage("카카오맵 SDK를 불러오지 못했습니다.")}
         />
