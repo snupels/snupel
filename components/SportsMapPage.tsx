@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActivityExploreResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
-import { AppIcon } from "./AppIcon";
 
 type KakaoLatLng = object;
 type KakaoMap = object;
@@ -123,8 +122,6 @@ export function SportsMapPage() {
     && (selectedRegion === "전체" || normalizeRegion(activity.sigun || activity.region) === normalizeRegion(selectedRegion))
   )), [activities, selectedRegion]);
 
-  const missingCoordinates = activities.filter((activity) => activity.latitude === null || activity.longitude === null).length;
-
   const initializeMap = useCallback(() => {
     const maps = window.kakao?.maps;
     const container = mapContainerRef.current;
@@ -222,12 +219,6 @@ export function SportsMapPage() {
       </section>
 
       <section className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10 xl:px-20">
-        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#e5f3ea] px-4 py-2 font-bold text-[#008f45]"><AppIcon name="mapPin" />지도 표시 {mappedActivities.length}곳</span>
-          <span className="rounded-full bg-white px-4 py-2 text-[#68756d]">전체 API 데이터 {activities.length}곳</span>
-          {missingCoordinates > 0 && <span className="rounded-full bg-[#fff6dd] px-4 py-2 text-[#8a6800]">좌표 미등록 {missingCoordinates}곳</span>}
-        </div>
-
         {!KAKAO_MAP_KEY && (
           <div className="mb-4 rounded-2xl border border-[#f1d58b] bg-[#fff9e8] p-5 text-sm leading-6 text-[#725900]">
             카카오맵 JavaScript 키가 아직 배포 환경에 등록되지 않았습니다. GitHub Secret에 <strong>NEXT_PUBLIC_KAKAO_MAP_APP_KEY</strong>를 추가하면 지도가 표시됩니다.
