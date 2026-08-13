@@ -36,6 +36,20 @@ function metadataText(
   return value && value !== "0" && value.toLowerCase() !== "null" ? value : null;
 }
 
+function facilityType(activity: ActivityResponse) {
+  const metadata = activity.metadata;
+  const categoryCode = String(metadata?.cat3 ?? "").trim();
+  const registeredType = String(metadata?.type ?? "").trim();
+  const title = activity.placeName ?? "";
+
+  if (categoryCode === "A03021200") return "장비·의류 대여점";
+  if (["스키장", "골프장"].includes(registeredType)) return registeredType;
+  if (/(렌탈|대여)/i.test(title)) return "장비 대여점";
+  if (/(스쿨|학교|아카데미)/i.test(title)) return "스포츠 교육·체험 업체";
+
+  return null;
+}
+
 function DetailLoading() {
   return (
     <main className="min-h-[70vh] bg-[#f3f7f4] px-5 py-16 text-[#172033]">
@@ -94,9 +108,11 @@ function SportsDetailContent() {
   const hours = metadataText(activity.metadata, ["opentime", "usetime", "운영시간", "이용시간"]);
   const fee = metadataText(activity.metadata, ["fee", "price", "요금", "입장료", "이용료"]);
   const parking = metadataText(activity.metadata, ["parking", "주차"]);
+  const type = facilityType(activity);
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
     ...(activity.sportName ? [{ label: "스포츠 종목", value: activity.sportName, icon: "medal" as AppIconName }] : []),
+    ...(type ? [{ label: "시설 유형", value: type, icon: "clipboard" as AppIconName }] : []),
     ...(phone ? [{ label: "문의", value: phone, icon: "phone" as AppIconName }] : []),
     ...(hours ? [{ label: "운영시간", value: hours, icon: "timer" as AppIconName }] : []),
     ...(fee ? [{ label: "이용요금", value: fee, icon: "gift" as AppIconName }] : []),
@@ -114,7 +130,10 @@ function SportsDetailContent() {
             <Image src={detailImage(activity)} alt={`${title} 대표 이미지`} fill preload sizes="(max-width: 1080px) 100vw, 1080px" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#102c22]/95 via-[#102c22]/25 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10">
-              <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{activity.sportName ?? "강원 스포츠"}</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{activity.sportName ?? "강원 스포츠"}</span>
+                {type && <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur">{type}</span>}
+              </div>
               <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{title}</h1>
               <p className="mt-3 flex items-center gap-2 text-sm text-white/80"><AppIcon name="mapPin" />{location}</p>
             </div>
