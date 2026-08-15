@@ -17,6 +17,7 @@ type KakaoBounds = { extend(position: KakaoLatLng): void };
 type KakaoMarkerClusterer = {
   addMarkers(markers: KakaoMarker[]): void;
   clear(): void;
+  redraw(): void;
 };
 type Coordinates = { latitude: number; longitude: number };
 type MappedActivity = { activity: ActivityExploreResponse; coordinates: Coordinates };
@@ -175,7 +176,6 @@ export function SportsMapPage() {
       return;
     }
 
-    const bounds = new maps.LatLngBounds();
     const markers = mappedActivities.map(({ activity, coordinates }) => {
       const position = new maps.LatLng(coordinates.latitude, coordinates.longitude);
       const marker = new maps.Marker({
@@ -184,12 +184,12 @@ export function SportsMapPage() {
       });
       const infoWindow = new maps.InfoWindow({ content: markerContent(activity), removable: true });
       maps.event.addListener(marker, "click", () => infoWindow.open(map, marker));
-      bounds.extend(position);
       return marker;
     });
     clusterer.addMarkers(markers);
     if (selectedRegion === "전체") {
-      map.setBounds(bounds);
+      map.setCenter(new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude));
+      map.setLevel(10);
     } else {
       const center = mappedActivities.reduce(
         (sum, item) => ({
@@ -208,6 +208,7 @@ export function SportsMapPage() {
       ));
       map.setLevel(6);
     }
+    clusterer.redraw();
   }, [mappedActivities, selectedRegion]);
 
   useEffect(() => {
