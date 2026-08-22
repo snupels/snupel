@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
-import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
+import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
@@ -26,14 +26,18 @@ const heroChallenges: Array<{
   description: string;
   date: string;
   location: string;
+  actionLabel?: string;
+  href?: string;
 }> = [
   {
-    image: heroImage,
-    tag: "진행중",
-    title: "2026 강원 트레일 챌린지",
-    description: "푸른 산을 달리고, 고성봉을 오르며 강원의 자연을 온몸으로 만끽하세요.",
-    date: "2026.06.03 ~ 2026.08.31",
-    location: "강원특별자치도 산악지역 전역",
+    image: hongcheonMarathonImage,
+    tag: "참가 접수중",
+    title: "2026 홍천사랑마라톤대회",
+    description: "홍천강을 따라 함께 달리는 러닝 페스티벌. 홍천종합운동장에서 힘차게 출발하세요.",
+    date: "2026.10.04(일) 09:00",
+    location: "홍천종합운동장",
+    actionLabel: "대회 참가 신청",
+    href: "https://www.hongcheonrun.net/participate.php",
   },
   {
     image: eventImage2,
@@ -233,7 +237,15 @@ export default function HomePage() {
                 <p className="flex items-center gap-2"><AppIcon name="mapPin" className="size-4" />{heroChallenge.location}</p>
               </div>
               <div className="mt-7 flex flex-wrap gap-3">
-                <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">챌린지 참여하기<AppIcon name="arrowRight" /></button>
+                {heroChallenge.href ? (
+                  <a href={heroChallenge.href} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                    {heroChallenge.actionLabel ?? "자세히 보기"}<AppIcon name="arrowRight" />
+                  </a>
+                ) : (
+                  <button type="button" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                    {heroChallenge.actionLabel ?? "챌린지 참여하기"}<AppIcon name="arrowRight" />
+                  </button>
+                )}
               </div>
               <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
                 <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
