@@ -125,7 +125,7 @@ const regions = ["전체 지역", "춘천", "원주", "강릉", "동해", "태�
 const sports = [
   { label: "전체 스포츠", value: "", icon: "medal" as AppIconName },
   { label: "산악스포츠", value: "산악스포츠", icon: "mountain" as AppIconName },
-  { label: "빙상스포츠", value: "빙상스포츠", icon: "snowflake" as AppIconName },
+  { label: "동계스포츠", value: "동계스포츠", icon: "snowflake" as AppIconName },
   { label: "수상스포츠", value: "수상스포츠", icon: "waves" as AppIconName },
   { label: "육상스포츠", value: "육상스포츠", icon: "person" as AppIconName },
   { label: "올림픽레거시", value: "올림픽레거시", icon: "olympicRings" as AppIconName },
@@ -145,7 +145,7 @@ const sportsPageSize = 20;
 function sportCategory(sportName: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
   if (["hiking", "trekking", "trail", "trail_running", "mtb"].some((value) => sport.includes(value))) return "산악스포츠";
-  if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return "빙상스포츠";
+  if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return "동계스포츠";
   if (["surf", "rafting", "kayak", "water", "sailing", "marine", "ocean", "yacht", "canoe", "wakeboard", "paddle", "sup", "snorkel", "scuba"].some((value) => sport.includes(value))) return "수상스포츠";
   if (["running", "marathon", "walking", "athletics"].some((value) => sport.includes(value))) return "육상스포츠";
   if (["olympic", "legacy"].some((value) => sport.includes(value))) return "올림픽레거시";
@@ -157,7 +157,7 @@ function sportCategories(
   metadata: Record<string, unknown> | null | undefined,
 ) {
   const labels: Record<string, string> = {
-    snow: "빙상스포츠",
+    snow: "동계스포츠",
     olympic_legacy: "올림픽레거시",
   };
   const metadataCategories = Array.isArray(metadata?.sport_categories)
@@ -170,7 +170,7 @@ function sportCategories(
 
 function sportIcon(category: string): AppIconName {
   if (category === "산악스포츠") return "mountain";
-  if (category === "빙상스포츠") return "snowflake";
+  if (category === "동계스포츠") return "snowflake";
   if (category === "수상스포츠") return "waves";
   if (category === "육상스포츠") return "person";
   if (category === "올림픽레거시") return "olympicRings";
