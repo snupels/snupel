@@ -55,10 +55,10 @@ const heroChallenges: Array<{
     image: digitalTourCardImage,
     tag: "진행중",
     title: "서핑타고 강원여행 혜택쿠폰받자",
-    description: "강원권에서 가고 싶은 지역을 선택하고 먹거리·관람·체험 혜택쿠폰을 받아보세요.",
+    description: "디지털 관광주민증을 등록하고 강원권 먹거리·관람·체험 혜택쿠폰을 받아보세요.",
     date: "2026.08.07 ~ 2026.10.31",
     location: "강원권 디지털 관광주민증 지역",
-    actionLabel: "혜택쿠폰 받기",
+    actionLabel: "디지털 관광주민증 등록하기",
     href: "https://korean.visitkorea.or.kr/membership-event/coupon/event?round=15",
   },
   {
