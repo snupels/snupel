@@ -33,7 +33,7 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string }>;
+  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; hidden?: boolean }>;
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -186,7 +186,6 @@ function activityDate(startsAt?: string | null, endsAt?: string | null) {
 async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig["cards"]> {
   if (page === "sports") {
     return (await api.sports.list({ page: dataPage, size: sportsPageSize }))
-      .filter((activity) => !isExcludedSportPlace(activity.placeName))
       .map((activity) => {
         const categories = sportCategories(activity.sportName, activity.metadata);
         const category = categories[0];
@@ -200,6 +199,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
           meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
           icon: sportIcon(category),
           href: `/sports/detail?id=${activity.id}`,
+          hidden: isExcludedSportPlace(activity.placeName),
         };
       });
   }
@@ -402,6 +402,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   const fallbackCards = page === "courses" ? [] : config.cards;
   const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? fallbackCards).filter((card) => {
+    if (card.hidden) return false;
     const query = activeFilters.q?.toLowerCase();
     const matchesSport = page === "courses" || activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
       card.title.includes(sport) || card.tag.includes(sport) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
