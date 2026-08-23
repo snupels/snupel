@@ -51,6 +51,7 @@ function apiSportImage(activity: SportImageActivity) {
 function categoryFallback(activity: SportImageActivity, categories: string[]): StaticImageData {
   const sport = normalized(activity.sportName);
   if (categories.includes("올림픽레거시") || ["olympic", "legacy"].some((value) => sport.includes(value))) return aiOlympicLegacyImage;
+  if (categories.includes("육상스포츠") || ["trekking", "trail", "running", "marathon", "walking", "athletics", "트레킹", "트레일", "러닝", "마라톤", "워킹", "걷기"].some((value) => sport.includes(value))) return aiRunningImage;
   if (sport.includes("bowling") || sport.includes("볼링")) return aiBowlingImage;
   if (sport.includes("squash") || sport.includes("스쿼시")) return aiSquashImage;
   if (sport.includes("fishing") || sport.includes("낚시")) return aiFishingImage;
@@ -58,7 +59,7 @@ function categoryFallback(activity: SportImageActivity, categories: string[]): S
   if (["cycling", "bicycle", "자전거"].some((value) => sport.includes(value))) return aiCyclingImage;
   if (["ski", "snow", "skating", "ice", "스키", "스노우", "빙상"].some((value) => sport.includes(value))) return aiSnowImage;
   if (["surf", "rafting", "kayak", "water", "sailing", "marine", "ocean", "yacht", "canoe", "wakeboard", "paddle", "sup", "snorkel", "scuba", "서핑", "래프팅", "카약", "수상", "해양"].some((value) => sport.includes(value))) return aiWaterImage;
-  if (["hiking", "trekking", "trail", "mtb", "paragliding", "등산", "트레킹", "산악"].some((value) => sport.includes(value))) return aiMountainImage;
+  if (["hiking", "mtb", "paragliding", "등산", "산악"].some((value) => sport.includes(value))) return aiMountainImage;
   return aiRunningImage;
 }
 
