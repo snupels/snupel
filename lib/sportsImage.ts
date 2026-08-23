@@ -15,6 +15,7 @@ import aiIndoorArenaImage from "@/imports/SportsAI/sports-ai-indoor-arena.jpg";
 import aiFitnessCenterImage from "@/imports/SportsAI/sports-ai-fitness-center.jpg";
 import aiAthleticsStadiumImage from "@/imports/SportsAI/sports-ai-athletics-stadium.jpg";
 import aiRailBikeImage from "@/imports/SportsAI/sports-ai-rail-bike.jpg";
+import gangneungOlympicMuseumImage from "@/imports/SportsAI/gangneung-olympic-museum.jpg";
 
 type SportImageActivity = Pick<ActivityResponse, "placeName" | "sportName" | "representativeImageUrl" | "metadata">;
 
@@ -24,6 +25,8 @@ function normalized(value: string | null | undefined) {
 
 function facilityImage(placeName: string | null): StaticImageData | undefined {
   const place = normalized(placeName);
+  if (place.includes("용평스키장")) return aiSnowImage;
+  if (place.includes("강릉올림픽뮤지엄")) return gangneungOlympicMuseumImage;
   if (place.includes("강릉볼링장")) return aiBowlingImage;
   if (place.includes("강릉스쿼시장")) return aiSquashImage;
   if (place.includes("강릉생활체육센터")) return aiCommunityCenterImage;
