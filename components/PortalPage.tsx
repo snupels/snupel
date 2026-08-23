@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
+import { isExcludedSportPlace, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
@@ -13,14 +14,6 @@ import image1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8b
 import image2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 import image3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
 import image4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
-import aiMountainImage from "@/imports/SportsAI/sports-ai-mountain.jpg";
-import aiSnowImage from "@/imports/SportsAI/sports-ai-snow.jpg";
-import aiWaterImage from "@/imports/SportsAI/sports-ai-water.jpg";
-import aiRunningImage from "@/imports/SportsAI/sports-ai-running.jpg";
-import aiOlympicLegacyImage from "@/imports/SportsAI/sports-ai-olympic-legacy.jpg";
-import aiGolfImage from "@/imports/SportsAI/sports-ai-golf.jpg";
-import aiCyclingImage from "@/imports/SportsAI/sports-ai-cycling.jpg";
-import aiFishingImage from "@/imports/SportsAI/sports-ai-fishing.jpg";
 
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
 
@@ -184,52 +177,21 @@ function sportIcon(category: string): AppIconName {
   return "activity";
 }
 
-function aiSportImage(sportName: string | null, categories: string[]) {
-  const sport = sportName?.toLowerCase() ?? "";
-  if (categories.includes("올림픽레거시") || ["olympic", "legacy"].some((value) => sport.includes(value))) return aiOlympicLegacyImage;
-  if (sport.includes("fishing")) return aiFishingImage;
-  if (sport.includes("golf")) return aiGolfImage;
-  if (["cycling", "bicycle"].some((value) => sport.includes(value))) return aiCyclingImage;
-  if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return aiSnowImage;
-  if (["surf", "rafting", "kayak", "water", "sailing", "marine", "ocean", "yacht", "canoe", "wakeboard", "paddle", "sup", "snorkel", "scuba"].some((value) => sport.includes(value))) return aiWaterImage;
-  if (["hiking", "trekking", "trail", "mtb", "paragliding"].some((value) => sport.includes(value))) return aiMountainImage;
-  return aiRunningImage;
-}
-
-function tourApiSportImage(
-  imageUrl: string | null,
-  metadata: Record<string, unknown> | null | undefined,
-) {
-  const contentType = metadata?.contenttypeid;
-  const categories = Array.isArray(metadata?.sport_categories)
-    ? metadata.sport_categories.map(String)
-    : [];
-  return (String(contentType ?? "") === "28" || categories.includes("olympic_legacy"))
-    && imageUrl?.startsWith("https://tong.visitkorea.or.kr/")
-    ? imageUrl
-    : undefined;
-}
-
 function activityDate(startsAt?: string | null, endsAt?: string | null) {
   const format = (value: string) => value.slice(0, 10).replaceAll("-", ".");
   if (startsAt && endsAt) return `${format(startsAt)} ~ ${format(endsAt)}`;
   return startsAt ? format(startsAt) : "일정 확인 중";
 }
 
-const excludedSportPlaceNames = new Set([
-  "알펜시아리조트대관령스키역사관",
-]);
-
 async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig["cards"]> {
   if (page === "sports") {
     return (await api.sports.list({ page: dataPage, size: sportsPageSize }))
-      .filter((activity) => !excludedSportPlaceNames.has((activity.placeName ?? "").replace(/\s+/g, "")))
+      .filter((activity) => !isExcludedSportPlace(activity.placeName))
       .map((activity) => {
         const categories = sportCategories(activity.sportName, activity.metadata);
         const category = categories[0];
         return {
-          image: tourApiSportImage(activity.representativeImageUrl, activity.metadata)
-            ?? aiSportImage(activity.sportName, categories),
+          image: sportsImage(activity, categories),
           tag: category,
           secondaryTag: categories[1],
           facilityTag: sportsFacilityType(activity) ?? undefined,
@@ -384,7 +346,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         const activity = activities[index];
         const category = sportCategory(activity?.sportName ?? params.get("sport"));
         return {
-          image: tourApiSportImage(activity?.representativeImageUrl ?? null, activity?.metadata) ?? cardImages[index % cardImages.length],
+          image: activity ? sportsImage(activity, [category]) : cardImages[index % cardImages.length],
           tag: themeLabels[theme],
           facilityTag: activity ? sportsFacilityType(activity) ?? undefined : undefined,
           title: activity?.placeName ?? activity?.sportName ?? `추천 장소 #${stop.activityId}`,

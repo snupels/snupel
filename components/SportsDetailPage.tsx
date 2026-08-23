@@ -7,8 +7,8 @@ import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
+import { isExcludedSportPlace, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
-import fallbackImage from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 
 type DetailItem = {
   label: string;
@@ -17,9 +17,7 @@ type DetailItem = {
 };
 
 function detailImage(activity: ActivityResponse): StaticImageData | string {
-  return activity.representativeImageUrl?.startsWith("https://tong.visitkorea.or.kr/")
-    ? activity.representativeImageUrl
-    : fallbackImage;
+  return sportsImage(activity);
 }
 
 function metadataText(
@@ -76,7 +74,7 @@ function SportsDetailContent() {
 
   if (validId && !activity && !error) return <DetailLoading />;
 
-  if (!activity) {
+  if (!activity || isExcludedSportPlace(activity.placeName)) {
     return (
       <main className="min-h-[70vh] bg-[#f3f7f4] px-5 py-16 text-[#172033]">
         <div className="mx-auto max-w-[720px] rounded-[28px] border border-[#dce6df] bg-white p-10 text-center shadow-sm">
