@@ -142,12 +142,16 @@ const cardImages = [image1, image2, image3, image4];
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
 const sportsPageSize = 20;
 
-function sportCategory(sportName: string | null) {
+function sportCategory(sportName: string | null, placeName?: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
-  if (["hiking", "trekking", "trail", "trail_running", "mtb"].some((value) => sport.includes(value))) return "산악스포츠";
+  const place = placeName?.replace(/\s+/g, "").toLowerCase() ?? "";
+  const isWalkingRoute = ["둘레길", "탐방로", "산소길", "트레킹", "걷기길", "산책로"].some((value) => place.includes(value))
+    || /(?:길|로)$/.test(place);
+  if (["mtb", "등산", "산악"].some((value) => sport.includes(value))) return "산악스포츠";
   if (["ski", "snow", "skating", "ice"].some((value) => sport.includes(value))) return "동계스포츠";
   if (["surf", "rafting", "kayak", "water", "sailing", "marine", "ocean", "yacht", "canoe", "wakeboard", "paddle", "sup", "snorkel", "scuba"].some((value) => sport.includes(value))) return "수상스포츠";
-  if (["running", "marathon", "walking", "athletics"].some((value) => sport.includes(value))) return "육상스포츠";
+  if (isWalkingRoute || ["trekking", "trail", "running", "marathon", "walking", "athletics", "트레킹", "트레일", "러닝", "마라톤", "워킹", "걷기"].some((value) => sport.includes(value))) return "육상스포츠";
+  if (["hiking", "paragliding"].some((value) => sport.includes(value))) return "산악스포츠";
   if (["olympic", "legacy"].some((value) => sport.includes(value))) return "올림픽레거시";
   return "스포츠";
 }
@@ -155,6 +159,7 @@ function sportCategory(sportName: string | null) {
 function sportCategories(
   sportName: string | null,
   metadata: Record<string, unknown> | null | undefined,
+  placeName?: string | null,
 ) {
   const labels: Record<string, string> = {
     snow: "동계스포츠",
@@ -165,7 +170,7 @@ function sportCategories(
       .map((value) => labels[String(value)] ?? "")
       .filter(Boolean)
     : [];
-  return [...new Set(metadataCategories.length ? metadataCategories : [sportCategory(sportName)])];
+  return [...new Set(metadataCategories.length ? metadataCategories : [sportCategory(sportName, placeName)])];
 }
 
 function sportIcon(category: string): AppIconName {
@@ -187,7 +192,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
   if (page === "sports") {
     return (await api.sports.list({ page: dataPage, size: sportsPageSize }))
       .map((activity) => {
-        const categories = sportCategories(activity.sportName, activity.metadata);
+        const categories = sportCategories(activity.sportName, activity.metadata, activity.placeName);
         const category = categories[0];
         return {
           image: sportsImage(activity, categories),
@@ -344,7 +349,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
       const recommendedCards: PageConfig["cards"] = recommendation.stops.map((stop, index) => {
         const activity = activities[index];
-        const category = sportCategory(activity?.sportName ?? params.get("sport"));
+        const category = sportCategory(activity?.sportName ?? params.get("sport"), activity?.placeName);
         return {
           image: activity ? sportsImage(activity, [category]) : cardImages[index % cardImages.length],
           tag: themeLabels[theme],
