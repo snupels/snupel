@@ -65,8 +65,14 @@ export function sportsImage(activity: SportImageActivity, categories: string[] =
     ?? categoryFallback(activity, categories);
 }
 
-export function isExcludedSportPlace(placeName: string | null | undefined) {
-  const place = normalized(placeName);
+export function isExcludedSportActivity(
+  activity: Pick<ActivityResponse, "placeName" | "source" | "externalId">,
+) {
+  const place = normalized(activity.placeName);
+  const source = normalized(activity.source);
+  const externalId = normalized(activity.externalId);
   return place === "알펜시아리조트대관령스키역사관"
-    || place.includes("잼버리수련장");
+    || place.includes("잼버리수련장")
+    || source === "mountain100"
+    || externalId.startsWith("stamp-catalog-");
 }
