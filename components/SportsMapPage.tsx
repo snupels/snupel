@@ -50,10 +50,16 @@ declare global {
 
 const KAKAO_MAP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
 const GANGWON_CENTER = { latitude: 37.8228, longitude: 128.1555 };
+const GANGWON_BOUNDS = {
+  minLatitude: 37.0,
+  maxLatitude: 38.7,
+  minLongitude: 127.0,
+  maxLongitude: 129.6,
+};
 const REGION_CENTERS: Record<string, Coordinates> = {
   "양양군": { latitude: 38.0754, longitude: 128.6191 },
 };
-const GEOCODE_CACHE_KEY = "gangwon-sports-map-geocodes-v1";
+const GEOCODE_CACHE_KEY = "gangwon-sports-map-geocodes-v2";
 const regions = [
   "전체",
   "춘천시",
@@ -78,6 +84,19 @@ const regions = [
 
 function normalizeRegion(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, "").replace(/[시군구]$/, "");
+}
+
+function isGangwonCoordinate(latitude: number | null | undefined, longitude: number | null | undefined) {
+  return latitude !== null
+    && latitude !== undefined
+    && longitude !== null
+    && longitude !== undefined
+    && Number.isFinite(latitude)
+    && Number.isFinite(longitude)
+    && latitude >= GANGWON_BOUNDS.minLatitude
+    && latitude <= GANGWON_BOUNDS.maxLatitude
+    && longitude >= GANGWON_BOUNDS.minLongitude
+    && longitude <= GANGWON_BOUNDS.maxLongitude;
 }
 
 function markerContent(activity: ActivityExploreResponse) {
@@ -142,8 +161,11 @@ export function SportsMapPage() {
   const mappedActivities = useMemo(() => activities.flatMap((activity): MappedActivity[] => {
     if (selectedRegion !== "전체" && normalizeRegion(activity.sigun || activity.region) !== normalizeRegion(selectedRegion)) return [];
     const cached = geocodedCoordinates[activity.id];
-    const latitude = activity.latitude ?? cached?.latitude;
-    const longitude = activity.longitude ?? cached?.longitude;
+    const sourceCoordinates = isGangwonCoordinate(activity.latitude, activity.longitude)
+      ? { latitude: activity.latitude as number, longitude: activity.longitude as number }
+      : undefined;
+    const latitude = cached?.latitude ?? sourceCoordinates?.latitude;
+    const longitude = cached?.longitude ?? sourceCoordinates?.longitude;
     return latitude === null || latitude === undefined || longitude === null || longitude === undefined
       ? []
       : [{ activity, coordinates: { latitude, longitude } }];
@@ -238,7 +260,7 @@ export function SportsMapPage() {
       }
 
       const resolved: Record<number, Coordinates> = {};
-      const missing = activities.filter((activity) => (activity.latitude === null || activity.longitude === null) && activity.address);
+      const missing = activities.filter((activity) => !isGangwonCoordinate(activity.latitude, activity.longitude) && activity.address);
       const pending = missing.filter((activity) => {
         const cacheKey = `${activity.id}:${activity.address}`;
         const coordinates = cache[cacheKey];
@@ -250,7 +272,7 @@ export function SportsMapPage() {
         geocoder.addressSearch(activity.address as string, (results, status) => {
           if (status === kakaoServices.Status.OK && results[0]) {
             const coordinates = { latitude: Number(results[0].y), longitude: Number(results[0].x) };
-            if (Number.isFinite(coordinates.latitude) && Number.isFinite(coordinates.longitude)) {
+            if (isGangwonCoordinate(coordinates.latitude, coordinates.longitude)) {
               resolved[activity.id] = coordinates;
               cache[`${activity.id}:${activity.address}`] = coordinates;
             }
