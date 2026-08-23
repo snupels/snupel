@@ -7,6 +7,7 @@ import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
 import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
+import digitalTourCardImage from "@/imports/LandingPage/digital-tour-card-gangwon-hero.png";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
@@ -51,12 +52,14 @@ const heroChallenges: Array<{
     href: "https://www.chuncheonmarathon.com/",
   },
   {
-    image: eventImage3,
+    image: digitalTourCardImage,
     tag: "진행중",
-    title: "인제 내린천 워터 챌린지",
-    description: "내린천의 힘찬 물살을 따라 강원의 여름을 가장 역동적으로 즐겨보세요.",
-    date: "2026.07.01 ~ 2026.08.31",
-    location: "인제군 내린천 일대",
+    title: "서핑타고 강원여행 혜택쿠폰받자",
+    description: "강원권에서 가고 싶은 지역을 선택하고 먹거리·관람·체험 혜택쿠폰을 받아보세요.",
+    date: "2026.08.07 ~ 2026.10.31",
+    location: "강원권 디지털 관광주민증 지역",
+    actionLabel: "혜택쿠폰 받기",
+    href: "https://korean.visitkorea.or.kr/membership-event/coupon/event?round=15",
   },
   {
     image: eventImage4,
