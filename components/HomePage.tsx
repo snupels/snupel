@@ -15,7 +15,7 @@ import eventImage4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f4
 
 const categories: Array<{ icon: AppIconName; title: string; description: string; filter: string }> = [
   { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝", filter: "산악스포츠" },
-  { icon: "snowflake", title: "빙상 스포츠", description: "스키 · 스노보드", filter: "빙상스포츠" },
+  { icon: "snowflake", title: "동계 스포츠", description: "스키 · 스노보드", filter: "동계스포츠" },
   { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트", filter: "수상스포츠" },
   { icon: "person", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠" },
   { icon: "olympicRings", title: "올림픽 레거시", description: "스키점프 · 경기장 투어", filter: "올림픽레거시" },
