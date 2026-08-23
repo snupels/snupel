@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title description">
+  <title id="title">올림픽 레거시 오륜기</title>
+  <desc id="description">흰 배경 위 파란색, 검은색, 빨간색, 노란색, 초록색 오륜기</desc>
+  <rect width="640" height="420" rx="28" fill="#fff"/>
+  <g fill="none" stroke-width="22">
+    <circle cx="180" cy="175" r="82" stroke="#0085c7"/>
+    <circle cx="320" cy="175" r="82" stroke="#111827"/>
+    <circle cx="460" cy="175" r="82" stroke="#df0024"/>
+    <circle cx="250" cy="255" r="82" stroke="#f4c300"/>
+    <circle cx="390" cy="255" r="82" stroke="#009f3d"/>
+  </g>
+</svg>
