@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
+import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
@@ -40,12 +41,14 @@ const heroChallenges: Array<{
     href: "https://www.hongcheonrun.net/participate.php",
   },
   {
-    image: eventImage2,
-    tag: "참가 모집중",
-    title: "평창 MTB 익스트림 2026",
-    description: "평창의 시원한 고원과 숲길을 가르며 짜릿한 라이딩에 도전해 보세요.",
-    date: "2026.06.20 ~ 2026.08.16",
-    location: "평창군 MTB 코스 일대",
+    image: chuncheonMarathonImage,
+    tag: "개최 예정",
+    title: "2026 춘천마라톤",
+    description: "아름다운 의암호 순환 코스를 달리는 대한민국 대표 가을 마라톤을 만나보세요.",
+    date: "2026.10.25(일) 09:00",
+    location: "춘천 공지천교",
+    actionLabel: "공식 홈페이지",
+    href: "https://www.chuncheonmarathon.com/",
   },
   {
     image: eventImage3,
@@ -166,6 +169,14 @@ export default function HomePage() {
 
     return () => window.clearTimeout(timer);
   }, [weatherRegionIndex]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setHeroIndex((current) => (current + 1) % heroChallenges.length);
+    }, 7000);
+
+    return () => window.clearTimeout(timer);
+  }, [heroIndex]);
 
   useEffect(() => {
     const user = api.currentUser();
