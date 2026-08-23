@@ -51,6 +51,7 @@ function apiSportImage(activity: SportImageActivity) {
 function categoryFallback(activity: SportImageActivity, categories: string[]): StaticImageData {
   const sport = normalized(activity.sportName);
   if (categories.includes("올림픽레거시") || ["olympic", "legacy"].some((value) => sport.includes(value))) return aiOlympicLegacyImage;
+  if (categories.includes("산악스포츠")) return aiMountainImage;
   if (categories.includes("육상스포츠") || ["trekking", "trail", "running", "marathon", "walking", "athletics", "트레킹", "트레일", "러닝", "마라톤", "워킹", "걷기"].some((value) => sport.includes(value))) return aiRunningImage;
   if (sport.includes("bowling") || sport.includes("볼링")) return aiBowlingImage;
   if (sport.includes("squash") || sport.includes("스쿼시")) return aiSquashImage;
