@@ -6,7 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
-import { isExcludedSportPlace, sportsImage } from "@/lib/sportsImage";
+import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
@@ -199,7 +199,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
           meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
           icon: sportIcon(category),
           href: `/sports/detail?id=${activity.id}`,
-          hidden: isExcludedSportPlace(activity.placeName),
+          hidden: isExcludedSportActivity(activity),
         };
       });
   }

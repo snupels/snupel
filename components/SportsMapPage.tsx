@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActivityExploreResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
+import { isExcludedSportActivity } from "@/lib/sportsImage";
 
 type KakaoLatLng = object;
 type KakaoMap = {
@@ -144,7 +145,8 @@ export function SportsMapPage() {
           if (batch.length < 100) break;
         }
         if (!cancelled) {
-          const unique = [...new Map(collected.map((item) => [item.id, item])).values()];
+          const unique = [...new Map(collected.map((item) => [item.id, item])).values()]
+            .filter((item) => !isExcludedSportActivity(item));
           setActivities(unique);
           setApiMessage("");
         }

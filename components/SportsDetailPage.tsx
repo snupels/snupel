@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
-import { isExcludedSportPlace, sportsImage } from "@/lib/sportsImage";
+import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 
 type DetailItem = {
@@ -74,7 +74,7 @@ function SportsDetailContent() {
 
   if (validId && !activity && !error) return <DetailLoading />;
 
-  if (!activity || isExcludedSportPlace(activity.placeName)) {
+  if (!activity || isExcludedSportActivity(activity)) {
     return (
       <main className="min-h-[70vh] bg-[#f3f7f4] px-5 py-16 text-[#172033]">
         <div className="mx-auto max-w-[720px] rounded-[28px] border border-[#dce6df] bg-white p-10 text-center shadow-sm">
