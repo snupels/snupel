@@ -11,6 +11,7 @@ const timestamps = {
 
 export const authProviderSchema = z.enum(["google", "kakao"]);
 export const genderSchema = z.enum(["male", "female", "other", "unknown"]);
+const phoneNumberSchema = z.string().trim().regex(/^01[016789]-?\d{3,4}-?\d{4}$/);
 export const activityCategorySchema = z.enum(["sports", "event", "festival", "tourism"]);
 export const courseThemeSchema = z.enum(["healing", "thrill", "photo_spot", "stamp"]);
 export const submissionStatusSchema = z.enum(["pending", "approved", "rejected"]);
@@ -21,6 +22,7 @@ export const signupRequestSchema = z.strictObject({
   birthDate: z.iso.date().nullable().optional(),
   gender: genderSchema.nullable().optional(),
   nickname: z.string().trim().min(2).max(30),
+  phoneNumber: phoneNumberSchema,
   agreeTerms: z.literal(true),
   agreePrivacy: z.literal(true),
   agreeMarketingEmail: z.boolean().default(false),
@@ -39,6 +41,7 @@ export const authUserSchema = z.strictObject({
   id: positiveInt,
   email: z.email(),
   nickname: z.string().nullable().default(null),
+  phoneNumber: z.string().nullable().default(null),
   profileImageUrl: z.string().nullable().default(null),
   birthDate: z.string().nullable().default(null),
   gender: genderSchema.nullable().default(null),
@@ -58,6 +61,7 @@ export const oauthAuthorizeResponseSchema = z.strictObject({
 });
 export const profileUpdateSchema = z.strictObject({
   nickname: z.string().min(2).max(30).nullable().optional(),
+  phoneNumber: phoneNumberSchema.nullable().optional(),
   profileImageKey: z.string().max(500).nullable().optional(),
   birthDate: z.iso.date().nullable().optional(),
   gender: genderSchema.nullable().optional(),
