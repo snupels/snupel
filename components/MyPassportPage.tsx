@@ -64,15 +64,18 @@ export function MyPassportPage() {
 
   useEffect(() => {
     if (!api.hasToken()) return;
-    Promise.all([
-      api.me(),
+    api.me().then((profile) => {
+      if (profile.onboardingRequired) { router.replace("/onboarding"); return; }
+      setUser(profile);
+      return Promise.allSettled([
       api.passports.list(),
       api.collectedStamps.list(),
       api.collectedBadges.list(),
       api.activities.list(),
-    ]).then(([profile, , collectedStamps, collectedBadges, allActivities]) => {
-      if (profile.onboardingRequired) { router.replace("/onboarding"); return; }
-      setUser(profile);
+      ]).then((results) => {
+      const collectedStamps = results[1].status === "fulfilled" ? results[1].value : [];
+      const collectedBadges = results[2].status === "fulfilled" ? results[2].value : [];
+      const allActivities = results[3].status === "fulfilled" ? results[3].value : [];
       setStampCount(collectedStamps.length);
       setLiveStats([
         { label: "모은 스탬프", value: `${collectedStamps.length}개`, icon: "award" },
@@ -81,6 +84,7 @@ export function MyPassportPage() {
         { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
       ]);
       setCollectedBadgeIds(collectedBadges.map((badge) => badge.badgeId));
+      });
     }).catch(() => setUser(null)).finally(() => setAuthChecked(true));
   }, [router]);
 
@@ -106,7 +110,7 @@ export function MyPassportPage() {
             <div className="mt-5 flex items-center gap-4"><span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/60 bg-white/15 text-2xl font-bold" style={user.profileImageUrl ? { backgroundImage: `url(${user.profileImageUrl})`, backgroundPosition: "center", backgroundSize: "cover" } : undefined}>{!user.profileImageUrl && displayName.slice(0, 1).toUpperCase()}</span><h1 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">{displayName}님의<br />강원 스포츠 패스포트</h1></div>
             <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 스탬프를 한눈에 확인하세요.</p>
             <p className="mt-3 text-sm text-white/75">배지를 달성하면 디지털 배지가 즉시 지급되며, 배지 6개부터 획득한 실물 배지 세트를 받을 수 있어요.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 스탬프북 보기</button><Link href="/account" className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:bg-white/10">내 정보 수정</Link></div>
+            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 스탬프북 보기</button><Link href="/account" className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:bg-white/10">개인정보 수정</Link></div>
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>

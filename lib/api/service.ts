@@ -33,6 +33,8 @@ import {
   accountReminderSchema,
   passwordResetRequestSchema,
   passwordResetConfirmSchema,
+  passwordVerifySchema,
+  passwordChangeSchema,
   messageResponseSchema,
   passportInputSchema,
   passportResponseSchema,
@@ -66,6 +68,8 @@ import {
   type ProfileUpdate,
   type ProfileUploadRequest,
   type PasswordResetConfirm,
+  type PasswordVerify,
+  type PasswordChange,
   type SignupRequest,
   type SportsExploreQuery,
   type StampSubmissionCreate,
@@ -185,6 +189,8 @@ export const api = {
     body: passwordResetConfirmSchema.parse(input),
     schema: messageResponseSchema,
   }),
+  verifyPassword: (input: PasswordVerify) => withToken("/auth/password/verify", messageResponseSchema, "POST", passwordVerifySchema.parse(input)),
+  changePassword: (input: PasswordChange) => withToken("/auth/password/change", messageResponseSchema, "POST", passwordChangeSchema.parse(input)),
   logout: () => {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);

@@ -84,6 +84,13 @@ export const passwordResetConfirmSchema = z.strictObject({
   code: z.string().regex(/^\d{6}$/),
   newPassword: z.string().min(8).max(128),
 });
+export const passwordVerifySchema = z.strictObject({
+  currentPassword: z.string().min(1).max(128),
+});
+export const passwordChangeSchema = z.strictObject({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
+});
 export const messageResponseSchema = z.strictObject({ message: z.string() });
 
 export const badgeInputSchema = z.strictObject({
@@ -320,6 +327,8 @@ export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 export type ProfileUploadRequest = z.infer<typeof profileUploadRequestSchema>;
 export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
+export type PasswordVerify = z.infer<typeof passwordVerifySchema>;
+export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 export type BadgeInput = z.infer<typeof badgeInputSchema>;
 export type BadgeResponse = z.infer<typeof badgeResponseSchema>;
 export type ActivityCreate = z.infer<typeof activityCreateSchema>;
