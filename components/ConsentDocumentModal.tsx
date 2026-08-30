@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 
-export type ConsentDocument = "service" | "privacy" | null;
+export type ConsentDocument = "service" | "privacy" | "marketingEmail" | "marketingSms" | null;
 
 const documentDetails = {
   service: { title: "이용약관", src: "/terms/service" },
   privacy: { title: "개인정보 수집·이용 동의", src: "/terms/privacy" },
+  marketingEmail: { title: "이메일 마케팅 수신 동의", src: "/terms/marketing-email" },
+  marketingSms: { title: "SMS 마케팅 수신 동의", src: "/terms/marketing-sms" },
 } as const;
 
 export function ConsentDocumentModal({ document, onClose }: { document: ConsentDocument; onClose: () => void }) {
