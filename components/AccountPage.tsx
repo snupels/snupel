@@ -17,8 +17,6 @@ export function AccountPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [consentDocument, setConsentDocument] = useState<ConsentDocument>(null);
-  const [passwordVerified, setPasswordVerified] = useState(false);
-  const [verifyPending, setVerifyPending] = useState(false);
 
   useEffect(() => {
     if (!api.hasToken()) {
@@ -30,21 +28,6 @@ export function AccountPage() {
       setUser(profile);
     }).catch(() => router.replace("/login")).finally(() => setPending(false));
   }, [router]);
-
-  async function verifyCurrentPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setVerifyPending(true);
-    setError("");
-    const form = new FormData(event.currentTarget);
-    try {
-      await api.verifyPassword({ currentPassword: String(form.get("currentPassword")) });
-      setPasswordVerified(true);
-    } catch {
-      setError("비밀번호가 올바르지 않습니다. 소셜 로그인 계정은 해당 로그인 수단을 이용해 주세요.");
-    } finally {
-      setVerifyPending(false);
-    }
-  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -91,21 +74,6 @@ export function AccountPage() {
   }
 
   if (!user) return <div className="grid min-h-[60vh] place-items-center text-sm text-[#6f7a87]">{pending ? "계정 정보를 불러오는 중…" : "로그인이 필요합니다."}</div>;
-
-  if (!passwordVerified) return (
-    <div className="grid min-h-[70vh] place-items-center bg-[#f3f7f4] px-4 py-12">
-      <form onSubmit={verifyCurrentPassword} className="w-full max-w-md rounded-[24px] border border-[#dfe7e1] bg-white p-7 shadow-sm sm:p-8">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e7f4ec] text-[#008f45]"><AppIcon name="lock" className="size-6" /></span>
-        <h1 className="mt-5 text-center text-2xl font-bold">개인정보 확인</h1>
-        <p className="mt-2 text-center text-sm leading-6 text-[#6f7a87]">개인정보 보호를 위해 현재 비밀번호를 다시 입력해 주세요.</p>
-        <label htmlFor="verifyPassword" className="mt-7 block text-sm font-bold">현재 비밀번호</label>
-        <input id="verifyPassword" name="currentPassword" type="password" required autoComplete="current-password" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" />
-        {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-        <button disabled={verifyPending} className="mt-6 h-12 w-full rounded-xl bg-[#008f45] text-sm font-bold text-white disabled:opacity-60">{verifyPending ? "확인 중…" : "확인 후 수정하기"}</button>
-        <Link href="/mypage" className="mt-3 flex h-11 items-center justify-center text-sm font-semibold text-[#6f7a87]">나의 패스포트로 돌아가기</Link>
-      </form>
-    </div>
-  );
 
   const shownImage = preview || user.profileImageUrl || "";
   const displayName = user.nickname || user.email.split("@")[0];
