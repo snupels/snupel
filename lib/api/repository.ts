@@ -2,6 +2,10 @@ import type { z } from "zod";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.sportspassport.kr/api").replace(/\/$/, "");
 
+export function apiUrl(path: string) {
+  return `${API_BASE_URL}${path}`;
+}
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -19,7 +23,7 @@ type RequestOptions<T> = {
 };
 
 export async function request<T>(path: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
-  return requestUrl(`${API_BASE_URL}${path}`, { method, body, token, schema });
+  return requestUrl(apiUrl(path), { method, body, token, schema });
 }
 
 export async function requestUrl<T>(url: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
