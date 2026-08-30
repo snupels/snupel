@@ -1161,7 +1161,7 @@ function Paragraph36() {
 function Paragraph37() {
   return (
     <div className="absolute h-[16px] left-[0.5px] top-[46px] w-[55px]" data-name="Paragraph">
-      <p className="-translate-x-1/2 [word-break:break-word] absolute font-['Noto_Sans_KR:Bold',sans-serif] font-bold leading-[16px] left-[27.9px] text-[#364153] text-[12px] text-center top-[-2px] whitespace-nowrap">빙상스포츠</p>
+      <p className="-translate-x-1/2 [word-break:break-word] absolute font-['Noto_Sans_KR:Bold',sans-serif] font-bold leading-[16px] left-[27.9px] text-[#364153] text-[12px] text-center top-[-2px] whitespace-nowrap">동계스포츠</p>
     </div>
   );
 }

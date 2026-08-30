@@ -77,7 +77,7 @@ const fallbackEvents: Array<{ image: StaticImageData | string; tag: string; titl
 const quickLinks: Array<{ icon: AppIconName; title: string; description: string; href?: string }> = [
   { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "일정에 저장", description: "관심 활동과 행사를 내 일정에 모아보세요.", href: "https://calendar.google.com/calendar/u/0/r" },
-  { icon: "clipboard", title: "여행 정보", description: "숙박 · 교통 · 식당 가이드" },
+  { icon: "users", title: "스포츠 피드", description: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
   { icon: "instagram", title: "Instargram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
 ];
 

@@ -6299,7 +6299,7 @@ function Text84() {
   return (
     <div className="relative shrink-0" data-name="Text">
       <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-center relative size-full">
-        <p className="[word-break:break-word] font-['Noto_Sans_KR:Medium',sans-serif] font-medium leading-[20px] relative shrink-0 text-[#4a5565] text-[14px] text-center whitespace-nowrap">빙상스포츠</p>
+        <p className="[word-break:break-word] font-['Noto_Sans_KR:Medium',sans-serif] font-medium leading-[20px] relative shrink-0 text-[#4a5565] text-[14px] text-center whitespace-nowrap">동계스포츠</p>
       </div>
     </div>
   );

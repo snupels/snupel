@@ -19,8 +19,10 @@ import {
   coursePatchSchema,
   courseRecommendationRequestSchema,
   courseRecommendationResponseSchema,
+  communityFeedResponseSchema,
   courseResponseSchema,
   eventsExploreQuerySchema,
+  feedVisibilityUpdateSchema,
   loginRequestSchema,
   oauthAuthorizeResponseSchema,
   oauthLoginRequestSchema,
@@ -50,6 +52,7 @@ import {
   type CoursePatch,
   type CourseRecommendationRequest,
   type EventsExploreQuery,
+  type FeedVisibilityUpdate,
   type LoginRequest,
   type OAuthLoginRequest,
   type PassportInput,
@@ -191,6 +194,22 @@ export const api = {
     list: (page = 1, size = 20) => withToken(`/stamp-submissions${pageQuery(page, size)}`, z.array(stampSubmissionResponseSchema)),
     create: (input: StampSubmissionCreate) => withToken("/stamp-submissions", stampSubmissionResponseSchema, "POST", stampSubmissionCreateSchema.parse(input)),
     createUploadUrl: (input: UploadUrlRequest) => withToken("/stamp-submissions/upload-url", uploadUrlResponseSchema, "POST", uploadUrlRequestSchema.parse(input)),
+    updateFeedVisibility: (id: number, input: FeedVisibilityUpdate) => withToken(
+      `/stamp-submissions/${itemIdSchema.parse(id)}/feed`,
+      stampSubmissionResponseSchema,
+      "PATCH",
+      feedVisibilityUpdateSchema.parse(input),
+    ),
+  },
+  communityFeed: {
+    list: (page = 1, size = 20) => request(
+      `/community-feed${pageQuery(page, size)}`,
+      { schema: z.array(communityFeedResponseSchema) },
+    ),
+    mine: (page = 1, size = 20) => withToken(
+      `/community-feed/me${pageQuery(page, size)}`,
+      z.array(communityFeedResponseSchema),
+    ),
   },
   adminStampSubmissions: {
     list: (status: SubmissionStatus = "pending", page = 1, size = 20) => withToken(

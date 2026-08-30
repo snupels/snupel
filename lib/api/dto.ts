@@ -224,6 +224,8 @@ export const stampSubmissionCreateSchema = z.strictObject({
   passport_id: positiveInt,
   stamp_id: positiveInt,
   object_key: z.string().min(1).max(500),
+  share_to_feed: z.boolean().optional(),
+  feed_caption: z.string().max(300).nullable().optional(),
 });
 export const uploadUrlRequestSchema = z.strictObject({
   passport_id: positiveInt,
@@ -246,6 +248,22 @@ export const stampSubmissionResponseSchema = z.object({
   reviewedAt: apiDateTime.nullable(),
   rejectionReason: z.string().nullable(),
   proofUrl: z.string().nullable().optional(),
+  shareToFeed: z.boolean().default(false),
+  feedCaption: z.string().nullable().default(null),
+});
+export const feedVisibilityUpdateSchema = z.strictObject({
+  share_to_feed: z.boolean(),
+  feed_caption: z.string().max(300).nullable().optional(),
+});
+export const communityFeedResponseSchema = z.object({
+  id: positiveInt,
+  proofUrl: z.string().nullable(),
+  caption: z.string().nullable(),
+  authorName: z.string(),
+  placeName: z.string().nullable(),
+  sigun: z.string().nullable(),
+  sportName: z.string().nullable(),
+  approvedAt: apiDateTime,
 });
 export const rejectSubmissionSchema = z.strictObject({ reason: z.string().min(1).max(1000) });
 
@@ -284,4 +302,6 @@ export type StampSubmissionCreate = z.infer<typeof stampSubmissionCreateSchema>;
 export type UploadUrlRequest = z.infer<typeof uploadUrlRequestSchema>;
 export type UploadUrlResponse = z.infer<typeof uploadUrlResponseSchema>;
 export type StampSubmissionResponse = z.infer<typeof stampSubmissionResponseSchema>;
+export type FeedVisibilityUpdate = z.infer<typeof feedVisibilityUpdateSchema>;
+export type CommunityFeedResponse = z.infer<typeof communityFeedResponseSchema>;
 export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
