@@ -172,6 +172,8 @@ export const coursePatchSchema = z.strictObject({
 });
 export const courseResponseSchema = z.object({
   ...timestamps,
+  category: activityCategorySchema,
+  sportName: z.string().nullable(),
   recommendedCompanion: z.string().nullable(),
   representativeImageUrl: z.string().nullable(),
   estimatedDurationMinutes: z.number().int().nullable(),
@@ -179,6 +181,30 @@ export const courseResponseSchema = z.object({
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   isPublished: z.boolean().default(false),
+});
+
+export const courseItineraryStopSchema = z.object({
+  position: z.number().int().nonnegative(),
+  stampId: positiveInt,
+  activityId: positiveInt,
+  category: activityCategorySchema,
+  placeName: z.string().nullable(),
+  sportName: z.string().nullable(),
+  address: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  estimatedMinutes: positiveInt,
+});
+export const courseItineraryResponseSchema = z.object({
+  id: positiveInt,
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  category: activityCategorySchema,
+  sportName: z.string().nullable(),
+  theme: courseThemeSchema,
+  recommendedCompanion: z.string().nullable(),
+  estimatedDurationMinutes: z.number().int().nonnegative(),
+  stops: z.array(courseItineraryStopSchema),
 });
 
 export const passportInputSchema = z.strictObject({ user_id: positiveInt });
@@ -275,6 +301,10 @@ export const stampSubmissionCreateSchema = z.strictObject({
   passport_id: positiveInt,
   stamp_id: positiveInt,
   object_key: z.string().min(1).max(500),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  gps_accuracy_m: z.number().positive().max(5000),
+  captured_at: apiDateTime,
   share_to_feed: z.boolean().optional(),
   feed_caption: z.string().max(300).nullable().optional(),
 });
@@ -287,6 +317,10 @@ export const uploadUrlResponseSchema = z.strictObject({
   uploadUrl: z.string(),
   fields: z.record(z.string(), z.string()),
   objectKey: z.string(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  gpsAccuracyM: z.number().nullable(),
+  capturedAt: apiDateTime.nullable(),
   expiresIn: z.number().int(),
 });
 export const stampSubmissionResponseSchema = z.object({
@@ -338,6 +372,7 @@ export type ActivityExploreResponse = z.infer<typeof activityExploreResponseSche
 export type CourseCreate = z.infer<typeof courseCreateSchema>;
 export type CoursePatch = z.infer<typeof coursePatchSchema>;
 export type CourseResponse = z.infer<typeof courseResponseSchema>;
+export type CourseItineraryResponse = z.infer<typeof courseItineraryResponseSchema>;
 export type PassportInput = z.infer<typeof passportInputSchema>;
 export type PassportResponse = z.infer<typeof passportResponseSchema>;
 export type CollectedBadgeCreate = z.infer<typeof collectedBadgeCreateSchema>;

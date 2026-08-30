@@ -21,6 +21,7 @@ import {
   courseRecommendationResponseSchema,
   communityFeedResponseSchema,
   courseResponseSchema,
+  courseItineraryResponseSchema,
   eventsExploreQuerySchema,
   feedVisibilityUpdateSchema,
   loginRequestSchema,
@@ -199,6 +200,10 @@ export const api = {
   badges: resource("/badges", badgeInputSchema, badgeInputSchema, badgeResponseSchema),
   activities: resource<ActivityCreate, ActivityPatch, z.infer<typeof activityResponseSchema>>("/activities", activityCreateSchema, activityPatchSchema, activityResponseSchema),
   courses: resource<CourseCreate, CoursePatch, z.infer<typeof courseResponseSchema>>("/courses", courseCreateSchema, coursePatchSchema, courseResponseSchema),
+  courseItinerary: (courseId: number) => request(
+    `/courses/${itemIdSchema.parse(courseId)}/itinerary`,
+    { schema: courseItineraryResponseSchema },
+  ),
   passports: resource<PassportInput, PassportInput, z.infer<typeof passportResponseSchema>>("/passports", passportInputSchema, passportInputSchema, passportResponseSchema),
   collectedBadges: resource<CollectedBadgeCreate, CollectedBadgePatch, z.infer<typeof collectedBadgeResponseSchema>>("/collected-badges", collectedBadgeCreateSchema, collectedBadgePatchSchema, collectedBadgeResponseSchema),
   collectedStamps: resource<CollectedStampCreate, CollectedStampPatch, z.infer<typeof collectedStampResponseSchema>>("/collected-stamps", collectedStampCreateSchema, collectedStampPatchSchema, collectedStampResponseSchema),

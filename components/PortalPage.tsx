@@ -234,14 +234,17 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     }));
   }
   if (page === "missions") {
-    return (await api.badges.list()).map((badge, index) => ({
-      image: cardImages[index % cardImages.length],
-      tag: "배지",
-      title: `배지 #${badge.id}`,
-      description: badge.description ?? "스포츠 활동으로 획득할 수 있는 배지",
-      meta: "패스포트 리워드",
-      icon: "award" as const,
-    }));
+    return (await api.courses.list())
+      .filter((course) => course.isPublished && course.category === "event")
+      .map((course) => ({
+        image: course.representativeImageUrl ?? image1,
+        tag: "GPS + 사진 인증",
+        title: course.title ?? `이벤트 미션 #${course.id}`,
+        description: course.description ?? "행사 현장에서 위치와 사진으로 참여를 인증하세요.",
+        meta: "홍천 · 참가 스탬프",
+        icon: "medal" as const,
+        href: `/missions/detail?id=${course.id}`,
+      }));
   }
 
   return (await api.activities.list())
@@ -286,7 +289,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const sportsLoadingRef = useRef(false);
 
   useEffect(() => {
-    const publicPage = page === "sports" || page === "events";
+    const publicPage = page === "sports" || page === "events" || page === "missions";
     if (page === "courses" && recommendationRequested) return;
     if (!publicPage && !api.hasToken()) return;
     let cancelled = false;
@@ -406,7 +409,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     return () => observer.disconnect();
   }, [hasMoreSports, loadMoreError, page, remoteCards, sportsPage]);
 
-  const fallbackCards = page === "courses" ? [] : config.cards;
+  const fallbackCards = page === "courses" || page === "missions" ? [] : config.cards;
   const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? fallbackCards).filter((card) => {
     if (card.hidden) return false;
     const query = activeFilters.q?.toLowerCase();
