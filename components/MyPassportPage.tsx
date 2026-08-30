@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import type { AuthUser } from "@/lib/api/dto";
 import { BADGE_CATALOG, DEFAULT_COLLECTED_BADGE_IDS } from "@/lib/badgeCatalog";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
@@ -55,15 +56,21 @@ function openActivityHistory() {
 export function MyPassportPage() {
   const [liveStats, setLiveStats] = useState(stats);
   const [collectedBadgeIds, setCollectedBadgeIds] = useState(DEFAULT_COLLECTED_BADGE_IDS);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(() => !api.hasToken());
+  const [stampCount, setStampCount] = useState(0);
 
   useEffect(() => {
     if (!api.hasToken()) return;
     Promise.all([
+      api.me(),
       api.passports.list(),
       api.collectedStamps.list(),
       api.collectedBadges.list(),
       api.activities.list(),
-    ]).then(([, collectedStamps, collectedBadges, allActivities]) => {
+    ]).then(([profile, , collectedStamps, collectedBadges, allActivities]) => {
+      setUser(profile);
+      setStampCount(collectedStamps.length);
       setLiveStats([
         { label: "모은 스탬프", value: `${collectedStamps.length}개`, icon: "award" },
         { label: "인증한 장소", value: `${allActivities.filter((item) => item.placeName).length}곳`, icon: "mapPin" },
@@ -71,8 +78,14 @@ export function MyPassportPage() {
         { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
       ]);
       setCollectedBadgeIds(collectedBadges.map((badge) => badge.badgeId));
-    }).catch(() => undefined);
+    }).catch(() => setUser(null)).finally(() => setAuthChecked(true));
   }, []);
+
+  if (!authChecked) return <div className="grid min-h-[60vh] place-items-center bg-[#f3f7f4] text-sm text-[#6f7a87]">나의 패스포트를 불러오는 중…</div>;
+  if (!user) return <div className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-4"><div className="max-w-md rounded-[24px] border border-[#dfe7e1] bg-white p-8 text-center shadow-sm"><span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e7f4ec] text-[#008f45]"><AppIcon name="lock" className="size-6" /></span><h1 className="mt-5 text-2xl font-bold">로그인이 필요합니다</h1><p className="mt-2 text-sm leading-6 text-[#6f7a87]">로그인하면 닉네임, 프로필과 수집한 스탬프를 확인할 수 있어요.</p><Link href="/login" className="mt-6 flex h-12 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하기</Link></div></div>;
+
+  const displayName = user.nickname || user.email.split("@")[0];
+  const level = stampCount >= 20 ? "Level 6 Legend" : stampCount >= 15 ? "Level 5 Champion" : stampCount >= 7 ? "Level 4 Adventure Pro" : stampCount >= 5 ? "Level 3 Challenger" : stampCount >= 1 ? "Level 2 Explorer" : "Level 1 Beginner";
 
   const badgePreview = badgePreviewIds
     .map((id) => BADGE_CATALOG.find((badge) => badge.id === id))
@@ -87,14 +100,14 @@ export function MyPassportPage() {
         <div className="relative mx-auto grid min-h-[460px] max-w-[1180px] items-center gap-10 py-10 lg:grid-cols-[1fr_440px]">
           <div className="max-w-2xl text-white">
             <span className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">MY PASSPORT</span>
-            <h1 className="mt-5 text-4xl font-bold tracking-[-0.04em] sm:text-5xl">홍길동님의<br />강원 스포츠 패스포트</h1>
+            <div className="mt-5 flex items-center gap-4"><span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/60 bg-white/15 text-2xl font-bold" style={user.profileImageUrl ? { backgroundImage: `url(${user.profileImageUrl})`, backgroundPosition: "center", backgroundSize: "cover" } : undefined}>{!user.profileImageUrl && displayName.slice(0, 1).toUpperCase()}</span><h1 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">{displayName}님의<br />강원 스포츠 패스포트</h1></div>
             <p className="mt-5 max-w-xl leading-7 text-white/80">강원도에서 방문 인증한 스포츠 코스와 모은 스탬프를 한눈에 확인하세요.</p>
             <p className="mt-3 text-sm text-white/75">배지를 달성하면 디지털 배지가 즉시 지급되며, 배지 6개부터 획득한 실물 배지 세트를 받을 수 있어요.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 스탬프북 보기</button></div>
+            <div className="mt-7 flex flex-wrap gap-3"><Link href="/sports" className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#008f45]">방문 인증하러 가기<AppIcon name="arrowRight" /></Link><button type="button" onClick={openStampBook} className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">내 스탬프북 보기</button><Link href="/account" className="inline-flex h-12 items-center rounded-xl border border-white/60 px-6 text-sm font-bold text-white transition-colors hover:bg-white/10">내 정보 수정</Link></div>
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
-            <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">Level 2 Explorer</span>
+            <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">{level}</span>
             <dl className="mt-7 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-white/60">획득 배지</dt><dd className="text-xl font-bold text-[#ffc438]">{collectedBadgeIds.length}개</dd></div><div className="flex justify-between"><dt className="text-white/60">실물 배지 6종까지</dt><dd className="text-xl font-bold">{Math.max(0, 6 - collectedBadgeIds.length)}개</dd></div></dl>
             <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs text-white/50">최근 인증</p><p className="mt-1 text-sm font-bold">설악산 트레일 챌린지</p></div>
           </aside>

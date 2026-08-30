@@ -28,7 +28,7 @@ export function LoginPage() {
     api.oauthLogin(provider, { code, state, redirectUri })
       .then(() => {
         sessionStorage.removeItem(OAUTH_KEY);
-        router.replace("/");
+        router.replace("/mypage");
       })
       .catch(showError)
       .finally(() => setPending(false));
@@ -54,7 +54,7 @@ export function LoginPage() {
       } else {
         await api.login({ email: String(form.get("email")), password: String(form.get("password")) });
       }
-      router.replace("/");
+      router.replace("/mypage");
     } catch (reason) {
       showError(reason);
     } finally {
@@ -89,6 +89,7 @@ export function LoginPage() {
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
             <button type="submit" disabled={pending} className="h-12 w-full rounded-xl bg-[#008f45] text-sm font-semibold text-white transition hover:bg-[#00783a] disabled:opacity-60">{pending ? "처리 중…" : signup ? "가입하기" : "로그인"}</button>
           </form>
+          {!signup && <div className="mt-4 flex items-center justify-center gap-3 text-sm text-[#68736d]"><Link href="/account-help?mode=id" className="hover:text-[#008f45]">아이디 찾기</Link><span className="h-3 w-px bg-[#d7ddd9]" /><Link href="/account-help?mode=password" className="hover:text-[#008f45]">비밀번호 찾기</Link></div>}
           <div className="my-6 flex items-center gap-3 text-xs text-[#98a19c]"><span className="h-px flex-1 bg-[#e4e9e6]" />또는<span className="h-px flex-1 bg-[#e4e9e6]" /></div>
           <div className="grid gap-3"><button type="button" disabled={pending} onClick={() => oauth("google")} className="h-11 rounded-xl border border-[#dfe5e1] text-sm font-medium hover:bg-[#f6f8f7]">Google로 로그인</button><button type="button" disabled={pending} onClick={() => oauth("kakao")} className="h-11 rounded-xl bg-[#fee500] text-sm font-medium text-[#191919]">카카오로 로그인</button></div>
           <p className="mt-7 text-center text-sm text-[#7a8491]">{signup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"} <button type="button" onClick={() => { setSignup(!signup); setError(""); }} className="font-semibold text-[#008f45]">{signup ? "로그인" : "회원가입"}</button></p>

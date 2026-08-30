@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api/service";
 import { NAV_ITEMS } from "@/types";
 
 const LOGO_PATH =
@@ -9,6 +11,14 @@ const LOGO_PATH =
 
 export function AppHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(() => api.hasToken());
+
+  useEffect(() => {
+    const refreshAuth = () => setLoggedIn(api.hasToken());
+    window.addEventListener("sportspassport-auth-change", refreshAuth);
+    return () => window.removeEventListener("sportspassport-auth-change", refreshAuth);
+  }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 z-[200] h-16 border-b border-[#e5e7eb] bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur-md">
@@ -35,7 +45,7 @@ export function AppHeader() {
 
         <nav className="app-header-nav flex h-full min-w-0 flex-1 items-center gap-4 overflow-x-auto px-1 md:justify-center lg:gap-8" aria-label="주요 메뉴">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
@@ -52,12 +62,27 @@ export function AppHeader() {
           })}
         </nav>
 
-        <Link
-          href="/login"
-          className="hidden shrink-0 rounded-full border border-[#d1d5dc] bg-white px-6 py-2 font-['Inter','Noto_Sans_KR',sans-serif] text-sm font-medium leading-5 text-[#4a5565] transition-colors hover:bg-[#f3f7f4] hover:text-[#007a3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007a3d] focus-visible:ring-offset-2 md:block"
-        >
-          로그인
-        </Link>
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <Link
+            href={loggedIn ? "/account" : "/login"}
+            className="rounded-full border border-[#d1d5dc] bg-white px-6 py-2 font-['Inter','Noto_Sans_KR',sans-serif] text-sm font-medium leading-5 text-[#4a5565] transition-colors hover:bg-[#f3f7f4] hover:text-[#007a3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007a3d] focus-visible:ring-offset-2"
+          >
+            {loggedIn ? "마이페이지" : "로그인"}
+          </Link>
+          {loggedIn && (
+            <button
+              type="button"
+              onClick={() => {
+                api.logout();
+                router.push("/");
+                router.refresh();
+              }}
+              className="rounded-full px-4 py-2 font-['Inter','Noto_Sans_KR',sans-serif] text-sm font-medium leading-5 text-[#6a7282] transition-colors hover:bg-[#f3f7f4] hover:text-[#007a3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007a3d]"
+            >
+              로그아웃
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

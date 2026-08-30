@@ -30,7 +30,14 @@ export const oauthLoginRequestSchema = z.strictObject({
   redirectUri: z.url(),
   state: z.string().min(1),
 });
-export const authUserSchema = z.strictObject({ id: positiveInt, email: z.email() });
+export const authUserSchema = z.strictObject({
+  id: positiveInt,
+  email: z.email(),
+  nickname: z.string().nullable().default(null),
+  profileImageUrl: z.string().nullable().default(null),
+  birthDate: z.string().nullable().default(null),
+  gender: genderSchema.nullable().default(null),
+});
 export const authResponseSchema = z.strictObject({
   accessToken: z.string(),
   tokenType: z.string().default("Bearer"),
@@ -41,6 +48,27 @@ export const oauthAuthorizeResponseSchema = z.strictObject({
   provider: authProviderSchema,
   authorizationUrl: z.url(),
 });
+export const profileUpdateSchema = z.strictObject({
+  nickname: z.string().min(2).max(30).nullable().optional(),
+  profileImageKey: z.string().max(500).nullable().optional(),
+  birthDate: z.iso.date().nullable().optional(),
+  gender: genderSchema.nullable().optional(),
+});
+export const profileUploadRequestSchema = z.strictObject({ contentType: z.enum(["image/jpeg", "image/png", "image/webp"]) });
+export const profileUploadResponseSchema = z.strictObject({
+  uploadUrl: z.url(),
+  fields: z.record(z.string(), z.string()),
+  objectKey: z.string(),
+  expiresIn: positiveInt,
+});
+export const accountReminderSchema = z.strictObject({ email: z.email() });
+export const passwordResetRequestSchema = z.strictObject({ email: z.email() });
+export const passwordResetConfirmSchema = z.strictObject({
+  email: z.email(),
+  code: z.string().regex(/^\d{6}$/),
+  newPassword: z.string().min(8).max(128),
+});
+export const messageResponseSchema = z.strictObject({ message: z.string() });
 
 export const badgeInputSchema = z.strictObject({
   image_url: nullableUrl.optional(),
@@ -273,6 +301,9 @@ export type SignupRequest = z.infer<typeof signupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type OAuthLoginRequest = z.infer<typeof oauthLoginRequestSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
+export type ProfileUploadRequest = z.infer<typeof profileUploadRequestSchema>;
+export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
 export type BadgeInput = z.infer<typeof badgeInputSchema>;
 export type BadgeResponse = z.infer<typeof badgeResponseSchema>;
 export type ActivityCreate = z.infer<typeof activityCreateSchema>;

@@ -27,6 +27,13 @@ import {
   oauthAuthorizeResponseSchema,
   oauthLoginRequestSchema,
   openMeteoResponseSchema,
+  profileUpdateSchema,
+  profileUploadRequestSchema,
+  profileUploadResponseSchema,
+  accountReminderSchema,
+  passwordResetRequestSchema,
+  passwordResetConfirmSchema,
+  messageResponseSchema,
   passportInputSchema,
   passportResponseSchema,
   missionProgressSchema,
@@ -56,6 +63,9 @@ import {
   type LoginRequest,
   type OAuthLoginRequest,
   type PassportInput,
+  type ProfileUpdate,
+  type ProfileUploadRequest,
+  type PasswordResetConfirm,
   type SignupRequest,
   type SportsExploreQuery,
   type StampSubmissionCreate,
@@ -96,6 +106,7 @@ function resource<TCreate, TPatch, TResponse>(
 function saveToken(auth: { accessToken: string; user: AuthUser }) {
   sessionStorage.setItem(TOKEN_KEY, auth.accessToken);
   sessionStorage.setItem(USER_KEY, JSON.stringify(auth.user));
+  window.dispatchEvent(new Event("sportspassport-auth-change"));
   return auth;
 }
 
@@ -109,6 +120,11 @@ function currentUser() {
     sessionStorage.removeItem(USER_KEY);
     return undefined;
   }
+}
+
+function saveUser(user: AuthUser) {
+  sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+  return user;
 }
 
 function queryString(input: Record<string, unknown>) {
@@ -142,9 +158,33 @@ export const api = {
   }).then(saveToken),
   hasToken: () => Boolean(token()),
   currentUser,
+  me: () => withToken("/auth/me", authUserSchema).then(saveUser),
+  updateProfile: (input: ProfileUpdate) => withToken("/auth/me", authUserSchema, "PATCH", profileUpdateSchema.parse(input)).then(saveUser),
+  createProfileUploadUrl: (input: ProfileUploadRequest) => withToken(
+    "/auth/profile-photo/upload-url",
+    profileUploadResponseSchema,
+    "POST",
+    profileUploadRequestSchema.parse(input),
+  ),
+  accountReminder: (email: string) => request("/auth/account-reminder", {
+    method: "POST",
+    body: accountReminderSchema.parse({ email }),
+    schema: messageResponseSchema,
+  }),
+  requestPasswordReset: (email: string) => request("/auth/password-reset/request", {
+    method: "POST",
+    body: passwordResetRequestSchema.parse({ email }),
+    schema: messageResponseSchema,
+  }),
+  confirmPasswordReset: (input: PasswordResetConfirm) => request("/auth/password-reset/confirm", {
+    method: "POST",
+    body: passwordResetConfirmSchema.parse(input),
+    schema: messageResponseSchema,
+  }),
   logout: () => {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    window.dispatchEvent(new Event("sportspassport-auth-change"));
   },
   badges: resource("/badges", badgeInputSchema, badgeInputSchema, badgeResponseSchema),
   activities: resource<ActivityCreate, ActivityPatch, z.infer<typeof activityResponseSchema>>("/activities", activityCreateSchema, activityPatchSchema, activityResponseSchema),
