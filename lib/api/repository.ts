@@ -25,6 +25,7 @@ export async function request<T>(path: string, { method = "GET", body, token, sc
 export async function requestUrl<T>(url: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
   const response = await fetch(url, {
     method,
+    credentials: "include",
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
