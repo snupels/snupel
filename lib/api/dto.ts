@@ -20,6 +20,11 @@ export const signupRequestSchema = z.strictObject({
   password: z.string().min(8).max(128),
   birthDate: z.iso.date().nullable().optional(),
   gender: genderSchema.nullable().optional(),
+  nickname: z.string().trim().min(2).max(30),
+  agreeTerms: z.literal(true),
+  agreePrivacy: z.literal(true),
+  agreeMarketingEmail: z.boolean().default(false),
+  agreeMarketingSns: z.boolean().default(false),
 });
 export const loginRequestSchema = z.strictObject({
   email: z.email(),
@@ -37,6 +42,9 @@ export const authUserSchema = z.strictObject({
   profileImageUrl: z.string().nullable().default(null),
   birthDate: z.string().nullable().default(null),
   gender: genderSchema.nullable().default(null),
+  onboardingRequired: z.boolean().default(true),
+  marketingEmailAgreed: z.boolean().default(false),
+  marketingSnsAgreed: z.boolean().default(false),
 });
 export const authResponseSchema = z.strictObject({
   accessToken: z.string(),
@@ -53,6 +61,10 @@ export const profileUpdateSchema = z.strictObject({
   profileImageKey: z.string().max(500).nullable().optional(),
   birthDate: z.iso.date().nullable().optional(),
   gender: genderSchema.nullable().optional(),
+  agreeTerms: z.literal(true).optional(),
+  agreePrivacy: z.literal(true).optional(),
+  agreeMarketingEmail: z.boolean().optional(),
+  agreeMarketingSns: z.boolean().optional(),
 });
 export const profileUploadRequestSchema = z.strictObject({ contentType: z.enum(["image/jpeg", "image/png", "image/webp"]) });
 export const profileUploadResponseSchema = z.strictObject({

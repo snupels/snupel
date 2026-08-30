@@ -2,6 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
 import type { AuthUser } from "@/lib/api/dto";
@@ -54,6 +55,7 @@ function openActivityHistory() {
 }
 
 export function MyPassportPage() {
+  const router = useRouter();
   const [liveStats, setLiveStats] = useState(stats);
   const [collectedBadgeIds, setCollectedBadgeIds] = useState(DEFAULT_COLLECTED_BADGE_IDS);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -69,6 +71,7 @@ export function MyPassportPage() {
       api.collectedBadges.list(),
       api.activities.list(),
     ]).then(([profile, , collectedStamps, collectedBadges, allActivities]) => {
+      if (profile.onboardingRequired) { router.replace("/onboarding"); return; }
       setUser(profile);
       setStampCount(collectedStamps.length);
       setLiveStats([
@@ -79,7 +82,7 @@ export function MyPassportPage() {
       ]);
       setCollectedBadgeIds(collectedBadges.map((badge) => badge.badgeId));
     }).catch(() => setUser(null)).finally(() => setAuthChecked(true));
-  }, []);
+  }, [router]);
 
   if (!authChecked) return <div className="grid min-h-[60vh] place-items-center bg-[#f3f7f4] text-sm text-[#6f7a87]">나의 패스포트를 불러오는 중…</div>;
   if (!user) return <div className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-4"><div className="max-w-md rounded-[24px] border border-[#dfe7e1] bg-white p-8 text-center shadow-sm"><span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e7f4ec] text-[#008f45]"><AppIcon name="lock" className="size-6" /></span><h1 className="mt-5 text-2xl font-bold">로그인이 필요합니다</h1><p className="mt-2 text-sm leading-6 text-[#6f7a87]">로그인하면 닉네임, 프로필과 수집한 스탬프를 확인할 수 있어요.</p><Link href="/login" className="mt-6 flex h-12 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하기</Link></div></div>;

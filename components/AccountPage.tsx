@@ -21,7 +21,10 @@ export function AccountPage() {
       router.replace("/login");
       return;
     }
-    api.me().then(setUser).catch(() => router.replace("/login")).finally(() => setPending(false));
+    api.me().then((profile) => {
+      if (profile.onboardingRequired) { router.replace("/onboarding"); return; }
+      setUser(profile);
+    }).catch(() => router.replace("/login")).finally(() => setPending(false));
   }, [router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -46,6 +49,8 @@ export function AccountPage() {
         nickname: String(form.get("nickname") || "").trim() || null,
         birthDate: String(form.get("birthDate") || "") || null,
         gender: (String(form.get("gender") || "") || null) as "male" | "female" | "other" | "unknown" | null,
+        agreeMarketingEmail: form.get("agreeMarketingEmail") === "on",
+        agreeMarketingSns: form.get("agreeMarketingSns") === "on",
         ...(profileImageKey ? { profileImageKey } : {}),
       });
       setUser(updated);
@@ -93,6 +98,7 @@ export function AccountPage() {
               <div><label className="text-sm font-bold" htmlFor="nickname">닉네임</label><input id="nickname" name="nickname" defaultValue={user.nickname ?? ""} minLength={2} maxLength={30} placeholder="2~30자로 입력해 주세요" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" /></div>
               <div><label className="text-sm font-bold" htmlFor="profilePhoto">프로필 사진</label><input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const selected = event.target.files?.[0] ?? null; if (selected && selected.size > 10 * 1024 * 1024) { setError("프로필 사진은 10MB 이하만 가능합니다."); event.target.value = ""; return; } setError(""); setFile(selected); if (!selected) { setPreview(""); return; } const reader = new FileReader(); reader.onload = () => setPreview(typeof reader.result === "string" ? reader.result : ""); reader.readAsDataURL(selected); }} className="mt-2 block w-full rounded-xl border border-[#dce4df] p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[#e7f4ec] file:px-4 file:py-2 file:font-bold file:text-[#008f45]" /><p className="mt-2 text-xs text-[#7c8781]">JPG, PNG, WebP · 최대 10MB</p></div>
               <div className="grid gap-4 sm:grid-cols-2"><div><label className="text-sm font-bold" htmlFor="birthDate">생년월일</label><input id="birthDate" name="birthDate" type="date" defaultValue={user.birthDate ?? ""} className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm" /></div><div><label className="text-sm font-bold" htmlFor="gender">성별</label><select id="gender" name="gender" defaultValue={user.gender ?? ""} className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm"><option value="">선택 안 함</option><option value="male">남성</option><option value="female">여성</option><option value="other">기타</option><option value="unknown">미상</option></select></div></div>
+              <fieldset className="rounded-2xl border border-[#dce4df] bg-[#f8faf9] p-4"><legend className="px-1 text-sm font-bold">홍보 수신 설정</legend><label className="mt-2 flex items-center gap-2 text-sm"><input name="agreeMarketingEmail" type="checkbox" defaultChecked={user.marketingEmailAgreed} className="size-4 accent-[#008f45]" />스포츠 행사·혜택 이메일 수신</label><label className="mt-3 flex items-center gap-2 text-sm"><input name="agreeMarketingSns" type="checkbox" defaultChecked={user.marketingSnsAgreed} className="size-4 accent-[#008f45]" />스포츠 행사·혜택 SNS 수신</label><Link href="/terms" target="_blank" className="mt-3 inline-block text-xs font-semibold text-[#008f45] underline">약관 및 개인정보 수집 내용 보기</Link></fieldset>
             </div>
             {message && <p role="status" className="mt-5 rounded-xl bg-[#e9f7ee] px-4 py-3 text-sm font-semibold text-[#00783a]">{message}</p>}
             {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
