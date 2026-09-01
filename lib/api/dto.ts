@@ -301,10 +301,6 @@ export const stampSubmissionCreateSchema = z.strictObject({
   passport_id: positiveInt,
   stamp_id: positiveInt,
   object_key: z.string().min(1).max(500),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-  gps_accuracy_m: z.number().positive().max(5000),
-  captured_at: apiDateTime,
   share_to_feed: z.boolean().optional(),
   feed_caption: z.string().max(300).nullable().optional(),
 });
@@ -317,10 +313,6 @@ export const uploadUrlResponseSchema = z.strictObject({
   uploadUrl: z.string(),
   fields: z.record(z.string(), z.string()),
   objectKey: z.string(),
-  latitude: z.number().nullable(),
-  longitude: z.number().nullable(),
-  gpsAccuracyM: z.number().nullable(),
-  capturedAt: apiDateTime.nullable(),
   expiresIn: z.number().int(),
 });
 export const stampSubmissionResponseSchema = z.object({

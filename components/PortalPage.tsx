@@ -238,9 +238,9 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
       .filter((course) => course.isPublished && course.category === "event")
       .map((course) => ({
         image: course.representativeImageUrl ?? image1,
-        tag: "GPS + 사진 인증",
+        tag: "사진 인증",
         title: course.title ?? `이벤트 미션 #${course.id}`,
-        description: course.description ?? "행사 현장에서 위치와 사진으로 참여를 인증하세요.",
+        description: course.description ?? "행사 참여 사진으로 미션을 인증하세요.",
         meta: "홍천 · 참가 스탬프",
         icon: "medal" as const,
         href: `/missions/detail?id=${course.id}`,
