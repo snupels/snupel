@@ -123,6 +123,9 @@ function markerContent(activity: ActivityExploreResponse) {
 }
 
 export function SportsMapPage() {
+  const focusedActivityId = typeof window === "undefined"
+    ? null
+    : Number(new URLSearchParams(window.location.search).get("id")) || null;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const kakaoMapRef = useRef<KakaoMap | null>(null);
   const markerClustererRef = useRef<KakaoMarkerClusterer | null>(null);
@@ -211,7 +214,14 @@ export function SportsMapPage() {
       return marker;
     });
     clusterer.addMarkers(markers);
-    if (selectedRegion === "전체") {
+    const focusedIndex = mappedActivities.findIndex(({ activity }) => activity.id === focusedActivityId);
+    const focused = focusedIndex >= 0 ? mappedActivities[focusedIndex] : undefined;
+    const focusedMarker = focusedIndex >= 0 ? markers[focusedIndex] : undefined;
+    if (focused && focusedMarker) {
+      map.setCenter(new maps.LatLng(focused.coordinates.latitude, focused.coordinates.longitude));
+      map.setLevel(4);
+      new maps.InfoWindow({ content: markerContent(focused.activity), removable: true }).open(map, focusedMarker);
+    } else if (selectedRegion === "전체") {
       map.setCenter(new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude));
       map.setLevel(10);
     } else {
@@ -233,7 +243,7 @@ export function SportsMapPage() {
       map.setLevel(6);
     }
     clusterer.redraw();
-  }, [mappedActivities, selectedRegion]);
+  }, [focusedActivityId, mappedActivities, selectedRegion]);
 
   useEffect(() => {
     if (sdkReady && !loading) initializeMap();
