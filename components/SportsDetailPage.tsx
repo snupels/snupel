@@ -104,8 +104,6 @@ function SportsDetailContent() {
     ...(fee ? [{ label: "이용요금", value: fee, icon: "gift" as AppIconName }] : []),
     ...(parking ? [{ label: "주차", value: parking, icon: "map" as AppIconName }] : []),
   ];
-  const mapHref = `/map?id=${activity.id}`;
-
   return (
     <main className="min-h-screen bg-[#f3f7f4] px-5 pb-20 pt-10 text-[#172033] sm:px-8 sm:pt-14">
       <div className="mx-auto max-w-[1080px]">
@@ -135,7 +133,6 @@ function SportsDetailContent() {
               <div className="mt-8 rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
                 <h3 className="font-bold">주소</h3>
                 <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#59675f]"><AppIcon name="mapPin" className="mt-0.5 shrink-0 text-[#008f45]" />{location}</p>
-                {activity.latitude !== null && activity.longitude !== null && <p className="mt-2 text-xs text-[#7a867f]">좌표 {activity.latitude.toFixed(5)}, {activity.longitude.toFixed(5)}</p>}
               </div>
             </section>
 
@@ -144,10 +141,7 @@ function SportsDetailContent() {
               <dl className="mt-5 space-y-5">
                 {details.map((item) => <div key={item.label} className="flex gap-3"><AppIcon name={item.icon} className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="text-xs font-semibold text-[#718078]">{item.label}</dt><dd className="mt-1 break-words text-sm leading-6 text-[#172033]">{item.value}</dd></div></div>)}
               </dl>
-              <div className="mt-6 grid gap-2">
-                <Link href={mapHref} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#9bc6aa] bg-white text-sm font-bold text-[#008f45] transition hover:bg-[#f7fbf8]">지도에서 보기<AppIcon name="map" /></Link>
-                {activity.sourceUrl && <a href={activity.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 정보 보기<AppIcon name="arrowRight" /></a>}
-              </div>
+              {activity.sourceUrl && <div className="mt-6"><a href={activity.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 정보 보기<AppIcon name="arrowRight" /></a></div>}
               {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {activity.source}</p>}
             </aside>
           </div>
