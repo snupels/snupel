@@ -233,7 +233,7 @@ export const api = {
       forecast_days: "1",
       timezone: "Asia/Seoul",
     });
-    return requestUrl(`https://api.open-meteo.com/v1/forecast?${params}`, { schema: openMeteoResponseSchema });
+    return requestUrl(`https://api.open-meteo.com/v1/forecast?${params}`, {       credentials: "omit",       schema: openMeteoResponseSchema,     });
   },
   courseRecommendations: (input: CourseRecommendationRequest) => withToken(
     "/course-recommendations",
