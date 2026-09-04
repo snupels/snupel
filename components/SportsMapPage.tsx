@@ -26,7 +26,7 @@ type KakaoAddressResult = { x: string; y: string };
 
 type KakaoMaps = {
   load(callback: () => void): void;
-  Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMap;
+  Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number; draggable?: boolean; scrollwheel?: boolean }) => KakaoMap;
   LatLng: new (latitude: number, longitude: number) => KakaoLatLng;
   LatLngBounds: new () => KakaoBounds;
   Marker: new (options: { map?: KakaoMap; position: KakaoLatLng; title: string }) => KakaoMarker;
