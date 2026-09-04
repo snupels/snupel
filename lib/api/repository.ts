@@ -19,6 +19,7 @@ type RequestOptions<T> = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   token?: string;
+  credentials?: RequestCredentials;
   schema: z.ZodType<T>;
 };
 
@@ -26,10 +27,10 @@ export async function request<T>(path: string, { method = "GET", body, token, sc
   return requestUrl(apiUrl(path), { method, body, token, schema });
 }
 
-export async function requestUrl<T>(url: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
+export async function requestUrl<T>(url: string, { method = "GET", body, token, credentials = "include", schema }: RequestOptions<T>): Promise<T> {
   const response = await fetch(url, {
     method,
-    credentials: "include",
+    credentials,
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
