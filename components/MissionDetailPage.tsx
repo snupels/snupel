@@ -113,10 +113,12 @@ export function MissionDetailPage() {
             <p className="mt-4 leading-7 text-[#66736b]">{course.description}</p>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
+                ["activity", "카테고리", mission.category],
+                ["mapPin", "지역", mission.region],
                 ["calendar", mission.scheduleLabel, mission.schedule],
                 ["mapPin", "인증 장소", itinerary.stops[0]?.address ?? mission.region],
-                ["medal", "완료 리워드", mission.reward],
-                ["camera", "인증 방식", mission.proof],
+                ["camera", "인증 조건", mission.proof],
+                ["medal", "지급 스탬프", mission.reward],
               ].map(([icon, label, value]) => <div key={label} className="rounded-2xl bg-[#f3f7f4] p-5"><span className="flex items-center gap-2 text-xs font-bold text-[#008f45]"><AppIcon name={icon as Parameters<typeof AppIcon>[0]["name"]} />{label}</span><p className="mt-2 text-sm font-semibold leading-6">{value}</p></div>)}
             </div>
           </div>
