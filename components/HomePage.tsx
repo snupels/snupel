@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
 import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
@@ -109,15 +110,6 @@ const weatherLabels: Record<number, string> = {
   80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
 };
 
-function resolvePassportLevel(stampCount: number, completedFirstMission: boolean) {
-  if (stampCount >= 20) return "Level 6 Legend";
-  if (stampCount >= 15) return "Level 5 Champion";
-  if (stampCount >= 7) return "Level 4 Adventure Pro";
-  if (stampCount >= 5) return "Level 3 Challenger";
-  if (completedFirstMission) return "Level 2 Explorer";
-  return "Level 1 Beginner";
-}
-
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [weatherRegionIndex, setWeatherRegionIndex] = useState(2);
@@ -189,7 +181,7 @@ export default function HomePage() {
         const stampCount = passportIds.size > 0 ? stamps.filter((stamp) => passportIds.has(stamp.passportId)).length : stamps.length;
         const missionResults = await Promise.allSettled(userPassports.map((passport) => api.passportMissions(passport.id, 1, 100)));
         const completedFirstMission = missionResults.some((result) => result.status === "fulfilled" && result.value.some((mission) => mission.completed));
-        setPassportProfile({ displayName, stampCount, level: resolvePassportLevel(stampCount, completedFirstMission), authenticated: true });
+        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, completedFirstMission)), authenticated: true });
       })
       .catch(() => setPassportProfile((current) => ({ ...current, displayName, authenticated: true })));
   }, []);

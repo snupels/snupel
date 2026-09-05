@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
+import { missionPresentation } from "@/lib/missionCatalog";
 import { sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -234,17 +235,23 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     }));
   }
   if (page === "missions") {
-    return (await api.courses.list())
-      .filter((course) => course.isPublished && course.category === "event")
-      .map((course) => ({
+    const courses = (await api.courses.list())
+      .filter((course) => course.isPublished && course.category === "event");
+    const itineraries = await Promise.all(courses.map((course) => (
+      api.courseItinerary(course.id).catch(() => null)
+    )));
+    return courses.map((course, index) => {
+      const presentation = missionPresentation(course, itineraries[index]?.stops[0]);
+      return {
         image: course.representativeImageUrl ?? image1,
-        tag: "사진 인증",
+        tag: presentation.category,
         title: course.title ?? `이벤트 미션 #${course.id}`,
-        description: course.description ?? "행사 참여 사진으로 미션을 인증하세요.",
-        meta: "홍천 · 참가 스탬프",
-        icon: "medal" as const,
+        description: course.description ?? "현장 사진으로 미션을 인증하세요.",
+        meta: `${presentation.region} · 스탬프 1개`,
+        icon: presentation.category === "올림픽 레거시" ? "olympicRings" as const : "medal" as const,
         href: `/missions/detail?id=${course.id}`,
-      }));
+      };
+    });
   }
 
   return (await api.activities.list())

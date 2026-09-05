@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
 import type { AuthUser } from "@/lib/api/dto";
 import { BADGE_CATALOG, DEFAULT_COLLECTED_BADGE_IDS } from "@/lib/badgeCatalog";
+import { PASSPORT_LEVELS, passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 import course1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
@@ -61,6 +62,7 @@ export function MyPassportPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authChecked, setAuthChecked] = useState(() => !api.hasToken());
   const [stampCount, setStampCount] = useState(0);
+  const [completedFirstMission, setCompletedFirstMission] = useState(false);
 
   useEffect(() => {
     if (!api.hasToken()) return;
@@ -72,7 +74,8 @@ export function MyPassportPage() {
       api.collectedStamps.list(),
       api.collectedBadges.list(),
       api.activities.list(),
-      ]).then((results) => {
+      ]).then(async (results) => {
+      const passports = results[0].status === "fulfilled" ? results[0].value : [];
       const collectedStamps = results[1].status === "fulfilled" ? results[1].value : [];
       const collectedBadges = results[2].status === "fulfilled" ? results[2].value : [];
       const allActivities = results[3].status === "fulfilled" ? results[3].value : [];
@@ -84,6 +87,9 @@ export function MyPassportPage() {
         { label: "받은 리워드", value: `${collectedBadges.length}개`, icon: "gift" },
       ]);
       setCollectedBadgeIds(collectedBadges.map((badge) => badge.badgeId));
+      const userPassports = passports.filter((passport) => passport.userId === profile.id);
+      const missionResults = await Promise.allSettled(userPassports.map((passport) => api.passportMissions(passport.id, 1, 100)));
+      setCompletedFirstMission(missionResults.some((result) => result.status === "fulfilled" && result.value.some((mission) => mission.completed)));
       });
     }).catch(() => setUser(null)).finally(() => setAuthChecked(true));
   }, [router]);
@@ -92,7 +98,7 @@ export function MyPassportPage() {
   if (!user) return <div className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-4"><div className="max-w-md rounded-[24px] border border-[#dfe7e1] bg-white p-8 text-center shadow-sm"><span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e7f4ec] text-[#008f45]"><AppIcon name="lock" className="size-6" /></span><h1 className="mt-5 text-2xl font-bold">로그인이 필요합니다</h1><p className="mt-2 text-sm leading-6 text-[#6f7a87]">로그인하면 닉네임, 프로필과 수집한 스탬프를 확인할 수 있어요.</p><Link href="/login" className="mt-6 flex h-12 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하기</Link></div></div>;
 
   const displayName = user.nickname || user.email.split("@")[0];
-  const level = stampCount >= 20 ? "Level 6 Legend" : stampCount >= 15 ? "Level 5 Champion" : stampCount >= 7 ? "Level 4 Adventure Pro" : stampCount >= 5 ? "Level 3 Challenger" : stampCount >= 1 ? "Level 2 Explorer" : "Level 1 Beginner";
+  const level = resolvePassportLevel(stampCount, completedFirstMission);
 
   const badgePreview = badgePreviewIds
     .map((id) => BADGE_CATALOG.find((badge) => badge.id === id))
@@ -114,7 +120,8 @@ export function MyPassportPage() {
           </div>
           <aside className="rounded-[28px] border border-white/10 bg-[#172c40]/95 p-7 text-white shadow-2xl backdrop-blur sm:p-9">
             <div className="flex items-start justify-between"><div><p className="text-xs font-bold text-[#ffc438]">GANGWON SPORTS PASSPORT</p><h2 className="mt-2 text-2xl font-bold">강원 스포츠 패스포트</h2></div><AppIcon name="award" className="size-7 text-[#ffc438]" /></div>
-            <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">{level}</span>
+            <span className="mt-7 inline-flex rounded-xl bg-[#ffc438]/10 px-4 py-2 font-bold text-[#ffc438]">{passportLevelLabel(level)}</span>
+            <p className="mt-3 text-sm font-semibold text-white/80">{level.meaning}</p>
             <dl className="mt-7 space-y-4 text-sm"><div className="flex justify-between"><dt className="text-white/60">획득 배지</dt><dd className="text-xl font-bold text-[#ffc438]">{collectedBadgeIds.length}개</dd></div><div className="flex justify-between"><dt className="text-white/60">실물 배지 6종까지</dt><dd className="text-xl font-bold">{Math.max(0, 6 - collectedBadgeIds.length)}개</dd></div></dl>
             <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs text-white/50">최근 인증</p><p className="mt-1 text-sm font-bold">설악산 트레일 챌린지</p></div>
           </aside>
@@ -142,6 +149,18 @@ export function MyPassportPage() {
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">나의 배지</h2><div className="mt-6 grid grid-cols-3 gap-5">{badgePreview.map((badge) => { const unlocked = collectedBadgeIds.includes(badge.id); return <div key={badge.name} className={`text-center ${unlocked ? "" : "opacity-30"}`}><span className={`mx-auto flex size-14 items-center justify-center rounded-full ${unlocked ? "bg-[#008f45] text-white shadow-md" : "bg-[#eef1ef] text-[#9aa39e]"}`}><AppIcon name={badge.icon} className="size-6" /></span><p className="mt-2 text-xs font-semibold leading-5">{badge.name}</p></div>; })}</div><p className="mt-6 border-t border-[#edf0ee] pt-5 text-center text-sm text-[#6f7a87]">획득한 배지 <strong className="text-[#008f45]">{collectedBadgeCount}개</strong> · 전체 배지 {BADGE_CATALOG.length}개</p><Link href="/badges" className="mt-4 flex h-10 w-full items-center justify-center rounded-xl border border-[#aad2b8] text-sm font-bold text-[#008f45] transition-colors hover:bg-[#f0f8f3]">전체 배지 보기 ({BADGE_CATALOG.length}개)</Link></section>
           <section className="rounded-[24px] border border-[#e0e7e2] bg-white p-6"><h2 className="text-xl font-bold">최근 방문 인증</h2><div className="mt-4 space-y-1">{activities.map((activity) => <a key={activity.date + activity.text} href={activity.href} className="group flex cursor-pointer gap-3 rounded-xl px-2 py-3 transition hover:bg-[#f0f8f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]"><span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${activity.yellow ? "bg-[#fff5d9] text-[#d99f00]" : "bg-[#e7f4ec] text-[#008f45]"}`}><AppIcon name={activity.icon} className="size-4" /></span><div className="min-w-0 flex-1"><p className="text-xs text-[#8a9490]">{activity.date}</p><p className="mt-1 text-sm font-semibold leading-5 transition group-hover:text-[#008f45]">{activity.text}</p></div><AppIcon name="arrowRight" className="mt-3 size-4 shrink-0 text-[#9aa49e] transition group-hover:translate-x-0.5 group-hover:text-[#008f45]" /></a>)}</div><button type="button" onClick={openActivityHistory} className="mt-6 h-10 w-full cursor-pointer border-t border-[#edf0ee] pt-4 text-sm font-bold text-[#008f45] transition-colors hover:text-[#006d35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">전체 활동 보기</button></section>
         </aside>
+      </section>
+
+      <section className="mx-auto max-w-[1180px] px-4 pb-16 sm:px-6">
+        <div className="overflow-hidden rounded-[24px] border border-[#e0e7e2] bg-white shadow-sm">
+          <div className="border-b border-[#e7ece9] px-6 py-6 sm:px-8"><h2 className="text-2xl font-bold">패스포트 등급 안내</h2><p className="mt-2 text-sm text-[#6f7a87]">첫 미션과 수집한 스탬프 수에 따라 등급이 자동으로 올라갑니다.</p></div>
+          <div className="overflow-x-auto">
+            <table className="min-w-[720px] w-full text-left text-sm">
+              <thead className="bg-[#f3f7f4] text-[#526159]"><tr><th className="px-6 py-4 font-bold">레벨</th><th className="px-6 py-4 font-bold">명칭</th><th className="px-6 py-4 font-bold">기준</th><th className="px-6 py-4 font-bold">의미</th></tr></thead>
+              <tbody className="divide-y divide-[#edf1ee]">{PASSPORT_LEVELS.map((item) => { const current = item.level === level.level; return <tr key={item.level} className={current ? "bg-[#eef9f2]" : ""}><td className="px-6 py-4 font-bold text-[#008f45]">Level {item.level}{current && <span className="ml-2 rounded-full bg-[#008f45] px-2 py-1 text-[10px] text-white">현재 등급</span>}</td><td className="px-6 py-4 font-bold">{item.name}</td><td className="px-6 py-4 text-[#5f6d65]">{item.criterion}</td><td className="px-6 py-4 text-[#5f6d65]">{item.meaning}</td></tr>; })}</tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </div>
   );

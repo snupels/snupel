@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AppIcon } from "./AppIcon";
 import { api } from "@/lib/api/service";
+import { missionPresentation } from "@/lib/missionCatalog";
 import { ApiError } from "@/lib/api/repository";
 import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
 
@@ -90,16 +91,18 @@ export function MissionDetailPage() {
   if (loading) return <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] text-sm font-semibold text-[#617168]">미션을 불러오는 중...</main>;
   if (!course || !itinerary) return <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-4"><div className="text-center"><p className="font-semibold">{message}</p><Link href="/missions" className="mt-5 inline-flex text-sm font-bold text-[#008f45]">미션 목록으로</Link></div></main>;
 
+  const mission = missionPresentation(course, itinerary.stops[0]);
+
   return (
     <main className="bg-[#f3f7f4] pb-16 text-[#172033]">
       <section className="relative min-h-[390px] overflow-hidden bg-[#173a2d]">
-        {course.representativeImageUrl && <Image src={course.representativeImageUrl} alt="2026 홍천사랑마라톤대회" fill priority className="object-cover" sizes="100vw" />}
+        {course.representativeImageUrl && <Image src={course.representativeImageUrl} alt={`${course.title ?? "패스포트 미션"} 대표 이미지`} fill priority className="object-cover" sizes="100vw" />}
         <div className="absolute inset-0 bg-gradient-to-r from-[#09271d]/95 via-[#09271d]/75 to-[#09271d]/25" />
         <div className="relative mx-auto flex min-h-[390px] max-w-[1180px] flex-col justify-end px-5 pb-12 pt-24 text-white sm:px-8">
           <Link href="/missions" className="mb-auto inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/80 hover:text-white"><AppIcon name="chevronLeft" />미션 목록</Link>
           <span className="w-fit rounded-full bg-[#00a94f] px-4 py-2 text-xs font-bold">사진 인증</span>
           <h1 className="mt-4 max-w-3xl text-3xl font-black tracking-[-0.04em] sm:text-5xl">{course.title}</h1>
-          <p className="mt-4 max-w-2xl leading-7 text-white/80">홍천의 가을 코스를 달리고 현장에서 참여 기록을 남겨 보세요.</p>
+          <p className="mt-4 max-w-2xl leading-7 text-white/80">{mission.intro}</p>
         </div>
       </section>
 
@@ -110,10 +113,10 @@ export function MissionDetailPage() {
             <p className="mt-4 leading-7 text-[#66736b]">{course.description}</p>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
-                ["calendar", "행사 일시", "2026.10.04 09:00"],
-                ["mapPin", "인증 장소", itinerary.stops[0]?.address ?? "홍천종합운동장"],
-                ["medal", "완료 리워드", "홍천 마라톤 참가 스탬프"],
-                ["camera", "인증 방식", "대회 참여 사진 1장"],
+                ["calendar", mission.scheduleLabel, mission.schedule],
+                ["mapPin", "인증 장소", itinerary.stops[0]?.address ?? mission.region],
+                ["medal", "완료 리워드", mission.reward],
+                ["camera", "인증 방식", mission.proof],
               ].map(([icon, label, value]) => <div key={label} className="rounded-2xl bg-[#f3f7f4] p-5"><span className="flex items-center gap-2 text-xs font-bold text-[#008f45]"><AppIcon name={icon as Parameters<typeof AppIcon>[0]["name"]} />{label}</span><p className="mt-2 text-sm font-semibold leading-6">{value}</p></div>)}
             </div>
           </div>
@@ -121,7 +124,7 @@ export function MissionDetailPage() {
           <div className="rounded-[24px] border border-[#dfe8e2] bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-bold">인증 순서</h2>
             <ol className="mt-5 grid gap-4 sm:grid-cols-3">
-              {["홍천사랑마라톤 참여", "현장에서 참여 사진 촬영", "사진 등록 후 인증 제출"].map((item, index) => <li key={item} className="rounded-2xl border border-[#e3ebe5] p-5"><span className="flex size-8 items-center justify-center rounded-full bg-[#008f45] text-sm font-black text-white">{index + 1}</span><p className="mt-3 text-sm font-semibold">{item}</p></li>)}
+              {mission.steps.map((item, index) => <li key={item} className="rounded-2xl border border-[#e3ebe5] p-5"><span className="flex size-8 items-center justify-center rounded-full bg-[#008f45] text-sm font-black text-white">{index + 1}</span><p className="mt-3 text-sm font-semibold">{item}</p></li>)}
             </ol>
             <p className="mt-5 text-xs leading-5 text-[#7b877f]">제출한 사진은 미션 인증 심사에만 사용되며 운영자 확인 후 스탬프가 지급됩니다.</p>
           </div>
@@ -130,15 +133,15 @@ export function MissionDetailPage() {
         <form onSubmit={submit} className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 shadow-[0_16px_50px_rgba(36,73,50,0.10)] lg:sticky lg:top-24">
           <h2 className="text-xl font-bold">참여 인증하기</h2>
           {!api.hasToken() ? <div className="mt-5 rounded-2xl bg-[#f3f7f4] p-5 text-center"><p className="text-sm leading-6 text-[#66736b]">로그인하면 참여 사진으로 인증을 신청할 수 있어요.</p><Link href="/login" className="mt-4 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하기</Link></div> : <>
-            <label className="mt-5 block text-sm font-bold" htmlFor="mission-photo">참여 사진</label>
+            <label className="mt-5 block text-sm font-bold" htmlFor="mission-photo">인증 사진</label>
             <label htmlFor="mission-photo" className="mt-2 flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#cbdacf] bg-[#f8faf8] text-center">
-              {previewUrl ? <span className="relative block min-h-52 w-full"><Image src={previewUrl} alt="선택한 인증 사진" fill className="object-cover" unoptimized /></span> : <span className="px-5 text-sm text-[#718078]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" />현장에서 촬영한 사진을 선택해 주세요<br /><small>JPG, PNG, WEBP · 최대 10MB</small></span>}
+              {previewUrl ? <span className="relative block min-h-52 w-full"><Image src={previewUrl} alt="선택한 인증 사진" fill className="object-cover" unoptimized /></span> : <span className="px-5 text-sm text-[#718078]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" />{mission.photoPrompt}<br /><small>JPG, PNG, WEBP · 최대 10MB</small></span>}
             </label>
             <input id="mission-photo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={completed} onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} />
             <button type="submit" disabled={!photo || submitting || completed} className="mt-6 flex h-13 w-full cursor-pointer items-center justify-center rounded-xl bg-[#008f45] text-sm font-black text-white transition hover:bg-[#00783a] disabled:cursor-not-allowed disabled:bg-[#aab7af]">{completed ? "인증 접수 완료" : submitting ? "인증 제출 중..." : "사진으로 인증 신청"}</button>
           </>}
           {message && <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm leading-6 ${completed ? "bg-[#e9f7ee] text-[#08743a]" : "bg-[#fff2f0] text-[#a03d32]"}`}>{message}</p>}
-          <a href="https://hongcheonrun.net/" target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">대회 공식 홈페이지 <AppIcon name="arrowRight" /></a>
+          <a href={mission.officialUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">{mission.officialLabel} <AppIcon name="arrowRight" /></a>
         </form>
       </div>
     </main>
