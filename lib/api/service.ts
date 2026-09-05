@@ -78,7 +78,7 @@ import {
   type UploadUrlRequest,
   type WeatherQuery,
 } from "./dto";
-import { request, requestUrl } from "./repository";
+import { apiUrl, request, requestUrl } from "./repository";
 
 const TOKEN_KEY = "sportspassport-access-token";
 const USER_KEY = "sportspassport-auth-user";
@@ -155,6 +155,10 @@ export const api = {
   authorize: (provider: AuthProvider, redirectUri: string) => {
     const params = new URLSearchParams({ redirectUri: z.url().parse(redirectUri) });
     return request(`/auth/oauth/${authProviderSchema.parse(provider)}/authorize?${params}`, { schema: oauthAuthorizeResponseSchema });
+  },
+  oauthStartUrl: (provider: AuthProvider, redirectUri: string) => {
+    const params = new URLSearchParams({ redirectUri: z.url().parse(redirectUri) });
+    return apiUrl(`/auth/oauth/${authProviderSchema.parse(provider)}/start?${params}`);
   },
   oauthLogin: (provider: AuthProvider, input: OAuthLoginRequest) => request(`/auth/oauth/${authProviderSchema.parse(provider)}/login`, {
     method: "POST",
