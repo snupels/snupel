@@ -87,13 +87,14 @@ export function LoginPage() {
     }
   }
 
-  function oauth(provider: AuthProvider) {
+  async function oauth(provider: AuthProvider) {
     setPending(true);
     setError("");
     try {
       const redirectUri = new URL("/login/", location.origin).toString();
       sessionStorage.setItem(OAUTH_KEY, JSON.stringify({ provider, redirectUri }));
-      location.assign(api.oauthStartUrl(provider, redirectUri));
+      const { authorizationUrl } = await api.authorize(provider, redirectUri);
+      location.assign(authorizationUrl);
     } catch (reason) {
       showError(reason);
       setPending(false);
