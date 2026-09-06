@@ -44,7 +44,7 @@ export function missionPresentation(
     intro: course.description ?? "현장에서 참여 사진을 촬영하고 미션 인증을 신청해 보세요.",
     scheduleLabel: "행사 일시",
     schedule: "2026.10.04 09:00",
-    reward: "홍천 마라톤 참가 스탬프 1개",
+    reward: "홍천 육상 스탬프 1개",
     proof: "대회 참여 사진 1장",
     photoPrompt: "현장에서 촬영한 참여 사진을 선택해 주세요",
     steps: ["홍천사랑마라톤 참여", "현장에서 참여 사진 촬영", "사진 등록 후 인증 제출"],
