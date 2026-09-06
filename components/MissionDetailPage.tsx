@@ -121,6 +121,9 @@ export function MissionDetailPage() {
                 ["medal", "지급 스탬프", mission.reward],
               ].map(([icon, label, value]) => <div key={label} className="rounded-2xl bg-[#f3f7f4] p-5"><span className="flex items-center gap-2 text-xs font-bold text-[#008f45]"><AppIcon name={icon as Parameters<typeof AppIcon>[0]["name"]} />{label}</span><p className="mt-2 text-sm font-semibold leading-6">{value}</p></div>)}
             </div>
+            {mission.sportsActivityId && <Link href={`/sports/detail/?id=${mission.sportsActivityId}`} className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-[#9dcdb0] bg-[#f1f8f4] px-5 text-sm font-bold text-[#00783a] transition hover:border-[#008f45] hover:bg-[#e5f3ea]">
+              <AppIcon name="map" className="size-4" />{mission.sportsLinkLabel ?? "스포츠 탐색에서 보기"}<AppIcon name="arrowRight" className="size-4" />
+            </Link>}
           </div>
 
           <div className="rounded-[24px] border border-[#dfe8e2] bg-white p-6 shadow-sm sm:p-8">
