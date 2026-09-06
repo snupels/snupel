@@ -268,6 +268,10 @@ export const api = {
       `/community-feed/me${pageQuery(page, size)}`,
       z.array(communityFeedResponseSchema),
     ),
+    byUser: (userId: number, page = 1, size = 20) => withToken(
+      `/community-feed/users/${itemIdSchema.parse(userId)}${pageQuery(page, size)}`,
+      z.array(communityFeedResponseSchema),
+    ),
     like: (id: number) => withToken(
       `/community-feed/${itemIdSchema.parse(id)}/like`, feedEngagementResponseSchema, "POST",
     ),
