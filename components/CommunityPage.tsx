@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { type CommunityFeedResponse, type FeedCommentResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { AppIcon } from "./AppIcon";
@@ -25,7 +26,10 @@ function tags(post: CommunityFeedResponse) {
   return [post.sportName, post.sigun].filter((tag): tag is string => Boolean(tag));
 }
 
-export function CommunityPage() {
+function CommunityPageContent() {
+  const searchParams = useSearchParams();
+  const profileUserId = Number(searchParams.get("user"));
+  const viewingProfile = Number.isInteger(profileUserId) && profileUserId > 0;
   const [tab, setTab] = useState<FeedTab>("all");
   const [posts, setPosts] = useState<CommunityFeedResponse[]>([]);
   const [savedPostIds, setSavedPostIds] = useState<number[]>([]);
@@ -43,7 +47,9 @@ export function CommunityPage() {
     setLoading(true);
     setError("");
     try {
-      const result = nextTab === "mine"
+      const result = viewingProfile
+        ? await api.communityFeed.byUser(profileUserId, 1, 100)
+        : nextTab === "mine"
         ? await api.communityFeed.mine(1, 100)
         : await api.communityFeed.list(1, 100);
       setPosts(result);
@@ -58,7 +64,7 @@ export function CommunityPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profileUserId, viewingProfile]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadFeed("all"), 0);
@@ -144,25 +150,25 @@ export function CommunityPage() {
         <div className="mx-auto flex max-w-[1120px] flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-bold text-[#008f45]">GANGWON SPORTS COMMUNITY</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">강원 스포츠 피드</h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{viewingProfile ? `${posts[0]?.authorName ?? "사용자"}님의 스포츠 피드` : "강원 스포츠 피드"}</h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-[#66736c]">
               미션 인증을 완료하고 승인을 받은 스포츠 순간을 다른 이용자와 나눠보세요.
             </p>
           </div>
-          <Link href="/missions" className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white shadow-sm transition hover:bg-[#00753a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">
-            <AppIcon name="checkCircle" className="size-5" />미션 인증하러 가기
+          <Link href={viewingProfile ? "/community" : "/missions"} className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white shadow-sm transition hover:bg-[#00753a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]">
+            <AppIcon name={viewingProfile ? "chevronLeft" : "checkCircle"} className="size-5" />{viewingProfile ? "전체 피드로 돌아가기" : "미션 인증하러 가기"}
           </Link>
         </div>
       </section>
 
       <div className="mx-auto max-w-[1120px] px-4 pt-8 sm:px-6">
-        <section className="flex items-center justify-between gap-4 border-b border-[#dce5df]">
+        {!viewingProfile && <section className="flex items-center justify-between gap-4 border-b border-[#dce5df]">
           <div className="flex">
             <button type="button" onClick={() => selectTab("all")} className={`h-12 cursor-pointer border-b-2 px-5 text-sm font-bold transition ${tab === "all" ? "border-[#008f45] text-[#008f45]" : "border-transparent text-[#7a867f] hover:text-[#34423a]"}`}>전체 피드</button>
             <button type="button" onClick={() => selectTab("mine")} className={`h-12 cursor-pointer border-b-2 px-5 text-sm font-bold transition ${tab === "mine" ? "border-[#008f45] text-[#008f45]" : "border-transparent text-[#7a867f] hover:text-[#34423a]"}`}>내 피드</button>
           </div>
           <p className="hidden text-xs text-[#89948e] sm:block">관리자 승인 완료 인증만 공개됩니다</p>
-        </section>
+        </section>}
         {actionMessage && <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#815f16]"><span>{actionMessage}</span>{!user && <Link href="/login" className="shrink-0 font-black underline underline-offset-2">로그인</Link>}<button type="button" aria-label="알림 닫기" onClick={() => setActionMessage("")} className="ml-auto cursor-pointer text-lg">×</button></div>}
 
         {tab === "mine" && !user ? (
@@ -197,9 +203,9 @@ export function CommunityPage() {
               return (
                 <article key={post.id} className="overflow-hidden rounded-[22px] border border-[#dde6e0] bg-white shadow-[0_4px_16px_rgba(23,58,45,0.07)]">
                   <header className="flex items-center gap-3 px-4 py-3.5">
-                    {post.authorProfileImageUrl ? <span className="relative size-9 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={post.authorProfileImageUrl} alt={`${post.authorName} 프로필 사진`} fill sizes="36px" className="object-cover" /></span> : <span className="flex size-9 items-center justify-center rounded-full bg-[#173a2d] text-xs font-bold text-white">{initials(post.authorName)}</span>}
+                    <Link href={`/community?user=${post.authorId}`} aria-label={`${post.authorName}의 피드 보기`} className="shrink-0 cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-[#008f45]">{post.authorProfileImageUrl ? <span className="relative block size-9 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={post.authorProfileImageUrl} alt={`${post.authorName} 프로필 사진`} fill sizes="36px" className="object-cover" /></span> : <span className="flex size-9 items-center justify-center rounded-full bg-[#173a2d] text-xs font-bold text-white">{initials(post.authorName)}</span>}</Link>
                     <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-sm font-bold">{post.authorName}</h2>
+                      <h2 className="truncate text-sm font-bold"><Link href={`/community?user=${post.authorId}`} className="cursor-pointer hover:text-[#008f45] hover:underline">{post.authorName}</Link></h2>
                       <p className="mt-0.5 truncate text-[11px] text-[#7a867f]"><AppIcon name="mapPin" /> {post.placeName ?? post.sigun ?? "강원특별자치도"}</p>
                     </div>
                     <time className="text-[11px] text-[#9aa39e]">{displayDate(post.approvedAt)}</time>
@@ -218,8 +224,8 @@ export function CommunityPage() {
                     {postTags.length > 0 && <p className="mt-2 text-xs font-semibold text-[#008f45]">{postTags.map((tag) => `#${tag}`).join(" ")}</p>}
                     <div className="mt-4 space-y-3 border-t border-[#edf1ee] pt-3">
                       {(comments[post.id] ?? []).map((comment) => <div key={comment.id} className="flex gap-2.5 text-sm">
-                        {comment.authorProfileImageUrl ? <span className="relative mt-0.5 size-7 shrink-0 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={comment.authorProfileImageUrl} alt={`${comment.authorName} 프로필 사진`} fill sizes="28px" className="object-cover" /></span> : <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#e9f3ec] text-[9px] font-black text-[#17633d]">{initials(comment.authorName)}</span>}
-                        <p className="min-w-0 leading-5"><strong className="mr-1.5">{comment.authorName}</strong><span className="break-words text-[#58655e]">{comment.content}</span></p>
+                        <Link href={`/community?user=${comment.authorId}`} aria-label={`${comment.authorName}의 피드 보기`} className="shrink-0 cursor-pointer rounded-full">{comment.authorProfileImageUrl ? <span className="relative mt-0.5 block size-7 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={comment.authorProfileImageUrl} alt={`${comment.authorName} 프로필 사진`} fill sizes="28px" className="object-cover" /></span> : <span className="mt-0.5 flex size-7 items-center justify-center rounded-full bg-[#e9f3ec] text-[9px] font-black text-[#17633d]">{initials(comment.authorName)}</span>}</Link>
+                        <p className="min-w-0 leading-5"><strong className="mr-1.5"><Link href={`/community?user=${comment.authorId}`} className="cursor-pointer hover:text-[#008f45] hover:underline">{comment.authorName}</Link></strong><span className="break-words text-[#58655e]">{comment.content}</span></p>
                       </div>)}
                       <form onSubmit={(event) => { event.preventDefault(); void submitComment(post.id); }} className="flex items-center gap-2">
                         <input value={commentDrafts[post.id] ?? ""} onChange={(event) => setCommentDrafts((current) => ({ ...current, [post.id]: event.target.value }))} maxLength={500} placeholder={user ? "댓글 달기..." : "로그인 후 댓글을 남겨보세요"} className="h-10 min-w-0 flex-1 rounded-full border border-[#dce5df] bg-[#f8faf8] px-4 text-sm outline-none transition focus:border-[#008f45]" />
@@ -236,4 +242,8 @@ export function CommunityPage() {
       </div>
     </main>
   );
+}
+
+export function CommunityPage() {
+  return <Suspense><CommunityPageContent /></Suspense>;
 }
