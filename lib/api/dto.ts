@@ -336,6 +336,7 @@ export const communityFeedResponseSchema = z.object({
   id: positiveInt,
   proofUrl: z.string().nullable(),
   caption: z.string().nullable(),
+  authorId: positiveInt,
   authorName: z.string(),
   authorProfileImageUrl: z.string().nullable().default(null),
   placeName: z.string().nullable(),
@@ -349,6 +350,7 @@ export const communityFeedResponseSchema = z.object({
 export const feedCommentCreateSchema = z.strictObject({ content: z.string().trim().min(1).max(500) });
 export const feedCommentResponseSchema = z.object({
   id: positiveInt,
+  authorId: positiveInt,
   authorName: z.string(),
   authorProfileImageUrl: z.string().nullable().default(null),
   content: z.string(),
