@@ -36,6 +36,23 @@ function metadataText(
   return value && value !== "0" && value.toLowerCase() !== "null" ? value : null;
 }
 
+function isReferenceSource(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "www.data.go.kr"
+      || /\.(?:gpx|zip)$/i.test(parsed.pathname);
+  } catch {
+    return true;
+  }
+}
+
+function kakaoPlaceSearchUrl(activity: ActivityResponse) {
+  const query = [activity.placeName, activity.sigun, activity.address]
+    .filter(Boolean)
+    .join(" ");
+  return `https://map.kakao.com/link/search/${encodeURIComponent(query)}`;
+}
+
 function DetailLoading() {
   return (
     <main className="min-h-[70vh] bg-[#f3f7f4] px-5 py-16 text-[#172033]">
@@ -95,6 +112,14 @@ function SportsDetailContent() {
   const fee = metadataText(activity.metadata, ["fee", "price", "요금", "입장료", "이용료"]);
   const parking = metadataText(activity.metadata, ["parking", "주차"]);
   const type = sportsFacilityType(activity);
+  const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
+    ? activity.sourceUrl
+    : null;
+  const officialWebsiteUrl = activity.sourceUrl && !referenceSourceUrl
+    ? activity.sourceUrl
+    : null;
+  const facilityWebsiteUrl = officialWebsiteUrl ?? kakaoPlaceSearchUrl(activity);
+  const facilityWebsiteLabel = officialWebsiteUrl ? "공식 홈페이지" : "카카오맵 시설 정보";
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
     ...(activity.sportName ? [{ label: "스포츠 종목", value: activity.sportName, icon: "medal" as AppIconName }] : []),
@@ -140,8 +165,20 @@ function SportsDetailContent() {
               <h2 className="text-lg font-bold">이용 정보</h2>
               <dl className="mt-5 space-y-5">
                 {details.map((item) => <div key={item.label} className="flex gap-3"><AppIcon name={item.icon} className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="text-xs font-semibold text-[#718078]">{item.label}</dt><dd className="mt-1 break-words text-sm leading-6 text-[#172033]">{item.value}</dd></div></div>)}
+                <div className="flex gap-3">
+                  <AppIcon name="map" className="mt-0.5 size-5 shrink-0 text-[#008f45]" />
+                  <div>
+                    <dt className="text-xs font-semibold text-[#718078]">관련 사이트</dt>
+                    <dd className="mt-1 text-sm leading-6">
+                      <a href={facilityWebsiteUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#007c3c] underline decoration-[#9bc7ad] underline-offset-4 transition hover:text-[#005f2e]">
+                        {facilityWebsiteLabel}
+                      </a>
+                    </dd>
+                  </div>
+                </div>
               </dl>
-              {activity.sourceUrl && <div className="mt-6"><a href={activity.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 정보 보기<AppIcon name="arrowRight" /></a></div>}
+              <div className="mt-6"><a href={facilityWebsiteUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">{facilityWebsiteLabel}<AppIcon name="arrowRight" /></a></div>
+              {referenceSourceUrl && <a href={referenceSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-[#65736b] underline underline-offset-4 transition hover:text-[#008f45]">{referenceSourceUrl.includes("data.go.kr") ? "공공데이터 원문" : "코스 원본 자료"}<AppIcon name="arrowRight" className="size-3.5" /></a>}
               {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {activity.source}</p>}
             </aside>
           </div>
