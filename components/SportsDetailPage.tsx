@@ -177,7 +177,6 @@ function SportsDetailContent() {
                   </div>
                 </div>
               </dl>
-              <div className="mt-6"><a href={facilityWebsiteUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">{facilityWebsiteLabel}<AppIcon name="arrowRight" /></a></div>
               {referenceSourceUrl && <a href={referenceSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-[#65736b] underline underline-offset-4 transition hover:text-[#008f45]">{referenceSourceUrl.includes("data.go.kr") ? "공공데이터 원문" : "코스 원본 자료"}<AppIcon name="arrowRight" className="size-3.5" /></a>}
               {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {activity.source}</p>}
             </aside>
