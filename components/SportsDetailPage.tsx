@@ -39,11 +39,22 @@ function metadataText(
 function isReferenceSource(url: string) {
   try {
     const parsed = new URL(url);
-    return parsed.hostname === "www.data.go.kr"
+    const hostname = parsed.hostname.toLowerCase();
+    return hostname === "data.go.kr"
+      || hostname === "www.data.go.kr"
+      || hostname === "durunubi.kr"
+      || hostname === "www.durunubi.kr"
       || /\.(?:gpx|zip)$/i.test(parsed.pathname);
   } catch {
     return true;
   }
+}
+
+function referenceSourceLabel(url: string) {
+  const hostname = new URL(url).hostname.toLowerCase();
+  if (hostname === "data.go.kr" || hostname === "www.data.go.kr") return "공공데이터 원문";
+  if (hostname === "durunubi.kr" || hostname === "www.durunubi.kr") return "두루누비 코스 정보";
+  return "코스 원본 자료";
 }
 
 function isOfficialFacilityWebsite(url: string) {
@@ -118,6 +129,9 @@ function SportsDetailContent() {
   const fee = metadataText(activity.metadata, ["fee", "price", "요금", "입장료", "이용료"]);
   const parking = metadataText(activity.metadata, ["parking", "주차"]);
   const type = sportsFacilityType(activity);
+  const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
+    ? activity.sourceUrl
+    : null;
   const officialWebsiteUrl = activity.sourceUrl && isOfficialFacilityWebsite(activity.sourceUrl)
     ? activity.sourceUrl
     : null;
@@ -178,6 +192,7 @@ function SportsDetailContent() {
                   </div>
                 </div>}
               </dl>
+              {referenceSourceUrl && <a href={referenceSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-[#65736b] underline underline-offset-4 transition hover:text-[#008f45]">{referenceSourceLabel(referenceSourceUrl)}<AppIcon name="arrowRight" className="size-3.5" /></a>}
               {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {activity.source}</p>}
             </aside>
           </div>
