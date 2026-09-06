@@ -24,6 +24,9 @@ import {
   courseItineraryResponseSchema,
   eventsExploreQuerySchema,
   feedVisibilityUpdateSchema,
+  feedCommentCreateSchema,
+  feedCommentResponseSchema,
+  feedEngagementResponseSchema,
   loginRequestSchema,
   oauthAuthorizeResponseSchema,
   oauthLoginRequestSchema,
@@ -257,13 +260,29 @@ export const api = {
     ),
   },
   communityFeed: {
-    list: (page = 1, size = 20) => request(
+    list: (page = 1, size = 20) => withToken(
       `/community-feed${pageQuery(page, size)}`,
-      { schema: z.array(communityFeedResponseSchema) },
+      z.array(communityFeedResponseSchema),
     ),
     mine: (page = 1, size = 20) => withToken(
       `/community-feed/me${pageQuery(page, size)}`,
       z.array(communityFeedResponseSchema),
+    ),
+    like: (id: number) => withToken(
+      `/community-feed/${itemIdSchema.parse(id)}/like`, feedEngagementResponseSchema, "POST",
+    ),
+    unlike: (id: number) => withToken(
+      `/community-feed/${itemIdSchema.parse(id)}/like`, feedEngagementResponseSchema, "DELETE",
+    ),
+    comments: (id: number, page = 1, size = 100) => request(
+      `/community-feed/${itemIdSchema.parse(id)}/comments${pageQuery(page, size)}`,
+      { schema: z.array(feedCommentResponseSchema) },
+    ),
+    addComment: (id: number, content: string) => withToken(
+      `/community-feed/${itemIdSchema.parse(id)}/comments`,
+      feedCommentResponseSchema,
+      "POST",
+      feedCommentCreateSchema.parse({ content }),
     ),
   },
   adminStampSubmissions: {

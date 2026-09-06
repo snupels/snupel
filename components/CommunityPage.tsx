@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { type CommunityFeedResponse } from "@/lib/api/dto";
+import { type CommunityFeedResponse, type FeedCommentResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { AppIcon } from "./AppIcon";
 
@@ -28,10 +28,13 @@ function tags(post: CommunityFeedResponse) {
 export function CommunityPage() {
   const [tab, setTab] = useState<FeedTab>("all");
   const [posts, setPosts] = useState<CommunityFeedResponse[]>([]);
-  const [likedPostIds, setLikedPostIds] = useState<number[]>([]);
   const [savedPostIds, setSavedPostIds] = useState<number[]>([]);
+  const [comments, setComments] = useState<Record<number, FeedCommentResponse[]>>({});
+  const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
+  const [busyPostIds, setBusyPostIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
   const [user] = useState<{ id: number; email: string } | null>(
     () => api.currentUser() ?? null,
   );
@@ -44,6 +47,11 @@ export function CommunityPage() {
         ? await api.communityFeed.mine(1, 100)
         : await api.communityFeed.list(1, 100);
       setPosts(result);
+      const entries = await Promise.all(result.map(async (post) => {
+        const postComments = await api.communityFeed.comments(post.id).catch(() => []);
+        return [post.id, postComments] as const;
+      }));
+      setComments(Object.fromEntries(entries));
     } catch {
       setPosts([]);
       setError("피드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
@@ -70,6 +78,52 @@ export function CommunityPage() {
 
   function toggleId(id: number, values: number[], setter: (value: number[]) => void) {
     setter(values.includes(id) ? values.filter((value) => value !== id) : [...values, id]);
+  }
+
+  async function toggleLike(post: CommunityFeedResponse) {
+    if (!user) {
+      setActionMessage("좋아요를 누르려면 먼저 로그인해 주세요.");
+      return;
+    }
+    if (busyPostIds.includes(post.id)) return;
+    setBusyPostIds((current) => [...current, post.id]);
+    try {
+      const engagement = post.likedByMe
+        ? await api.communityFeed.unlike(post.id)
+        : await api.communityFeed.like(post.id);
+      setPosts((current) => current.map((item) => item.id === post.id
+        ? { ...item, ...engagement }
+        : item));
+    } catch {
+      setActionMessage("좋아요를 반영하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setBusyPostIds((current) => current.filter((id) => id !== post.id));
+    }
+  }
+
+  async function submitComment(postId: number) {
+    const content = commentDrafts[postId]?.trim();
+    if (!user) {
+      setActionMessage("댓글을 작성하려면 먼저 로그인해 주세요.");
+      return;
+    }
+    if (!content || busyPostIds.includes(postId)) return;
+    setBusyPostIds((current) => [...current, postId]);
+    try {
+      const comment = await api.communityFeed.addComment(postId, content);
+      setComments((current) => ({
+        ...current,
+        [postId]: [...(current[postId] ?? []), comment],
+      }));
+      setPosts((current) => current.map((post) => post.id === postId
+        ? { ...post, commentCount: post.commentCount + 1 }
+        : post));
+      setCommentDrafts((current) => ({ ...current, [postId]: "" }));
+    } catch {
+      setActionMessage("댓글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setBusyPostIds((current) => current.filter((id) => id !== postId));
+    }
   }
 
   async function hideFromFeed(id: number) {
@@ -109,6 +163,7 @@ export function CommunityPage() {
           </div>
           <p className="hidden text-xs text-[#89948e] sm:block">관리자 승인 완료 인증만 공개됩니다</p>
         </section>
+        {actionMessage && <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#815f16]"><span>{actionMessage}</span>{!user && <Link href="/login" className="shrink-0 font-black underline underline-offset-2">로그인</Link>}<button type="button" aria-label="알림 닫기" onClick={() => setActionMessage("")} className="ml-auto cursor-pointer text-lg">×</button></div>}
 
         {tab === "mine" && !user ? (
           <section className="mt-8 rounded-[24px] border border-[#dce5df] bg-white px-6 py-16 text-center">
@@ -136,13 +191,13 @@ export function CommunityPage() {
         ) : (
           <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post, index) => {
-              const liked = likedPostIds.includes(post.id);
+              const liked = post.likedByMe;
               const saved = savedPostIds.includes(post.id);
               const postTags = tags(post);
               return (
                 <article key={post.id} className="overflow-hidden rounded-[22px] border border-[#dde6e0] bg-white shadow-[0_4px_16px_rgba(23,58,45,0.07)]">
                   <header className="flex items-center gap-3 px-4 py-3.5">
-                    <span className="flex size-9 items-center justify-center rounded-full bg-[#173a2d] text-xs font-bold text-white">{initials(post.authorName)}</span>
+                    {post.authorProfileImageUrl ? <span className="relative size-9 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={post.authorProfileImageUrl} alt={`${post.authorName} 프로필 사진`} fill sizes="36px" className="object-cover" /></span> : <span className="flex size-9 items-center justify-center rounded-full bg-[#173a2d] text-xs font-bold text-white">{initials(post.authorName)}</span>}
                     <div className="min-w-0 flex-1">
                       <h2 className="truncate text-sm font-bold">{post.authorName}</h2>
                       <p className="mt-0.5 truncate text-[11px] text-[#7a867f]"><AppIcon name="mapPin" /> {post.placeName ?? post.sigun ?? "강원특별자치도"}</p>
@@ -154,11 +209,23 @@ export function CommunityPage() {
                   </div>
                   <div className="p-4">
                     <div className="flex items-center gap-2">
-                      <button type="button" aria-label={liked ? "좋아요 취소" : "좋아요"} aria-pressed={liked} onClick={() => toggleId(post.id, likedPostIds, setLikedPostIds)} className={`inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition ${liked ? "bg-[#fff0f0] text-[#e04444]" : "bg-[#f3f6f4] text-[#4f5d55] hover:text-[#e04444]"}`}><AppIcon name="heart" className={`size-5 ${liked ? "fill-current" : ""}`} /></button>
+                      <button type="button" aria-label={liked ? "좋아요 취소" : "좋아요"} aria-pressed={liked} onClick={() => void toggleLike(post)} disabled={busyPostIds.includes(post.id)} className={`inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition disabled:opacity-50 ${liked ? "bg-[#fff0f0] text-[#e04444]" : "bg-[#f3f6f4] text-[#4f5d55] hover:text-[#e04444]"}`}><AppIcon name="heart" className={`size-5 ${liked ? "fill-current" : ""}`} /></button>
+                      <span className="text-xs font-bold text-[#4f5d55]">{post.likeCount}</span>
+                      <span className="ml-1 inline-flex items-center gap-1 text-xs font-bold text-[#4f5d55]"><AppIcon name="messageCircle" className="size-5" />{post.commentCount}</span>
                       <button type="button" aria-label={saved ? "저장 취소" : "저장"} aria-pressed={saved} onClick={() => toggleId(post.id, savedPostIds, setSavedPostIds)} className={`ml-auto inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition ${saved ? "bg-[#e8f4ec] text-[#008f45]" : "bg-[#f3f6f4] text-[#4f5d55] hover:text-[#008f45]"}`}><AppIcon name="bookmark" className={`size-5 ${saved ? "fill-current" : ""}`} /></button>
                     </div>
                     <p className="mt-3 text-sm leading-6"><strong className="mr-2">{post.placeName ?? "강원 스포츠 인증"}</strong>{post.caption ?? "미션 인증을 완료했습니다."}</p>
                     {postTags.length > 0 && <p className="mt-2 text-xs font-semibold text-[#008f45]">{postTags.map((tag) => `#${tag}`).join(" ")}</p>}
+                    <div className="mt-4 space-y-3 border-t border-[#edf1ee] pt-3">
+                      {(comments[post.id] ?? []).map((comment) => <div key={comment.id} className="flex gap-2.5 text-sm">
+                        {comment.authorProfileImageUrl ? <span className="relative mt-0.5 size-7 shrink-0 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={comment.authorProfileImageUrl} alt={`${comment.authorName} 프로필 사진`} fill sizes="28px" className="object-cover" /></span> : <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#e9f3ec] text-[9px] font-black text-[#17633d]">{initials(comment.authorName)}</span>}
+                        <p className="min-w-0 leading-5"><strong className="mr-1.5">{comment.authorName}</strong><span className="break-words text-[#58655e]">{comment.content}</span></p>
+                      </div>)}
+                      <form onSubmit={(event) => { event.preventDefault(); void submitComment(post.id); }} className="flex items-center gap-2">
+                        <input value={commentDrafts[post.id] ?? ""} onChange={(event) => setCommentDrafts((current) => ({ ...current, [post.id]: event.target.value }))} maxLength={500} placeholder={user ? "댓글 달기..." : "로그인 후 댓글을 남겨보세요"} className="h-10 min-w-0 flex-1 rounded-full border border-[#dce5df] bg-[#f8faf8] px-4 text-sm outline-none transition focus:border-[#008f45]" />
+                        <button type="submit" disabled={!commentDrafts[post.id]?.trim() || busyPostIds.includes(post.id)} className="h-9 cursor-pointer rounded-full px-3 text-xs font-black text-[#008f45] disabled:cursor-not-allowed disabled:text-[#aab4ae]">게시</button>
+                      </form>
+                    </div>
                     {tab === "mine" && <button type="button" onClick={() => void hideFromFeed(post.id)} className="mt-4 cursor-pointer text-xs font-semibold text-[#929c96] underline-offset-2 hover:text-[#b43d3d] hover:underline">피드에서 숨기기</button>}
                   </div>
                 </article>

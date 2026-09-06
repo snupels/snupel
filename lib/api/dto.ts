@@ -337,10 +337,26 @@ export const communityFeedResponseSchema = z.object({
   proofUrl: z.string().nullable(),
   caption: z.string().nullable(),
   authorName: z.string(),
+  authorProfileImageUrl: z.string().nullable().default(null),
   placeName: z.string().nullable(),
   sigun: z.string().nullable(),
   sportName: z.string().nullable(),
   approvedAt: apiDateTime,
+  likeCount: z.number().int().nonnegative().default(0),
+  commentCount: z.number().int().nonnegative().default(0),
+  likedByMe: z.boolean().default(false),
+});
+export const feedCommentCreateSchema = z.strictObject({ content: z.string().trim().min(1).max(500) });
+export const feedCommentResponseSchema = z.object({
+  id: positiveInt,
+  authorName: z.string(),
+  authorProfileImageUrl: z.string().nullable().default(null),
+  content: z.string(),
+  createdAt: apiDateTime,
+});
+export const feedEngagementResponseSchema = z.object({
+  likeCount: z.number().int().nonnegative(),
+  likedByMe: z.boolean(),
 });
 export const rejectSubmissionSchema = z.strictObject({ reason: z.string().min(1).max(1000) });
 
@@ -387,4 +403,7 @@ export type UploadUrlResponse = z.infer<typeof uploadUrlResponseSchema>;
 export type StampSubmissionResponse = z.infer<typeof stampSubmissionResponseSchema>;
 export type FeedVisibilityUpdate = z.infer<typeof feedVisibilityUpdateSchema>;
 export type CommunityFeedResponse = z.infer<typeof communityFeedResponseSchema>;
+export type FeedCommentCreate = z.infer<typeof feedCommentCreateSchema>;
+export type FeedCommentResponse = z.infer<typeof feedCommentResponseSchema>;
+export type FeedEngagementResponse = z.infer<typeof feedEngagementResponseSchema>;
 export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
