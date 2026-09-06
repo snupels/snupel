@@ -6,7 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
-import { sportsFacilityType } from "@/lib/sportsFacility";
+import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
@@ -146,6 +146,7 @@ const sportsPageSize = 20;
 function sportCategory(sportName: string | null, placeName?: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
   const place = placeName?.replace(/\s+/g, "").toLowerCase() ?? "";
+  if (isGeneralSportsFacility(placeName)) return "스포츠";
   const isWalkingRoute = ["둘레길", "탐방로", "산소길", "트레킹", "걷기길", "산책로"].some((value) => place.includes(value))
     || /(?:길|로)$/.test(place);
   if (["짚와이어", "짚라인", "zipwire", "zipline"].some((value) => place.includes(value))) return "산악스포츠";

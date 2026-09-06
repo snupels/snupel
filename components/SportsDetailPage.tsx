@@ -6,7 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
-import { sportsFacilityType } from "@/lib/sportsFacility";
+import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
@@ -129,6 +129,9 @@ function SportsDetailContent() {
   const fee = metadataText(activity.metadata, ["fee", "price", "요금", "입장료", "이용료"]);
   const parking = metadataText(activity.metadata, ["parking", "주차"]);
   const type = sportsFacilityType(activity);
+  const sportLabel = isGeneralSportsFacility(activity.placeName)
+    ? "스포츠"
+    : activity.sportName;
   const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
     ? activity.sourceUrl
     : null;
@@ -137,7 +140,7 @@ function SportsDetailContent() {
     : null;
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
-    ...(activity.sportName ? [{ label: "스포츠 종목", value: activity.sportName, icon: "medal" as AppIconName }] : []),
+    ...(sportLabel ? [{ label: "스포츠 종목", value: sportLabel, icon: "medal" as AppIconName }] : []),
     ...(type ? [{ label: "시설 유형", value: type, icon: "clipboard" as AppIconName }] : []),
     ...(phone ? [{ label: "문의", value: phone, icon: "phone" as AppIconName }] : []),
     ...(hours ? [{ label: "운영시간", value: hours, icon: "timer" as AppIconName }] : []),
@@ -155,7 +158,7 @@ function SportsDetailContent() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#102c22]/95 via-[#102c22]/25 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10">
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{activity.sportName ?? "강원 스포츠"}</span>
+                <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{sportLabel ?? "강원 스포츠"}</span>
                 {type && <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur">{type}</span>}
               </div>
               <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{title}</h1>

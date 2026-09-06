@@ -2,6 +2,18 @@ import type { ActivityResponse } from "./api/dto";
 
 type FacilityActivity = Pick<ActivityResponse, "placeName" | "metadata">;
 
+const GENERAL_SPORTS_FACILITIES = new Set([
+  "강릉국민체육센터",
+  "강릉볼링장",
+  "강릉생활체육센터",
+  "강릉스쿼시장",
+  "강릉실내체육관",
+]);
+
+export function isGeneralSportsFacility(placeName: string | null | undefined) {
+  return GENERAL_SPORTS_FACILITIES.has(placeName?.replace(/\s+/g, "") ?? "");
+}
+
 export function sportsFacilityType(activity: FacilityActivity) {
   const metadata = activity.metadata;
   const categoryCode = String(metadata?.cat3 ?? "").trim();
