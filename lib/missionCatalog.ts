@@ -16,6 +16,8 @@ export type MissionPresentation = {
   steps: string[];
   officialUrl: string;
   officialLabel: string;
+  sportsActivityId?: number;
+  sportsLinkLabel?: string;
 };
 
 export function missionPresentation(
@@ -35,6 +37,8 @@ export function missionPresentation(
       steps: ["평창 동계올림픽·패럴림픽 기념관 방문", "기념관 포토존 앞에서 사진 촬영", "사진 등록 후 인증 제출"],
       officialUrl: "https://pom2018.org/",
       officialLabel: "기념관 공식 홈페이지",
+      sportsActivityId: 714,
+      sportsLinkLabel: "스포츠 탐색에서 기념관 보기",
     };
   }
 
