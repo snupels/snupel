@@ -1,0 +1,20 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Standalone regression test. */
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const ts = require('typescript');
+const source = fs.readFileSync(path.join(__dirname, '../lib/api/dto.ts'), 'utf8');
+const exportsObject = {};
+vm.runInNewContext(ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText, {exports:exportsObject, require, URL});
+const profile = exportsObject.communityProfileResponseSchema.parse({id:1, name:'운영자', profileImageUrl:null, followerCount:2, followingCount:1, followedByMe:true, isOperator:true, email:'private'});
+assert.equal(profile.followedByMe, true);
+assert.equal(profile.email, undefined);
+assert.equal(exportsObject.communityProfileResponseSchema.safeParse({...profile, followerCount:-1}).success, false);
+assert.equal(exportsObject.feedCommentCreateSchema.safeParse({content:'   '}).success, false);
+const ui = fs.readFileSync(path.join(__dirname, '../components/CommunityPage.tsx'), 'utf8');
+assert.ok(ui.includes('api.communityFeed.following'));
+assert.ok(ui.includes('post.isDemo'));
+assert.ok(ui.includes('expandedComments.includes(post.id)'));
+assert.ok(ui.includes('xl:grid-cols-4'));
+console.log('PASS: community profile privacy, validation, following and demo rendering guards');

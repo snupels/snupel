@@ -20,6 +20,7 @@ import {
   courseRecommendationRequestSchema,
   courseRecommendationResponseSchema,
   communityFeedResponseSchema,
+  communityProfileResponseSchema,
   courseResponseSchema,
   courseItineraryResponseSchema,
   eventsExploreQuerySchema,
@@ -260,6 +261,10 @@ export const api = {
     ),
   },
   communityFeed: {
+    following: (page = 1, size = 20) => withToken(`/community-feed${pageQuery(page, size)}&following=true`, z.array(communityFeedResponseSchema)),
+    profile: (id: number) => withToken(`/community-profiles/${itemIdSchema.parse(id)}`, communityProfileResponseSchema),
+    follow: (id: number) => withToken(`/community-profiles/${itemIdSchema.parse(id)}/follow`, communityProfileResponseSchema, "POST"),
+    unfollow: (id: number) => withToken(`/community-profiles/${itemIdSchema.parse(id)}/follow`, communityProfileResponseSchema, "DELETE"),
     list: (page = 1, size = 20) => withToken(
       `/community-feed${pageQuery(page, size)}`,
       z.array(communityFeedResponseSchema),
