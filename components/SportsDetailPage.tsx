@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
-import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
+import { isExcludedSportActivity, sportsImage, sportsPhotoSource } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
 
@@ -138,6 +138,7 @@ function SportsDetailContent() {
   const officialWebsiteUrl = activity.sourceUrl && isOfficialFacilityWebsite(activity.sourceUrl)
     ? activity.sourceUrl
     : null;
+  const photoSource = sportsPhotoSource(activity);
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
     ...(sportLabel ? [{ label: "스포츠 종목", value: sportLabel, icon: "medal" as AppIconName }] : []),
@@ -166,6 +167,7 @@ function SportsDetailContent() {
             </div>
           </div>
 
+          {photoSource && <p className="px-7 pt-3 text-right text-xs text-[#637069] sm:px-10">사진 출처: <a href={photoSource.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{photoSource.label}</a></p>}
           <div className="grid gap-10 p-7 sm:p-10 lg:grid-cols-[minmax(0,1fr)_340px]">
             <section>
               <p className="text-sm font-bold text-[#008f45]">스포츠 장소 소개</p>
