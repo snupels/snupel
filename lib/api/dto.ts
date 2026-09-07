@@ -333,6 +333,7 @@ export const feedVisibilityUpdateSchema = z.strictObject({
   feed_caption: z.string().max(300).nullable().optional(),
 });
 export const communityFeedResponseSchema = z.object({
+  isDemo: z.boolean().default(false),
   id: positiveInt,
   proofUrl: z.string().nullable(),
   caption: z.string().nullable(),
@@ -348,6 +349,12 @@ export const communityFeedResponseSchema = z.object({
   likedByMe: z.boolean().default(false),
 });
 export const feedCommentCreateSchema = z.strictObject({ content: z.string().trim().min(1).max(500) });
+export const communityProfileResponseSchema = z.object({
+  id: positiveInt, name: z.string(), profileImageUrl: z.string().nullable(),
+  followerCount: z.number().int().nonnegative(), followingCount: z.number().int().nonnegative(),
+  followedByMe: z.boolean(), isOperator: z.boolean(),
+});
+export type CommunityProfileResponse = z.infer<typeof communityProfileResponseSchema>;
 export const feedCommentResponseSchema = z.object({
   id: positiveInt,
   authorId: positiveInt,
