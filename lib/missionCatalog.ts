@@ -1,4 +1,5 @@
 import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
+import photoMissions from "./photoMissions.json";
 
 type CourseItineraryStop = CourseItineraryResponse["stops"][number];
 
@@ -24,6 +25,25 @@ export function missionPresentation(
   course: Pick<CourseResponse, "title" | "description">,
   stop?: CourseItineraryStop | null,
 ): MissionPresentation {
+  const photoMission = photoMissions.find((mission) => mission.title === course.title);
+  if (photoMission) {
+    const activityId = stop?.activityId ?? photoMission.activityId;
+    return {
+      category: photoMission.category,
+      region: photoMission.region,
+      intro: course.description ?? photoMission.description,
+      scheduleLabel: "참여 기간",
+      schedule: photoMission.schedule,
+      reward: `${photoMission.region} ${photoMission.category} 스탬프 1개`,
+      proof: photoMission.proof,
+      photoPrompt: photoMission.proof,
+      steps: ["운영 여부 확인 후 현장 방문·체험", "인증 조건에 맞는 현장 사진 촬영", "사진 제출 후 운영자 승인 확인"],
+      officialUrl: `/sports/detail/?id=${activityId}`,
+      officialLabel: "장소 이용정보 확인",
+      sportsActivityId: activityId,
+      sportsLinkLabel: "스포츠 탐색에서 장소 보기",
+    };
+  }
   if (course.title === PYEONGCHANG_MUSEUM_MISSION) {
     return {
       category: "올림픽 레거시",
