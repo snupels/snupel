@@ -122,7 +122,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
 
 type FilterGroup = { label: string; key: string; items: Array<{ label: string; value: string; icon: AppIconName }> };
 
-const regions = ["전체 지역", "춘천", "원주", "강릉", "동해", "태백", "속초", "삼척", "홍천", "평창", "정선", "인제", "양양"].map((label) => ({ label, value: label === "전체 지역" ? "" : label, icon: "mapPin" as AppIconName }));
+const regions = ["전체 지역", "춘천", "원주", "강릉", "동해", "태백", "속초", "삼척", "홍천", "횡성", "영월", "평창", "정선", "철원", "화천", "양구", "인제", "고성", "양양"].map((label) => ({ label, value: label === "전체 지역" ? "" : label, icon: "mapPin" as AppIconName }));
 const sports = [
   { label: "전체 스포츠", value: "", icon: "medal" as AppIconName },
   { label: "산악스포츠", value: "산악스포츠", icon: "mountain" as AppIconName },
@@ -236,15 +236,20 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig[
     }));
   }
   if (page === "missions") {
-    const courses = (await api.courses.list())
-      .filter((course) => course.isPublished && course.category === "event");
+    const allCourses = [];
+    for (let pageNumber = 1; ; pageNumber += 1) {
+      const batch = await api.courses.list(pageNumber, 100);
+      allCourses.push(...batch);
+      if (batch.length < 100) break;
+    }
+    const courses = allCourses.filter((course) => course.isPublished && course.category === "event");
     const itineraries = await Promise.all(courses.map((course) => (
       api.courseItinerary(course.id).catch(() => null)
     )));
     return courses.map((course, index) => {
       const presentation = missionPresentation(course, itineraries[index]?.stops[0]);
       return {
-        image: course.representativeImageUrl ?? image1,
+        image: course.representativeImageUrl ?? sportsImage({ placeName: course.title ?? null, sportName: course.sportName, representativeImageUrl: null, metadata: null }, [presentation.category.replace(/\s/g, "")]),
         tag: presentation.category,
         title: course.title ?? `이벤트 미션 #${course.id}`,
         description: "",
@@ -422,7 +427,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     if (card.hidden) return false;
     const query = activeFilters.q?.toLowerCase();
     const matchesSport = page === "courses" || activeSportFilters.length === 0 || activeSportFilters.some((sport) => (
-      card.title.includes(sport) || card.tag.includes(sport) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
+      card.title.includes(sport) || card.tag.replace(/\s/g, "").includes(sport.replace(/\s/g, "")) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
     ));
     const matchesRegion = page === "courses" || activeRegionFilters.length === 0 || activeRegionFilters.some((region) => card.meta.includes(region));
     return (!query || `${card.title} ${card.description} ${card.meta}`.toLowerCase().includes(query))

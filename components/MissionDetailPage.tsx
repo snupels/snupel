@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AppIcon } from "./AppIcon";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
+import { sportsImage } from "@/lib/sportsImage";
 import { ApiError } from "@/lib/api/repository";
 import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
 
@@ -92,11 +93,12 @@ export function MissionDetailPage() {
   if (!course || !itinerary) return <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-4"><div className="text-center"><p className="font-semibold">{message}</p><Link href="/missions" className="mt-5 inline-flex text-sm font-bold text-[#008f45]">미션 목록으로</Link></div></main>;
 
   const mission = missionPresentation(course, itinerary.stops[0]);
+  const heroImage = course.representativeImageUrl ?? sportsImage({ placeName: course.title ?? null, sportName: course.sportName, representativeImageUrl: null, metadata: null }, [mission.category.replace(/\s/g, "")]);
 
   return (
     <main className="bg-[#f3f7f4] pb-16 text-[#172033]">
       <section className="relative min-h-[390px] overflow-hidden bg-[#173a2d]">
-        {course.representativeImageUrl && <Image src={course.representativeImageUrl} alt={`${course.title ?? "패스포트 미션"} 대표 이미지`} fill priority className="object-cover" sizes="100vw" />}
+        <Image src={heroImage} alt={`${course.title ?? "패스포트 미션"} 대표 이미지`} fill priority className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#09271d]/95 via-[#09271d]/75 to-[#09271d]/25" />
         <div className="relative mx-auto flex min-h-[390px] max-w-[1180px] flex-col justify-end px-5 pb-12 pt-24 text-white sm:px-8">
           <Link href="/missions" className="mb-auto inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/80 hover:text-white"><AppIcon name="chevronLeft" />미션 목록</Link>

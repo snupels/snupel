@@ -103,7 +103,7 @@ function resource<TCreate, TPatch, TResponse>(
   responseSchema: z.ZodType<TResponse>,
 ) {
   return {
-    list: () => withToken(path, z.array(responseSchema)),
+    list: (page = 1, size = 20) => withToken(`${path}${pageQuery(page, size)}`, z.array(responseSchema)),
     get: (id: number) => withToken(`${path}/${itemIdSchema.parse(id)}`, responseSchema),
     create: (input: TCreate) => withToken(path, responseSchema, "POST", createSchema.parse(input)),
     update: (id: number, input: TPatch) => withToken(`${path}/${itemIdSchema.parse(id)}`, responseSchema, "PATCH", patchSchema.parse(input)),
