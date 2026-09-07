@@ -261,6 +261,8 @@ export const api = {
     ),
   },
   communityFeed: {
+    get: (id: number) => withToken(`/community-feed/posts/${itemIdSchema.parse(id)}`, communityFeedResponseSchema),
+    liked: (page = 1, size = 20) => withToken(`/community-feed/liked${pageQuery(page, size)}`, z.array(communityFeedResponseSchema)),
     following: (page = 1, size = 20) => withToken(`/community-feed${pageQuery(page, size)}&following=true`, z.array(communityFeedResponseSchema)),
     profile: (id: number) => withToken(`/community-profiles/${itemIdSchema.parse(id)}`, communityProfileResponseSchema),
     follow: (id: number) => withToken(`/community-profiles/${itemIdSchema.parse(id)}/follow`, communityProfileResponseSchema, "POST"),
