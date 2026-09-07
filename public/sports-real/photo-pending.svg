@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-label="장소 사진 준비 중">
+  <rect width="1200" height="700" fill="#e8efeb"/>
+  <g fill="none" stroke="#84988c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="565" y="202" width="70" height="54" rx="8"/>
+    <path d="m575 202 7-12h36l7 12"/>
+    <circle cx="600" cy="229" r="13"/>
+  </g>
+  <text x="600" y="301" text-anchor="middle" fill="#556b5e" font-family="sans-serif" font-size="27">사진 준비 중</text>
+  <text x="600" y="338" text-anchor="middle" fill="#6f8276" font-family="sans-serif" font-size="18">실제 장소 사진을 확인하고 있어요</text>
+</svg>
