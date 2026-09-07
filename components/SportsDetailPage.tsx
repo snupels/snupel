@@ -40,9 +40,9 @@ function isReferenceSource(url: string) {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
-    return hostname === "data.go.kr"
-      || hostname === "www.data.go.kr"
-      || hostname === "durunubi.kr"
+    // Dataset catalog pages are not visitor information; retain actual course resources.
+    if (hostname === "data.go.kr" || hostname.endsWith(".data.go.kr")) return false;
+    return hostname === "durunubi.kr"
       || hostname === "www.durunubi.kr"
       || /\.(?:gpx|zip)$/i.test(parsed.pathname);
   } catch {
@@ -52,7 +52,6 @@ function isReferenceSource(url: string) {
 
 function referenceSourceLabel(url: string) {
   const hostname = new URL(url).hostname.toLowerCase();
-  if (hostname === "data.go.kr" || hostname === "www.data.go.kr") return "공공데이터 원문";
   if (hostname === "durunubi.kr" || hostname === "www.durunubi.kr") return "두루누비 코스 정보";
   return "코스 원본 자료";
 }
