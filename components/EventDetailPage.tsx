@@ -22,6 +22,36 @@ function detailImage(event: ActivityResponse) {
   return event.representativeImageUrl || fallbackImages[(event.id - 1) % fallbackImages.length];
 }
 
+function calendarFile(event: ActivityResponse, title: string, location: string) {
+  if (!event.startsAt) return null;
+  const date = (value: string) => value.slice(0, 10).replaceAll("-", "");
+  const nextDay = (value: string) => {
+    const day = new Date(`${value.slice(0, 10)}T00:00:00Z`);
+    day.setUTCDate(day.getUTCDate() + 1);
+    return day.toISOString().slice(0, 10).replaceAll("-", "");
+  };
+  const escape = (value: string) => value.replaceAll("\\", "\\\\").replaceAll("\n", "\\n").replaceAll(",", "\\,").replaceAll(";", "\\;");
+  const description = [event.summary, event.sourceUrl].filter(Boolean).join("\n");
+  const startsAt = date(event.startsAt);
+  const endsAt = event.endsAt ? nextDay(event.endsAt) : nextDay(event.startsAt);
+  const contents = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Snupel//Events//KO",
+    "BEGIN:VEVENT",
+    `UID:snupel-event-${event.id}@snupel`,
+    `DTSTART;VALUE=DATE:${startsAt}`,
+    `DTEND;VALUE=DATE:${endsAt}`,
+    `SUMMARY:${escape(title)}`,
+    `LOCATION:${escape(location)}`,
+    ...(description ? [`DESCRIPTION:${escape(description)}`] : []),
+    "END:VEVENT",
+    "END:VCALENDAR",
+    "",
+  ].join("\r\n");
+  return new Blob([contents], { type: "text/calendar;charset=utf-8" });
+}
+
 export function EventDetailPage() {
   return <Suspense fallback={<DetailLoading />}><EventDetailContent /></Suspense>;
 }
@@ -78,6 +108,15 @@ function EventDetailContent() {
   const location = event.address ?? event.sigun ?? event.region ?? "강원특별자치도";
   const posterImage = detailImage(event);
   const closePoster = () => setPosterOpen(false);
+  const exportCalendar = () => {
+    const file = calendarFile(event, title, location);
+    if (!file) return;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = `${title.replaceAll(/[\\/:*?"<>|]/g, "-")}.ics`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
 
   return (
     <>
@@ -112,6 +151,7 @@ function EventDetailContent() {
                 <div className="flex gap-3"><AppIcon name="calendar" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">일정</dt><dd className="mt-1 text-[#172033]">{formatDate(event.startsAt)} ~ {formatDate(event.endsAt)}</dd></div></div>
                 <div className="flex gap-3"><AppIcon name="mapPin" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">장소</dt><dd className="mt-1 leading-6 text-[#172033]">{location}</dd></div></div>
               </dl>
+              {event.startsAt && <button type="button" onClick={exportCalendar} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white text-sm font-bold text-[#008f45] transition hover:bg-[#e8f5ed]">캘린더에 저장<AppIcon name="calendar" /></button>}
               {event.sourceUrl && <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 안내 보기<AppIcon name="arrowRight" /></a>}
             </aside>
           </div>
