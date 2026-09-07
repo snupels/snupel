@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
+import { verifiedSportWebsite } from "@/lib/sportsWebsites";
 import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage, sportsPhotoSource } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -134,9 +135,9 @@ function SportsDetailContent() {
   const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
     ? activity.sourceUrl
     : null;
-  const officialWebsiteUrl = activity.sourceUrl && isOfficialFacilityWebsite(activity.sourceUrl)
+  const officialWebsiteUrl = verifiedSportWebsite(activity) ?? (activity.sourceUrl && isOfficialFacilityWebsite(activity.sourceUrl)
     ? activity.sourceUrl
-    : null;
+    : null);
   const photoSource = sportsPhotoSource(activity);
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
