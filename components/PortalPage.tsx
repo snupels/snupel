@@ -34,7 +34,15 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; hidden?: boolean }>;
+  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean }>;
+};
+
+type CoursePlan = {
+  title: string;
+  description: string;
+  stopCount: number;
+  totalMinutes: number;
+  mapHref: string | null;
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -62,7 +70,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     action: { label: "스포츠부터 찾기", href: "/sports" },
     stats: [],
     sectionTitle: "추천 맞춤 코스",
-    sectionDescription: "소요 시간과 난이도가 명확한 코스만 모았습니다.",
+    sectionDescription: "추천 장소를 방문 순서대로 연결한 하나의 일정입니다.",
     cards: [
       { image: image1, tag: "1박 2일", title: "대관령 하늘길 트레킹", description: "트레킹과 목장 풍경을 함께 즐기는 주말 코스", meta: "중급 · 5시간", icon: "mountain" },
       { image: image3, tag: "당일", title: "동해 패들 & 서핑", description: "오전 패들보드와 오후 서핑을 잇는 바다 코스", meta: "초급 · 6시간", icon: "waves" },
@@ -142,6 +150,21 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
 const cardImages = [image1, image2, image3, image4];
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
 const sportsPageSize = 20;
+
+function kakaoMapPoint(title: string, latitude: number, longitude: number) {
+  return `${encodeURIComponent(title)},${latitude},${longitude}`;
+}
+
+function kakaoRouteHref(stops: Array<{ title: string; latitude: number | null; longitude: number | null }>) {
+  if (stops.length < 2 || stops.length > 7 || stops.some((stop) => stop.latitude === null || stop.longitude === null)) return null;
+  return `https://map.kakao.com/link/by/car/${stops.map((stop) => kakaoMapPoint(stop.title, stop.latitude!, stop.longitude!)).join("/")}`;
+}
+
+function kakaoPlaceHref(title: string, latitude: number | null, longitude: number | null, address?: string | null) {
+  return latitude === null || longitude === null
+    ? `https://map.kakao.com/link/search/${encodeURIComponent([title, address].filter(Boolean).join(" "))}`
+    : `https://map.kakao.com/link/map/${kakaoMapPoint(title, latitude, longitude)}`;
+}
 
 function sportCategory(sportName: string | null, placeName?: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
@@ -292,6 +315,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
   const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
+  const [coursePlan, setCoursePlan] = useState<CoursePlan | null>(null);
   const [apiMessage, setApiMessage] = useState("");
   const recommendationPending = recommendationRequested && !recommendationNeedsLogin && remoteCards === null && !apiMessage;
   const [sportsPage, setSportsPage] = useState(1);
@@ -348,6 +372,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       ? selectedTheme
       : "healing";
     const availableMinutes = Number(params.get("availableMinutes"));
+    const selectedMinutes = Number.isInteger(availableMinutes) && availableMinutes > 0 && availableMinutes <= 1440
+      ? availableMinutes
+      : 360;
     let cancelled = false;
 
     api.courseRecommendations({
@@ -355,9 +382,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       region: params.get("region") || "강원특별자치도",
       sigun: params.get("sigun") || "강릉시",
       sport: params.get("sport") || null,
-      availableMinutes: Number.isInteger(availableMinutes) && availableMinutes > 0 && availableMinutes <= 1440
-        ? availableMinutes
-        : 360,
+      availableMinutes: selectedMinutes,
     }).then(async (recommendation) => {
       const activities = await Promise.all(recommendation.stops.map((stop) => (
         api.activities.get(stop.activityId).catch(() => null)
@@ -367,24 +392,42 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       const recommendedCards: PageConfig["cards"] = recommendation.stops.map((stop, index) => {
         const activity = activities[index];
         const category = sportCategory(activity?.sportName ?? params.get("sport"), activity?.placeName);
+        const title = activity?.placeName ?? activity?.sportName ?? `추천 장소 #${stop.activityId}`;
         return {
           image: activity ? sportsImage(activity, [category]) : cardImages[index % cardImages.length],
           tag: themeLabels[theme],
           facilityTag: activity ? sportsFacilityType(activity) ?? undefined : undefined,
-          title: activity?.placeName ?? activity?.sportName ?? `추천 장소 #${stop.activityId}`,
+          title,
           description: stop.reason,
           meta: [activity?.sigun ?? params.get("sigun"), `약 ${stop.estimatedMinutes}분`].filter(Boolean).join(" · "),
           icon: sportIcon(category),
           href: activity ? `/sports/detail?id=${activity.id}` : undefined,
+          mapHref: activity ? kakaoPlaceHref(title, activity.latitude, activity.longitude, activity.address) : undefined,
+          order: index + 1,
         };
       });
       setRemoteCards(recommendedCards);
+      const stopNames = recommendedCards.map((card) => card.title);
+      const sigun = params.get("sigun") || "강릉시";
+      const courseLength = selectedMinutes <= 180 ? "가벼운" : selectedMinutes <= 360 ? "반나절" : selectedMinutes <= 720 ? "하루" : "여유로운";
+      setCoursePlan(recommendedCards.length ? {
+        title: `${sigun} ${themeLabels[theme]} ${courseLength} 코스`,
+        description: `${stopNames.join(", ")} 순으로 이어지는 ${recommendedCards.length}곳의 일정입니다. 각 장소의 추천 이유와 체류 시간을 확인한 뒤 전체 동선을 바로 길찾기할 수 있어요.`,
+        stopCount: recommendedCards.length,
+        totalMinutes: recommendation.stops.reduce((total, stop) => total + stop.estimatedMinutes, 0),
+        mapHref: kakaoRouteHref(recommendedCards.map((card, index) => ({
+          title: card.title,
+          latitude: activities[index]?.latitude ?? null,
+          longitude: activities[index]?.longitude ?? null,
+        }))),
+      } : null);
       setApiMessage(recommendedCards.length
         ? `추천 일치도 ${recommendation.matchScore}% · ${recommendation.usedAi ? "AI 맞춤 추천" : "조건 기반 추천"}`
         : "선택한 조건에 맞는 추천 코스가 없습니다. 지역이나 종목을 바꿔 다시 시도해 주세요.");
     }).catch((error: unknown) => {
       if (cancelled) return;
       setRemoteCards([]);
+      setCoursePlan(null);
       const status = typeof error === "object" && error && "status" in error ? Number(error.status) : 0;
       setApiMessage(status === 401
         ? "로그인 정보가 만료되었습니다. 다시 로그인한 뒤 추천받아 주세요."
@@ -462,9 +505,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div><h2 className="text-2xl font-bold">{config.sectionTitle}</h2><p className="mt-2 text-sm text-[#6f7a87]">{config.sectionDescription}</p></div>
-            <form action={`/${page}`} role="search" className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-[#dbe4de] bg-[#f5f7f6] px-3"><AppIcon name="search" className="size-4 text-[#738078]" /><label htmlFor={`${page}-search`} className="sr-only">{config.eyebrow} 검색</label><input id={`${page}-search`} name="q" type="search" placeholder="검색어를 입력하세요" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" /></form>
+            {page !== "courses" && <form action={`/${page}`} role="search" className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-[#dbe4de] bg-[#f5f7f6] px-3"><AppIcon name="search" className="size-4 text-[#738078]" /><label htmlFor={`${page}-search`} className="sr-only">{config.eyebrow} 검색</label><input id={`${page}-search`} name="q" type="search" placeholder="검색어를 입력하세요" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" /></form>}
           </div>
-          {pageFilters.length > 0 && <div className="mt-6 space-y-3 border-y border-[#e4ebe6] py-4">
+          {page !== "courses" && pageFilters.length > 0 && <div className="mt-6 space-y-3 border-y border-[#e4ebe6] py-4">
             {pageFilters.map((group) => <div key={group.key} className="flex items-center gap-3">
               <span className="w-20 shrink-0 text-xs font-semibold text-[#778279]">{group.label}</span>
               <div className="flex min-w-0 gap-2 overflow-x-auto pb-1">
@@ -492,10 +535,22 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             </div>)}
           </div>}
           {(recommendationNeedsLogin || recommendationPending || apiMessage) && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{recommendationNeedsLogin ? "맞춤 코스 추천은 로그인이 필요합니다. 상단의 로그인 버튼으로 로그인한 뒤 다시 추천받아 주세요." : recommendationPending ? "강릉시 힐링 코스를 추천하고 있습니다." : apiMessage}</p>}
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {coursePlan && <section aria-labelledby="recommended-course-title" className="mt-6 flex flex-col gap-6 rounded-[24px] border border-[#cfe1d5] bg-[#f3f8f5] p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold text-[#008f45]">나만의 추천 일정</p>
+              <h3 id="recommended-course-title" className="mt-2 text-2xl font-bold tracking-[-0.03em]">{coursePlan.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-[#59675f]">{coursePlan.description}</p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#405149]">
+                <span className="rounded-full bg-white px-3 py-1.5">{coursePlan.stopCount}개 장소</span>
+                <span className="rounded-full bg-white px-3 py-1.5">추천 체류 {Math.floor(coursePlan.totalMinutes / 60)}시간 {coursePlan.totalMinutes % 60}분</span>
+              </div>
+            </div>
+            {coursePlan.mapHref ? <a href={coursePlan.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2"><AppIcon name="map" className="size-4" />카카오맵 전체 길찾기<AppIcon name="arrowRight" className="size-4" /></a> : <p className="max-w-52 text-xs leading-5 text-[#6f7a87]">모든 장소의 좌표가 확인되면 전체 길찾기를 열 수 있습니다.</p>}
+          </section>}
+          <div className={`mt-8 grid gap-5 sm:grid-cols-2 ${page === "courses" ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
             {cards.map((card, index) => {
-              const content = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5"><span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}{card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}<p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p></div></article>;
-              return card.href ? <Link key={`${card.title}-${index}`} href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div key={`${card.title}-${index}`}>{content}</div>;
+              const content = <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{card.order && <span className="flex size-7 items-center justify-center rounded-full bg-[#008f45] text-xs font-bold text-white" aria-label={`${card.order}번째 장소`}>{card.order}</span>}<span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="flex flex-1 flex-col p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}{card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}<p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p>{card.mapHref && <div className="mt-auto flex gap-2 border-t border-[#edf1ee] pt-4"><a href={card.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#fae100] px-3 text-xs font-bold text-[#191919] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a7d00]"><AppIcon name="map" />카카오맵</a>{card.href && <Link href={card.href} className="inline-flex h-9 items-center justify-center rounded-lg border border-[#dce5df] px-3 text-xs font-bold text-[#526058] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">상세</Link>}</div>}</div></article>;
+              return card.mapHref ? <div key={`${card.title}-${index}`} className="group">{content}</div> : card.href ? <Link key={`${card.title}-${index}`} href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div key={`${card.title}-${index}`}>{content}</div>;
             })}
           </div>
           {page === "sports" && remoteCards !== null && (
