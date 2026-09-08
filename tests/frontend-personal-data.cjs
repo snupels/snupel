@@ -4,6 +4,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const source = (file) => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+const componentSource = fs.readdirSync(path.join(__dirname, "..", "components"))
+  .filter((file) => file.endsWith(".tsx"))
+  .map((file) => source(path.join("components", file)))
+  .join("\n");
 const passport = source("components/PassportPage.tsx");
 const badges = source("components/BadgesPage.tsx");
 const history = source("components/ActivityHistoryPage.tsx");
@@ -24,9 +28,11 @@ assert.ok(saved.includes('api.savedActivities.save('));
 assert.ok(saved.includes('api.savedActivities.remove('));
 assert.ok(mission.includes('share_to_feed: shareToFeed'));
 assert.ok(mission.includes('feed_caption:'));
+assert.ok(!mission.includes('passport_id:'));
+for (const resource of ["passports", "collectedBadges", "collectedStamps"])
+  assert.ok(!componentSource.includes(`api.${resource}.`), `${resource} is admin-only; use an authenticated /me endpoint`);
 assert.ok(!passport.includes('DEFAULT_COLLECTED_BADGE_IDS'));
 assert.ok(!badges.includes('DEFAULT_COLLECTED_BADGE_IDS'));
-assert.ok(!badges.includes('api.collectedBadges'));
 assert.ok(!history.includes('fallbackActivities'));
 assert.ok(!history.includes('api.activities'));
 assert.ok(!home.includes('fallbackEvents'));

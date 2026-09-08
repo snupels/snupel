@@ -80,11 +80,7 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
     setSubmitting(true);
     setMessage("");
     try {
-      const [user, passports] = await Promise.all([api.me(), api.passports.list()]);
-      const passport = passports.find((item) => item.userId === user.id);
-      if (!passport) throw new Error("passport_missing");
       const upload = await api.stampSubmissions.createUploadUrl({
-        passport_id: passport.id,
         stamp_id: stop.stampId,
         content_type: photo.type,
       });
@@ -94,7 +90,6 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
       const uploaded = await fetch(upload.uploadUrl, { method: "POST", body: form });
       if (!uploaded.ok) throw new Error("upload_failed");
       await api.stampSubmissions.create({
-        passport_id: passport.id,
         stamp_id: stop.stampId,
         object_key: upload.objectKey,
         share_to_feed: shareToFeed,

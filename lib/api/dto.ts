@@ -360,14 +360,14 @@ export const missionProgressSchema = z.strictObject({
 });
 
 export const stampSubmissionCreateSchema = z.strictObject({
-  passport_id: positiveInt,
+  passport_id: positiveInt.optional(),
   stamp_id: positiveInt,
   object_key: z.string().min(1).max(500),
   share_to_feed: z.boolean().optional(),
   feed_caption: z.string().max(300).nullable().optional(),
 });
 export const uploadUrlRequestSchema = z.strictObject({
-  passport_id: positiveInt,
+  passport_id: positiveInt.optional(),
   stamp_id: positiveInt,
   content_type: z.string().min(1),
 });
