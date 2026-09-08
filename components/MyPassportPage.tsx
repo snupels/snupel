@@ -94,7 +94,7 @@ export function MyPassportPage() {
   const approved = submissions.filter((item) => item.status === "approved").length;
   const pending = submissions.filter((item) => item.status === "pending").length;
   const regions = new Set(collected.map((stamp) => stamp.regionKo)).size;
-  const level = resolvePassportLevel(stampCount, approved > 0 || stampCount > 0);
+  const level = resolvePassportLevel(stampCount);
   const displayName = user.nickname || user.email.split("@")[0];
   const stats: Stat[] = [
     { label: "모은 스탬프", value: stampbook ? `${stampCount}개` : "—", icon: "award" },
@@ -139,8 +139,8 @@ export function MyPassportPage() {
         </div>
         <details className="mt-8 rounded-[24px] border border-[#e0e7e2] bg-white p-6">
           <summary className="cursor-pointer text-lg font-bold text-[#008f45]">패스포트 등급은 어떻게 올라가나요?</summary>
-          <p className="mt-4 text-sm leading-6 text-[#6f7a87]">승인된 첫 미션과 획득 스탬프 수에 따라 자동으로 올라갑니다. 등급과 배지, 패스포트 리워드는 각각 구분됩니다.</p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{PASSPORT_LEVELS.map((item) => <div key={item.level} className={`rounded-xl p-4 ${item.level === level.level ? "bg-[#e7f4ec] ring-1 ring-[#aad2b8]" : "bg-[#f6f8f7]"}`}><h3 className="font-bold">Level {item.level} · {item.name}{item.level === level.level && <span className="ml-2 text-xs text-[#008f45]">현재 등급</span>}</h3><p className="mt-2 text-sm font-semibold text-[#008f45]">{item.criterion}</p><p className="mt-1 text-sm text-[#6f7a87]">{item.meaning}</p></div>)}</div>
+          <p className="mt-4 text-sm leading-6 text-[#6f7a87]">가입 시 Level 1에서 시작하고, 획득 스탬프가 1개·5개·10개·20개·40개에 도달하면 순서대로 등급이 올라갑니다. 등급과 배지, 패스포트 리워드는 각각 구분됩니다.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{PASSPORT_LEVELS.map((item) => <div key={item.level} className={`rounded-xl p-4 ${stampbook && item.level === level.level ? "bg-[#e7f4ec] ring-1 ring-[#aad2b8]" : "bg-[#f6f8f7]"}`}><h3 className="font-bold">Level {item.level} · {item.name}{stampbook && item.level === level.level && <span className="ml-2 text-xs text-[#008f45]">현재 등급</span>}</h3><p className="mt-2 text-sm font-semibold text-[#008f45]">{item.criterion}</p><p className="mt-1 text-sm text-[#6f7a87]">{item.meaning}</p></div>)}</div>
         </details>
       </div>
     </div>
