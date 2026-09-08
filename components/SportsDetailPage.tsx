@@ -11,6 +11,7 @@ import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacilit
 import { isExcludedSportActivity, sportsImage, sportsPhotoSource } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
+import { sportsDescription } from "@/lib/sportsDescription";
 
 type DetailItem = {
   label: string;
@@ -150,6 +151,7 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
     ? activity.sourceUrl
     : null);
   const photoSource = sportsPhotoSource(activity);
+  const description = sportsDescription(activity);
   const details: DetailItem[] = [
     { label: "지역", value: [activity.region, activity.sigun].filter(Boolean).join(" · ") || "강원특별자치도", icon: "mapPin" },
     ...(sportLabel ? [{ label: "스포츠 종목", value: sportLabel, icon: "medal" as AppIconName }] : []),
@@ -183,9 +185,19 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
             <section>
               <p className="text-sm font-bold text-[#008f45]">{isSportsPlace ? "스포츠 장소 소개" : "여행 장소 소개"}</p>
               <h2 className="mt-3 text-2xl font-bold">{title} 이용 안내</h2>
-              <p className="mt-5 whitespace-pre-line leading-8 text-[#526058]">
-                {activity.summary ?? `${title}의 장소 정보입니다. 운영 시간과 이용 조건은 방문 전 안내처에 확인해 주세요.`}
-              </p>
+              {(description.introduction || !description.trails.length) && <p className="mt-5 whitespace-pre-line break-words leading-8 text-[#526058]">
+                {description.introduction || `${title}의 장소 정보입니다. 운영 시간과 이용 조건은 방문 전 안내처에 확인해 주세요.`}
+              </p>}
+              {description.trails.map((section, sectionIndex) => <section key={sectionIndex} aria-labelledby={`trail-heading-${sectionIndex}`} className="mt-7">
+                <h3 id={`trail-heading-${sectionIndex}`} className="flex items-center gap-2 text-lg font-bold"><AppIcon name="map" className="text-[#008f45]" />{section.title} 안내</h3>
+                <div className="mt-4 space-y-3">
+                  {section.routes.map((route, routeIndex) => <div key={routeIndex} className="rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
+                    {route.title && <h4 className="font-bold leading-6 text-[#007c3c]">{route.title}</h4>}
+                    {route.description && <p className={`${route.title ? "mt-2 " : ""}whitespace-pre-line break-words text-sm leading-7 text-[#526058]`}>{route.description}</p>}
+                  </div>)}
+                </div>
+              </section>)}
+              {description.trails.length > 0 && <p className="mt-4 text-xs leading-6 text-[#68756d]">{activity.source === "tourapi" ? "한국관광공사 API에서 제공한 등산로 안내입니다. " : "제공된 원문 코스 안내입니다. "}거리·소요 시간은 원문 기준이며, 방문 전 개방 여부와 현장 안내를 확인해 주세요.</p>}
               <div className="mt-8 rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
                 <h3 className="font-bold">주소</h3>
                 <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#59675f]"><AppIcon name="mapPin" className="mt-0.5 shrink-0 text-[#008f45]" />{location}</p>

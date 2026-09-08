@@ -44,6 +44,10 @@ export function ActivityHistoryPage() {
           <p className="text-xs font-bold tracking-[0.18em] text-white/60">MY ACTIVITY HISTORY</p>
           <h1 className="mt-2 text-3xl font-bold">나의 활동 이력</h1>
           <p className="mt-3 text-sm text-white/70">내 사진 인증의 심사 상태와 스탬프 획득, 관심 활동 기록을 확인하세요.</p>
+          <nav aria-label="활동 이어가기" className="mt-6 flex flex-wrap gap-3">
+            <Link href="/community/" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-[#00783a] transition hover:bg-[#e9f5ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><AppIcon name="users" className="size-4" />스포츠 피드 보기</Link>
+            <Link href="/missions" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/60 px-5 text-sm font-bold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">참여할 미션 찾기<AppIcon name="arrowRight" className="size-4" /></Link>
+          </nav>
         </header>
         <section className="mt-8">
           <form onSubmit={search} role="search" className="flex gap-2">

@@ -34,7 +34,7 @@ type PageConfig = {
   sectionDescription: string;
 };
 
-type PortalCard = { image: string | StaticImageData; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
+type PortalCard = { image: string | StaticImageData; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; searchText?: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
 
 type CoursePlan = {
   title: string;
@@ -233,7 +233,8 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
           secondaryTag: categories[1],
           facilityTag: sportsFacilityType(activity) ?? undefined,
           title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
-          description: activity.summary ?? `${activity.sigun ?? "강원"} · ${category}`,
+          description: `${activity.sigun ?? "강원"} · ${category}`,
+          searchText: activity.summary ?? "",
           meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
           icon: sportIcon(category),
           href: `/sports/detail?id=${activity.id}`,
@@ -524,7 +525,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       card.title.includes(sport) || card.tag.replace(/\s/g, "").includes(sport.replace(/\s/g, "")) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
     ));
     const matchesRegion = page === "courses" || activeRegionFilters.length === 0 || activeRegionFilters.some((region) => card.meta.includes(region));
-    return (!query || `${card.title} ${card.description} ${card.meta}`.toLowerCase().includes(query))
+    return (!query || `${card.title} ${card.description} ${card.searchText ?? ""} ${card.meta}`.toLowerCase().includes(query))
       && matchesRegion
       && matchesSport;
   });

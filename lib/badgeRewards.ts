@@ -15,7 +15,7 @@ export const BADGE_REWARD_MILESTONES: BadgeRewardMilestone[] = [
   {
     threshold: 6,
     title: "실물 배지 6종 세트",
-    description: "배지 6개 달성 후 실물 배지 6종 세트의 배송을 신청할 수 있습니다. 숙박 할인권·굿즈와는 별도입니다.",
+    description: "배지 6개 달성 후 실물 배지 6종 세트의 배송을 신청할 수 있습니다.",
     fulfillment: "실물 배지 배송 신청",
   },
   {
