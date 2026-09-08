@@ -499,7 +499,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         </div>
       </section>
 
-      {page === "courses" && <CoursePreferences values={preferenceValues} />}
+      {page === "courses" && <CoursePreferences values={preferenceValues} collapsed={recommendationPending || Boolean(coursePlan)} />}
 
       <section className="bg-white py-12">
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
