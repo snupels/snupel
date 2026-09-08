@@ -195,7 +195,7 @@ export default function HomePage() {
         const stampbook = await api.myStampbook();
         if (cancelled || request !== requestId) return;
         const stampCount = stampbook.summary.collected;
-        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, stampCount > 0)), status: "ready" });
+        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount)), status: "ready" });
       } catch (error) {
         if (cancelled || request !== requestId) return;
         setPassportProfile({ displayName: error instanceof ApiError && error.status === 401 ? "" : displayName, stampCount: null, level: null, status: error instanceof ApiError && error.status === 401 ? "guest" : "error" });
