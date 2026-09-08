@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { AppIcon, type AppIconName } from "./AppIcon";
 
@@ -62,7 +64,7 @@ export function CoursePreferences({ values = {}, collapsed = false }: { values?:
         <input type="hidden" name="region" value="강원특별자치도" />
         <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)} className="group">
           <summary className="flex cursor-pointer list-none items-center justify-between bg-[#008f45] px-6 py-5 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white [&::-webkit-details-marker]:hidden">
-            <span className="flex items-center gap-2"><AppIcon name="activity" className="size-5" /><h2 className="font-bold">맞춤 코스 설정</h2></span>
+            <div className="flex items-center gap-2"><AppIcon name="activity" className="size-5" /><h2 className="font-bold">맞춤 코스 설정</h2></div>
             <span className="text-sm font-bold"><span className="group-open:hidden">다른 코스 보기</span><span className="hidden group-open:inline">접기</span></span>
           </summary>
           <div className="space-y-8 p-6 sm:p-8">
