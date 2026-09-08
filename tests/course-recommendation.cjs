@@ -59,8 +59,22 @@ context.window = { kakao: { maps: {
 assert.equal(await context.findKakaoPlaceId("교동반점", 37.758354, 128.893003), "8773810");
 
 const dtoSource = fs.readFileSync(path.join(__dirname, "../lib/api/dto.ts"), "utf8");
+const stopSchemaSource = dtoSource.slice(
+  dtoSource.indexOf("export const recommendedStopSchema"),
+  dtoSource.indexOf("export const recommendedLegSchema"),
+);
 assert.match(dtoSource, /activityCategorySchema = z\.enum\(\[[^\]]*"tour"/);
-console.log("PASS: recommendation places support deployed categories and Kakao Map links");
+assert.doesNotMatch(dtoSource, /"tourism"/);
+assert.match(dtoSource, /title: z\.string\(\)\.min\(1\)/);
+assert.match(dtoSource, /totalEstimatedMinutes: z\.number\(\)\.int\(\)\.nonnegative\(\)/);
+assert.match(stopSchemaSource, /representativeImageUrl: z\.string\(\)\.nullable\(\)/);
+assert.match(dtoSource, /distanceKm: z\.number\(\)\.nonnegative\(\)/);
+
+assert.doesNotMatch(portalSource, /api\.activities\.get\(stop\.activityId\)/);
+assert.match(portalSource, /recommendation\.legs/);
+assert.match(portalSource, /총 예상 \{coursePlan\.totalEstimatedMinutes\}분/);
+assert.match(portalSource, /return\s*<div[^>]*className="flex flex-col gap-3">/);
+console.log("PASS: recommendation contract and Kakao Map links");
 }
 
 run().catch((error) => { console.error(error); process.exitCode = 1; });
