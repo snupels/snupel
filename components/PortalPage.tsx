@@ -7,6 +7,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
+import { courseItineraryDescription, courseStopReason } from "@/lib/coursePresentation";
 import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -406,12 +407,12 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
       const recommendedCards: PortalCard[] = recommendation.stops.map((stop, index) => {
         const category = sportCategory(params.get("sport"), stop.placeName);
-        const title = stop.placeName ?? `추천 장소 #${stop.activityId}`;
+        const title = stop.placeName?.trim() || `${index + 1}번째 추천 장소`;
         return {
           image: stop.representativeImageUrl ?? unavailablePhoto,
           tag: themeLabels[theme],
           title,
-          description: stop.reason,
+          description: courseStopReason(stop.reason, recommendation.stops),
           meta: [stop.address ?? "주소 정보 없음", `활동 약 ${stop.estimatedMinutes}분`].join(" · "),
           icon: sportIcon(category),
           href: `/sports/detail/?id=${stop.activityId}`,
@@ -425,7 +426,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       setRemoteCards(recommendedCards);
       setCoursePlan(recommendedCards.length ? {
         title: recommendation.title,
-        description: recommendation.description,
+        description: courseItineraryDescription(recommendation.stops),
         stopCount: recommendedCards.length,
         activityMinutes: recommendation.activityMinutes,
         travelMinutes: recommendation.travelMinutes,
@@ -608,10 +609,11 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               <p className="mt-3 text-sm leading-6 text-[#59675f]">{coursePlan.description}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#405149]">
                 <span className="rounded-full bg-white px-3 py-1.5">{coursePlan.stopCount}개 장소</span>
-                <span className="rounded-full bg-white px-3 py-1.5">활동 {coursePlan.activityMinutes}분</span>
-                <span className="rounded-full bg-white px-3 py-1.5">이동 {coursePlan.travelMinutes}분</span>
+                <span className="rounded-full bg-white px-3 py-1.5">예상 활동 약 {coursePlan.activityMinutes}분</span>
+                <span className="rounded-full bg-white px-3 py-1.5">예상 이동 약 {coursePlan.travelMinutes}분</span>
                 <span className="rounded-full bg-white px-3 py-1.5">총 예상 {coursePlan.totalEstimatedMinutes}분</span>
               </div>
+              <p className="mt-3 text-xs leading-5 text-[#68756d]">거리와 활동·이동 시간은 추정값이며 실제 도로, 교통 및 현장 여건에 따라 달라집니다. 출발 전 카카오맵에서 실제 경로를 확인해 주세요.</p>
             </div>
             {coursePlan.mapHref ? <a href={coursePlan.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2"><AppIcon name="map" className="size-4" />카카오맵 전체 길찾기<AppIcon name="arrowRight" className="size-4" /></a> : <p className="max-w-52 text-xs leading-5 text-[#6f7a87]">모든 장소의 좌표가 확인되면 전체 길찾기를 열 수 있습니다.</p>}
           </section>}
@@ -619,7 +621,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             {cards.map((card, index) => {
               const content = <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{card.order && <span className="flex size-7 items-center justify-center rounded-full bg-[#008f45] text-xs font-bold text-white" aria-label={`${card.order}번째 장소`}>{card.order}</span>}<span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="flex flex-1 flex-col p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}{card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}<p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p>{card.mapHref && <div className="mt-auto flex gap-2 border-t border-[#edf1ee] pt-4"><a href={card.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#fae100] px-3 text-xs font-bold text-[#191919] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a7d00]"><AppIcon name="map" />카카오맵</a>{card.href && <Link href={card.href} className="inline-flex h-9 items-center justify-center rounded-lg border border-[#dce5df] px-3 text-xs font-bold text-[#526058] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">상세</Link>}</div>}</div></article>;
               const leg = page === "courses" ? coursePlan?.legs[index - 1] : undefined;
-              return <div key={`${card.title}-${index}`} className="flex flex-col gap-3">{leg && <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#b9d5c3] bg-[#e8f3ec] px-3 py-2 text-xs font-semibold text-[#405149]"><AppIcon name="map" className="size-4 text-[#008f45]" />{leg.distanceKm.toFixed(1)}km · 이동 {leg.travelMinutes}분</div>}{card.mapHref ? <div className="group">{content}</div> : card.href ? <Link href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div>{content}</div>}</div>;
+              return <div key={`${card.title}-${index}`} className="flex flex-col gap-3">{leg && <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#b9d5c3] bg-[#e8f3ec] px-3 py-2 text-xs font-semibold text-[#405149]"><AppIcon name="map" className="size-4 text-[#008f45]" />추정 거리 약 {leg.distanceKm.toFixed(1)}km · 예상 이동 약 {leg.travelMinutes}분</div>}{card.mapHref ? <div className="group">{content}</div> : card.href ? <Link href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div>{content}</div>}</div>;
             })}
           </div>
           {page === "sports" && remoteCards !== null && (
