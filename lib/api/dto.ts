@@ -158,11 +158,20 @@ export const activityExploreResponseSchema = activityResponseSchema.extend({
 });
 
 const courseFields = {
+  category: activityCategorySchema.optional(),
+  sport_name: z.string().max(100).nullable().optional(),
   recommended_companion: z.string().max(100).nullable().optional(),
   representative_image_url: nullableUrl.optional(),
   estimated_duration_minutes: positiveInt.nullable().optional(),
   title: z.string().max(255).nullable().optional(),
   description: z.string().nullable().optional(),
+  participation_period: z.string().max(255).nullable().optional(),
+  proof_instructions: z.string().nullable().optional(),
+  photo_prompt: z.string().nullable().optional(),
+  reward_description: z.string().nullable().optional(),
+  steps: z.array(z.string()).nullable().optional(),
+  official_url: nullableUrl.optional(),
+  official_label: z.string().max(100).nullable().optional(),
   is_published: z.boolean().optional(),
 };
 export const courseCreateSchema = z.strictObject({ ...courseFields, theme: courseThemeSchema });
@@ -180,6 +189,13 @@ export const courseResponseSchema = z.object({
   theme: courseThemeSchema,
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
+  participationPeriod: z.string().nullable().optional(),
+  proofInstructions: z.string().nullable().optional(),
+  photoPrompt: z.string().nullable().optional(),
+  rewardDescription: z.string().nullable().optional(),
+  steps: z.array(z.string()).nullable().optional(),
+  officialUrl: z.string().nullable().optional(),
+  officialLabel: z.string().nullable().optional(),
   isPublished: z.boolean().default(false),
 });
 
@@ -209,6 +225,34 @@ export const courseItineraryResponseSchema = z.object({
 
 export const passportInputSchema = z.strictObject({ user_id: positiveInt });
 export const passportResponseSchema = z.object({ ...timestamps, userId: positiveInt });
+
+export const stampbookStatusSchema = z.enum(["collected", "available", "locked"]);
+export const stampbookFilterSchema = z.enum(["all", "collected", "available", "locked"]);
+export const stampbookResponseSchema = z.strictObject({
+  summary: z.strictObject({
+    total: z.number().int().nonnegative(),
+    collected: z.number().int().nonnegative(),
+    available: z.number().int().nonnegative(),
+    locked: z.number().int().nonnegative(),
+  }),
+  page: positiveInt,
+  size: positiveInt,
+  totalItems: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+  items: z.array(z.strictObject({
+    catalogId: positiveInt,
+    stampId: positiveInt,
+    regionKo: z.string(),
+    regionEn: z.string(),
+    sportKo: z.string(),
+    sportEn: z.string(),
+    color: z.string(),
+    imageUrl: z.string().nullable(),
+    status: stampbookStatusSchema,
+    collectedAt: apiDateTime.nullable(),
+    courses: z.array(z.strictObject({ id: positiveInt, title: z.string().nullable() })),
+  })),
+});
 
 export const collectedBadgeCreateSchema = z.strictObject({ passport_id: positiveInt, badge_id: positiveInt });
 export const collectedBadgePatchSchema = z.strictObject({
@@ -344,6 +388,68 @@ export const stampSubmissionResponseSchema = z.object({
   proofUrl: z.string().nullable().optional(),
   shareToFeed: z.boolean().default(false),
   feedCaption: z.string().nullable().default(null),
+  activity: z.object({
+    id: positiveInt,
+    category: activityCategorySchema,
+    placeName: z.string().nullable(),
+    sportName: z.string().nullable(),
+    sigun: z.string().nullable(),
+    representativeImageUrl: z.string().nullable(),
+    address: z.string().nullable(),
+    startsAt: apiDateTime.nullable(),
+    endsAt: apiDateTime.nullable(),
+  }).nullable().default(null),
+  courseTitle: z.string().nullable().default(null),
+  stampName: z.string().nullable().default(null),
+  submittedAt: apiDateTime.nullable().default(null),
+});
+
+export const meBadgeResponseSchema = z.object({
+  id: positiveInt,
+  badgeId: positiveInt,
+  ruleKey: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  description: z.string().nullable(),
+  collectedAt: apiDateTime,
+});
+export const savedActivityResponseSchema = z.object({
+  id: positiveInt,
+  activityId: positiveInt,
+  createdAt: apiDateTime,
+  activity: activityResponseSchema,
+});
+export const activityHistoryStatusSchema = z.enum(["pending", "approved", "rejected", "collected"]);
+export const activityHistoryResponseSchema = z.object({
+  id: positiveInt,
+  type: z.enum(["submission", "stamp", "saved"]),
+  status: activityHistoryStatusSchema,
+  activityId: positiveInt,
+  courseId: positiveInt.nullable(),
+  submissionId: positiveInt.nullable(),
+  title: z.string().nullable(),
+  placeName: z.string().nullable(),
+  sigun: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  occurredAt: apiDateTime,
+  rejectionReason: z.string().nullable(),
+});
+export const rewardMilestoneSchema = z.enum(["badge_6", "badge_12"]);
+export const rewardClaimStatusSchema = z.enum(["eligible", "requested", "preparing", "shipped", "completed"]);
+export const rewardClaimCreateSchema = z.strictObject({
+  recipient_name: z.string().trim().min(1).max(100),
+  phone_number: z.string().trim().min(7).max(30),
+  address: z.string().trim().min(1).max(1000),
+});
+export const rewardClaimResponseSchema = z.object({
+  id: positiveInt.nullable().default(null),
+  userId: positiveInt,
+  milestone: rewardMilestoneSchema,
+  recipientName: z.string().nullable().default(null),
+  phoneNumber: z.string().nullable().default(null),
+  address: z.string().nullable().default(null),
+  status: rewardClaimStatusSchema,
+  requestedAt: apiDateTime.nullable().default(null),
+  fulfilledAt: apiDateTime.nullable().default(null),
 });
 export const feedVisibilityUpdateSchema = z.strictObject({
   share_to_feed: z.boolean(),
@@ -409,6 +515,9 @@ export type CourseResponse = z.infer<typeof courseResponseSchema>;
 export type CourseItineraryResponse = z.infer<typeof courseItineraryResponseSchema>;
 export type PassportInput = z.infer<typeof passportInputSchema>;
 export type PassportResponse = z.infer<typeof passportResponseSchema>;
+export type StampbookFilter = z.infer<typeof stampbookFilterSchema>;
+export type StampbookResponse = z.infer<typeof stampbookResponseSchema>;
+export type StampbookItem = StampbookResponse["items"][number];
 export type CollectedBadgeCreate = z.infer<typeof collectedBadgeCreateSchema>;
 export type CollectedBadgePatch = z.infer<typeof collectedBadgePatchSchema>;
 export type CollectedBadgeResponse = z.infer<typeof collectedBadgeResponseSchema>;
@@ -427,6 +536,14 @@ export type StampSubmissionCreate = z.infer<typeof stampSubmissionCreateSchema>;
 export type UploadUrlRequest = z.infer<typeof uploadUrlRequestSchema>;
 export type UploadUrlResponse = z.infer<typeof uploadUrlResponseSchema>;
 export type StampSubmissionResponse = z.infer<typeof stampSubmissionResponseSchema>;
+export type MeBadgeResponse = z.infer<typeof meBadgeResponseSchema>;
+export type SavedActivityResponse = z.infer<typeof savedActivityResponseSchema>;
+export type ActivityHistoryStatus = z.infer<typeof activityHistoryStatusSchema>;
+export type ActivityHistoryResponse = z.infer<typeof activityHistoryResponseSchema>;
+export type RewardMilestone = z.infer<typeof rewardMilestoneSchema>;
+export type RewardClaimStatus = z.infer<typeof rewardClaimStatusSchema>;
+export type RewardClaimCreate = z.infer<typeof rewardClaimCreateSchema>;
+export type RewardClaimResponse = z.infer<typeof rewardClaimResponseSchema>;
 export type FeedVisibilityUpdate = z.infer<typeof feedVisibilityUpdateSchema>;
 export type CommunityFeedResponse = z.infer<typeof communityFeedResponseSchema>;
 export type FeedCommentCreate = z.infer<typeof feedCommentCreateSchema>;

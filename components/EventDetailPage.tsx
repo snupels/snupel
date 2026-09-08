@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
+import { SaveActivityButton } from "./SaveActivityButton";
 import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
 import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
@@ -151,6 +152,7 @@ function EventDetailContent() {
                 <div className="flex gap-3"><AppIcon name="calendar" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">일정</dt><dd className="mt-1 text-[#172033]">{formatDate(event.startsAt)} ~ {formatDate(event.endsAt)}</dd></div></div>
                 <div className="flex gap-3"><AppIcon name="mapPin" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">장소</dt><dd className="mt-1 leading-6 text-[#172033]">{location}</dd></div></div>
               </dl>
+              <SaveActivityButton activityId={event.id} />
               {event.startsAt && <button type="button" onClick={exportCalendar} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white text-sm font-bold text-[#008f45] transition hover:bg-[#e8f5ed]">캘린더에 저장<AppIcon name="calendar" /></button>}
               {event.sourceUrl && <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 안내 보기<AppIcon name="arrowRight" /></a>}
             </aside>

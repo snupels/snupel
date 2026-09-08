@@ -29,6 +29,8 @@ export function MissionDetailPage() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [shareToFeed, setShareToFeed] = useState(false);
+  const [feedCaption, setFeedCaption] = useState("");
 
   useEffect(() => {
     if (!validCourseId) return;
@@ -79,6 +81,8 @@ export function MissionDetailPage() {
         passport_id: passport.id,
         stamp_id: stop.stampId,
         object_key: upload.objectKey,
+        share_to_feed: shareToFeed,
+        feed_caption: shareToFeed ? feedCaption.trim() || null : null,
       });
       setCompleted(true);
       setMessage("인증 신청이 접수되었습니다. 운영자 검토 후 스탬프가 지급됩니다.");
@@ -112,7 +116,7 @@ export function MissionDetailPage() {
         <section className="space-y-6">
           <div className="rounded-[24px] border border-[#dfe8e2] bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-2xl font-bold">미션 안내</h2>
-            <p className="mt-4 leading-7 text-[#66736b]">{course.description}</p>
+            <p className="mt-4 leading-7 text-[#66736b]">{course.description ?? mission.intro}</p>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
                 ["activity", "카테고리", mission.category],
@@ -145,10 +149,15 @@ export function MissionDetailPage() {
               {previewUrl ? <span className="relative block min-h-52 w-full"><Image src={previewUrl} alt="선택한 인증 사진" fill className="object-cover" unoptimized /></span> : <span className="px-5 text-sm text-[#718078]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" />{mission.photoPrompt}<br /><small>JPG, PNG, WEBP · 최대 10MB</small></span>}
             </label>
             <input id="mission-photo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={completed} onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} />
+            <label className="mt-5 flex items-start gap-3 rounded-xl bg-[#f3f7f4] p-4 text-sm">
+              <input type="checkbox" checked={shareToFeed} disabled={completed} onChange={(event) => setShareToFeed(event.target.checked)} className="mt-0.5 size-4 accent-[#008f45]" />
+              <span><strong className="block">승인 후 스포츠 피드에 공개</strong><span className="mt-1 block text-xs leading-5 text-[#718078]">선택하지 않으면 인증 기록은 나에게만 보입니다.</span></span>
+            </label>
+            {shareToFeed && <textarea value={feedCaption} onChange={(event) => setFeedCaption(event.target.value)} maxLength={300} disabled={completed} aria-label="피드에 함께 올릴 글" placeholder="사진과 함께 나눌 이야기를 적어주세요. (선택)" className="mt-3 min-h-24 w-full resize-y rounded-xl border border-[#cbdacf] p-3 text-sm outline-none focus:border-[#008f45]" />}
             <button type="submit" disabled={!photo || submitting || completed} className="mt-6 flex h-13 w-full cursor-pointer items-center justify-center rounded-xl bg-[#008f45] text-sm font-black text-white transition hover:bg-[#00783a] disabled:cursor-not-allowed disabled:bg-[#aab7af]">{completed ? "인증 접수 완료" : submitting ? "인증 제출 중..." : "사진으로 인증 신청"}</button>
           </>}
           {message && <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm leading-6 ${completed ? "bg-[#e9f7ee] text-[#08743a]" : "bg-[#fff2f0] text-[#a03d32]"}`}>{message}</p>}
-          <a href={mission.officialUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">{mission.officialLabel} <AppIcon name="arrowRight" /></a>
+          {mission.officialUrl && <a href={mission.officialUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">{mission.officialLabel ?? "공식 안내"} <AppIcon name="arrowRight" /></a>}
         </form>
       </div>
     </main>

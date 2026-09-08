@@ -21,5 +21,3 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   { id: 11, name: "선라이즈 헌터", description: "일출 명소 인증 완료", icon: "cloudSun" },
   { id: 12, name: "Multi Sports Player", description: "서로 다른 스포츠 3종 인증 완료", icon: "dumbbell" },
 ];
-
-export const DEFAULT_COLLECTED_BADGE_IDS = [2, 10, 5, 4];
