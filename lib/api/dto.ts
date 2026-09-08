@@ -199,6 +199,24 @@ export const courseResponseSchema = z.object({
   isPublished: z.boolean().default(false),
 });
 
+// Optional organizer-verified information in activity.metadata; old API rows stay valid.
+export const eventParticipationSchema = z.object({
+  mode: z.enum(["registration", "onsite", "spectator"]),
+  status: z.enum(["open", "closed", "check"]),
+  verifiedAt: z.iso.date(),
+  opensAt: z.iso.datetime({ offset: true }).optional(),
+  closesAt: z.iso.datetime({ offset: true }).optional(),
+  onsiteAvailable: z.boolean().optional(),
+  firstCome: z.boolean().optional(),
+  programs: z.string().trim().min(1).optional(),
+  eligibility: z.string().trim().min(1).optional(),
+  fee: z.string().trim().min(1).optional(),
+  registrationGuide: z.string().trim().min(1).optional(),
+  note: z.string().trim().min(1).optional(),
+  evidenceUrls: z.array(z.url()).optional(),
+});
+export type EventParticipation = z.infer<typeof eventParticipationSchema>;
+
 export const courseItineraryStopSchema = z.object({
   position: z.number().int().nonnegative(),
   stampId: positiveInt,

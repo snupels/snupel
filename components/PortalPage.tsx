@@ -5,6 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { compareEvents, eventParticipation } from "@/lib/eventParticipation";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
 import { courseItineraryDescription, courseStopReason } from "@/lib/coursePresentation";
@@ -245,10 +246,11 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
   if (page === "events") {
     const events = await api.events.list({ page: 1, size: 100 });
     return [...events]
-      .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
+      .sort((first, second) => compareEvents(first, second))
       .map((activity) => ({
       image: activity.representativeImageUrl ?? unavailablePhoto,
       tag: activity.sportName ? "스포츠 행사" : activity.category === "festival" ? "축제" : "이벤트",
+      secondaryTag: eventParticipation(activity)?.label,
       title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
       description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",
       meta: `${activityDate(activity.startsAt, activity.endsAt)} · ${activity.sigun ?? activity.region ?? "강원"}`,
