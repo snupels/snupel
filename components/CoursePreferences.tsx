@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { AppIcon, type AppIconName } from "./AppIcon";
 
 const groups: Array<{
@@ -51,40 +54,44 @@ const groups: Array<{
   },
 ];
 
-export function CoursePreferences({ values = {} }: { values?: Record<string, string | string[] | undefined> }) {
+export function CoursePreferences({ values = {}, collapsed = false }: { values?: Record<string, string | string[] | undefined>; collapsed?: boolean }) {
+  const [open, setOpen] = useState(!collapsed);
+
   return (
     <section className="bg-[#f3f7f4] px-4 py-12 sm:px-6">
       <form action="/courses" className="mx-auto max-w-[1180px] overflow-hidden rounded-[28px] border border-[#dce6df] bg-white shadow-sm">
         <input type="hidden" name="recommend" value="1" />
         <input type="hidden" name="region" value="강원특별자치도" />
-        <div className="flex items-center justify-between bg-[#008f45] px-6 py-5 text-white">
-          <div className="flex items-center gap-2"><AppIcon name="activity" className="size-5" /><h2 className="font-bold">맞춤 코스 설정</h2></div>
-          <span className="text-xs text-white/80">백엔드 추천 결과를 바로 확인해보세요</span>
-        </div>
-        <div className="space-y-8 p-6 sm:p-8">
-          {groups.map((group) => (
-            <fieldset key={group.name}>
-              <legend className="flex items-center gap-2 text-sm font-bold"><AppIcon name={group.items[0].icon} className="size-4 text-[#00a94f]" />{group.title}{group.description && <span className="font-normal text-[#96a09a]">{group.description}</span>}</legend>
-              <div className={`mt-4 grid gap-3 ${group.name === "sigun" ? "grid-cols-3 sm:grid-cols-6 lg:grid-cols-9" : "grid-cols-2 lg:grid-cols-4"}`}>
-                {group.items.map((item, index) => {
-                  const selected = values[group.name];
-                  const defaultValue = group.name === "sigun" ? "강릉시" : group.name === "theme" ? "healing" : group.name === "availableMinutes" ? "360" : "";
-                  const defaultChecked = Array.isArray(selected) ? selected.includes(item.value) : (selected ?? defaultValue) === item.value;
-                  return (
-                    <div key={`${group.name}-${item.value || "all"}`}>
-                      <input className="peer sr-only" id={`${group.name}-${item.value || "all"}`} name={group.name} value={item.value} type="radio" defaultChecked={defaultChecked || (!selected && !defaultValue && index === 0)} />
-                      <label htmlFor={`${group.name}-${item.value || "all"}`} className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[#e0e7e2] px-3 py-3 text-center text-sm font-semibold text-[#445065] transition hover:border-[#8cc3a1] peer-checked:border-[#008f45] peer-checked:bg-[#e9f6ee] peer-checked:text-[#008f45] focus-within:ring-2 focus-within:ring-[#008f45] sm:min-h-20 sm:flex-col">
-                        <AppIcon name={item.icon} className="size-5" />
-                        <span>{item.label}{item.caption && <small className="mt-1 hidden font-normal text-[#8a9590] sm:block">{item.caption}</small>}</span>
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-            </fieldset>
-          ))}
-          <div className="flex justify-end"><button type="submit" className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#008f45] px-7 text-sm font-bold text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2">맞춤 코스 추천받기<AppIcon name="arrowRight" /></button></div>
-        </div>
+        <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)} className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between bg-[#008f45] px-6 py-5 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white [&::-webkit-details-marker]:hidden">
+            <div className="flex items-center gap-2"><AppIcon name="activity" className="size-5" /><h2 className="font-bold">맞춤 코스 설정</h2></div>
+            <span className="text-sm font-bold"><span className="group-open:hidden">다른 코스 보기</span><span className="hidden group-open:inline">접기</span></span>
+          </summary>
+          <div className="space-y-8 p-6 sm:p-8">
+            {groups.map((group) => (
+              <fieldset key={group.name}>
+                <legend className="flex items-center gap-2 text-sm font-bold"><AppIcon name={group.items[0].icon} className="size-4 text-[#00a94f]" />{group.title}{group.description && <span className="font-normal text-[#96a09a]">{group.description}</span>}</legend>
+                <div className={`mt-4 grid gap-3 ${group.name === "sigun" ? "grid-cols-3 sm:grid-cols-6 lg:grid-cols-9" : "grid-cols-2 lg:grid-cols-4"}`}>
+                  {group.items.map((item, index) => {
+                    const selected = values[group.name];
+                    const defaultValue = group.name === "sigun" ? "강릉시" : group.name === "theme" ? "healing" : group.name === "availableMinutes" ? "360" : "";
+                    const defaultChecked = Array.isArray(selected) ? selected.includes(item.value) : (selected ?? defaultValue) === item.value;
+                    return (
+                      <div key={`${group.name}-${item.value || "all"}`}>
+                        <input className="peer sr-only" id={`${group.name}-${item.value || "all"}`} name={group.name} value={item.value} type="radio" defaultChecked={defaultChecked || (!selected && !defaultValue && index === 0)} />
+                        <label htmlFor={`${group.name}-${item.value || "all"}`} className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[#e0e7e2] px-3 py-3 text-center text-sm font-semibold text-[#445065] transition hover:border-[#8cc3a1] peer-checked:border-[#008f45] peer-checked:bg-[#e9f6ee] peer-checked:text-[#008f45] focus-within:ring-2 focus-within:ring-[#008f45] sm:min-h-20 sm:flex-col">
+                          <AppIcon name={item.icon} className="size-5" />
+                          <span>{item.label}{item.caption && <small className="mt-1 hidden font-normal text-[#8a9590] sm:block">{item.caption}</small>}</span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
+            <div className="flex justify-end"><button type="submit" className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#008f45] px-7 text-sm font-bold text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2">맞춤 코스 추천받기<AppIcon name="arrowRight" /></button></div>
+          </div>
+        </details>
       </form>
     </section>
   );
