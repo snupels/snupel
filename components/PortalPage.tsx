@@ -487,7 +487,9 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     kakaoLookupRef.current = kakaoLookupKey;
     let cancelled = false;
 
-    Promise.all(remoteCards.map((card) => findKakaoPlaceId(card.title, card.latitude ?? null, card.longitude ?? null))).then((placeIds) => {
+    void Promise.all(remoteCards.map((card) => (
+      findKakaoPlaceId(card.title, card.latitude ?? null, card.longitude ?? null).catch(() => null)
+    ))).then((placeIds) => {
       if (cancelled) return;
       const enrichedCards = remoteCards.map((card, index) => ({
         ...card,
@@ -504,6 +506,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           placeId: card.kakaoPlaceId,
         }))),
       } : plan);
+    }).catch(() => {
+      if (!cancelled) kakaoLookupRef.current = "";
     });
 
     return () => { cancelled = true; };
@@ -552,7 +556,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
-      {page === "courses" && KAKAO_MAP_KEY && <Script id="kakao-places-sdk" src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=services`} strategy="afterInteractive" onLoad={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} onReady={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} />}
+      {page === "courses" && KAKAO_MAP_KEY && <Script id="kakao-places-sdk" src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=services`} strategy="afterInteractive" onReady={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} onError={() => { kakaoLookupRef.current = ""; setKakaoPlacesReady(false); }} />}
       <section className="bg-gradient-to-b from-[#e6f0e9] to-[#f3f7f4] px-4 pb-10 pt-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1180px]">
           <div className="relative flex min-h-[320px] flex-col justify-end gap-8 overflow-hidden rounded-[28px] bg-[#173a2d] p-7 shadow-[0_24px_70px_rgba(28,72,51,0.18)] sm:p-10 lg:flex-row lg:items-end lg:justify-between">
