@@ -43,7 +43,9 @@ export function parseOAuthSession(saved: string | null, origin: string, now = Da
 export function authErrorMessage(reason: unknown): string {
   const error = reason as { status?: number; body?: { error?: string } } | null;
   const messages: Record<string, string> = {
-    invalid_credentials: "이메일 또는 비밀번호를 확인해 주세요.",
+    invalid_credentials: "아이디(또는 이메일)와 비밀번호를 확인해 주세요.",
+    username_already_exists: "이미 사용 중인 아이디입니다. 다른 아이디로 중복 확인해 주세요.",
+    username_change_not_allowed: "설정한 아이디는 변경할 수 없습니다. 계정 정보를 새로 불러와 주세요.",
     email_already_exists: "이미 가입한 이메일입니다. 로그인하거나 비밀번호 찾기를 이용해 주세요.",
     invalid_oauth_state: "소셜 로그인 요청이 만료되었거나 다른 창에서 시작되었습니다. 이 창에서 다시 로그인해 주세요.",
     oauth_code_expired: "소셜 로그인 인증이 만료되었습니다. 카카오 또는 Google 버튼을 눌러 다시 시작해 주세요.",

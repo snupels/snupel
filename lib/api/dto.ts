@@ -11,6 +11,12 @@ const timestamps = {
 
 export const authProviderSchema = z.enum(["google", "kakao"]);
 export const genderSchema = z.enum(["male", "female", "other", "unknown"]);
+export const usernameSchema = z.string().trim().regex(/^[A-Za-z0-9_]{4,20}$/).toLowerCase();
+const loginIdentifierSchema = z.string().trim().toLowerCase().min(1).max(254);
+export const usernameAvailabilitySchema = z.strictObject({
+  username: usernameSchema,
+  available: z.boolean(),
+});
 const phoneNumberSchema = z.string().trim().regex(/^01[016789]-?\d{3,4}-?\d{4}$/);
 const optionalAddressText = (max: number) => z.string().trim().max(max).transform((value) => value || null).nullable().optional();
 const addressInputFields = {
@@ -24,6 +30,7 @@ export const submissionStatusSchema = z.enum(["pending", "approved", "rejected"]
 
 export const signupRequestSchema = z.strictObject({
   ...addressInputFields,
+  username: usernameSchema,
   email: z.email(),
   password: z.string().min(8).max(128),
   birthDate: z.iso.date().nullable().optional(),
@@ -35,10 +42,10 @@ export const signupRequestSchema = z.strictObject({
   agreeMarketingEmail: z.boolean().default(false),
   agreeMarketingSns: z.boolean().default(false),
 });
-export const loginRequestSchema = z.strictObject({
-  email: z.email(),
-  password: z.string().min(1).max(128),
-});
+export const loginRequestSchema = z.union([
+  z.strictObject({ identifier: loginIdentifierSchema, password: z.string().min(1).max(128) }),
+  z.strictObject({ email: z.email(), password: z.string().min(1).max(128) }),
+]);
 export const oauthLoginRequestSchema = z.strictObject({
   code: z.string().min(1),
   redirectUri: z.url(),
@@ -72,6 +79,7 @@ export const oauthAuthorizeResponseSchema = z.strictObject({
 });
 export const profileUpdateSchema = z.strictObject({
   ...addressInputFields,
+  username: usernameSchema.optional(),
   nickname: z.string().min(2).max(30).nullable().optional(),
   phoneNumber: phoneNumberSchema.nullable().optional(),
   profileImageKey: z.string().max(500).nullable().optional(),
@@ -90,9 +98,12 @@ export const profileUploadResponseSchema = z.strictObject({
   expiresIn: positiveInt,
 });
 export const accountReminderSchema = z.strictObject({ email: z.email() });
-export const passwordResetRequestSchema = z.strictObject({ email: z.email() });
+export const passwordResetRequestSchema = z.strictObject({
+  username: loginIdentifierSchema,
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+});
 export const passwordResetConfirmSchema = z.strictObject({
-  email: z.email(),
+  ...passwordResetRequestSchema.shape,
   code: z.string().regex(/^\d{6}$/),
   newPassword: z.string().min(8).max(128),
 });
@@ -532,6 +543,7 @@ export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
 export type ProfileUploadRequest = z.infer<typeof profileUploadRequestSchema>;
 export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
+export type PasswordResetRequest = z.infer<typeof passwordResetRequestSchema>;
 export type PasswordVerify = z.infer<typeof passwordVerifySchema>;
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 export type BadgeInput = z.infer<typeof badgeInputSchema>;

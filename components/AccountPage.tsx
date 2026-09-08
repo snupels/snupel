@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/service";
-import { loginHref } from "@/lib/auth-flow";
-import type { AuthUser } from "@/lib/api/dto";
+import { authErrorMessage, loginHref } from "@/lib/auth-flow";
+import { usernameSchema, type AuthUser } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
 import { ConsentDocumentModal, type ConsentDocument } from "./ConsentDocumentModal";
 import { AddressFields } from "./AddressFields";
 import { readAccountAddress } from "@/lib/accountAddress";
+import { UsernameField } from "./UsernameField";
 
 export function AccountPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export function AccountPage() {
   const [consentDocument, setConsentDocument] = useState<ConsentDocument>(null);
   const activeSession = useRef(false);
   const sessionVersion = useRef(0);
+  const submitting = useRef(false);
+  const [checkedUsername, setCheckedUsername] = useState<string | null>(null);
 
   useEffect(() => {
     activeSession.current = true;
@@ -36,6 +39,7 @@ export function AccountPage() {
       setPreview("");
       setMessage("");
       setError("");
+      setCheckedUsername(null);
       setPending(false);
       router.replace(api.hasToken() ? "/mypage/" : loginHref("/account/"));
     };
@@ -58,15 +62,23 @@ export function AccountPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!user || pending) return;
+    if (!user || pending || submitting.current) return;
     const version = sessionVersion.current;
     const isCurrent = () => activeSession.current && version === sessionVersion.current
       && api.hasToken() && api.currentUser()?.id === user.id;
     if (!isCurrent()) return;
+    const form = new FormData(event.currentTarget);
+    const rawUsername = String(form.get("username") || "").trim();
+    const parsedUsername = usernameSchema.safeParse(rawUsername);
+    const username = parsedUsername.success ? parsedUsername.data : "";
+    if (!user.username && rawUsername && (!username || checkedUsername !== username)) {
+      setError("아이디를 등록하려면 중복 확인을 완료해 주세요.");
+      return;
+    }
+    submitting.current = true;
     setPending(true);
     setMessage("");
     setError("");
-    const form = new FormData(event.currentTarget);
     try {
       let profileImageKey: string | undefined;
       if (file) {
@@ -82,6 +94,7 @@ export function AccountPage() {
       }
       if (!isCurrent()) return;
       const updated = await api.updateProfile({
+        ...(!user.username && username ? { username } : {}),
         nickname: String(form.get("nickname") || "").trim() || null,
         phoneNumber: String(form.get("phoneNumber") || "").trim() || null,
         ...readAccountAddress(form),
@@ -96,9 +109,10 @@ export function AccountPage() {
       setFile(null);
       setPreview("");
       setMessage("계정 정보가 저장되었습니다.");
-    } catch {
-      if (isCurrent()) setError("계정 정보를 저장하지 못했습니다. 입력 내용과 사진 형식을 확인해 주세요.");
+    } catch (reason) {
+      if (isCurrent()) setError(authErrorMessage(reason));
     } finally {
+      submitting.current = false;
       if (isCurrent()) setPending(false);
     }
   }
@@ -133,7 +147,8 @@ export function AccountPage() {
           <form onSubmit={submit} className="rounded-[24px] border border-[#dfe7e1] bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-bold">계정 정보 수정</h2>
             <div className="mt-7 space-y-5">
-              <div><label className="text-sm font-bold" htmlFor="email">아이디(이메일)</label><input id="email" value={user.email} readOnly className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" /></div>
+              {user.username ? <div><label className="text-sm font-bold" htmlFor="accountUsername">아이디</label><input id="accountUsername" value={user.username} readOnly autoComplete="username" className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" /><p className="mt-2 text-xs text-[#7c8781]">등록한 아이디는 변경할 수 없습니다.</p></div> : <UsernameField idPrefix="account" disabled={pending} required={false} onVerifiedChange={setCheckedUsername} />}
+              <div><label className="text-sm font-bold" htmlFor="email">이메일</label><input id="email" value={user.email} readOnly autoComplete="email" className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" /></div>
               <div><label className="text-sm font-bold" htmlFor="nickname">닉네임</label><input id="nickname" name="nickname" defaultValue={user.nickname ?? ""} minLength={2} maxLength={30} placeholder="2~30자로 입력해 주세요" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" /></div>
               <div><label className="text-sm font-bold" htmlFor="phoneNumber">전화번호</label><input id="phoneNumber" name="phoneNumber" type="tel" required inputMode="tel" autoComplete="tel" pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}" defaultValue={user.phoneNumber ?? ""} placeholder="010-1234-5678" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" /></div>
               <AddressFields idPrefix="account" value={user} disabled={pending} />
