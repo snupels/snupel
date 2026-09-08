@@ -95,6 +95,7 @@ import {
   type WeatherQuery,
 } from "./dto";
 import { apiUrl, request, requestUrl } from "./repository";
+import { accountSessionUser } from "../accountAddress";
 
 const TOKEN_KEY = "sportspassport-access-token";
 const USER_KEY = "sportspassport-auth-user";
@@ -126,7 +127,7 @@ function resource<TCreate, TPatch, TResponse>(
 
 function saveToken(auth: { accessToken: string; user: AuthUser }) {
   sessionStorage.setItem(TOKEN_KEY, auth.accessToken);
-  sessionStorage.setItem(USER_KEY, JSON.stringify(auth.user));
+  sessionStorage.setItem(USER_KEY, JSON.stringify(accountSessionUser(auth.user)));
   window.dispatchEvent(new Event("sportspassport-auth-change"));
   return auth;
 }
@@ -136,7 +137,9 @@ function currentUser() {
   const saved = sessionStorage.getItem(USER_KEY);
   if (!saved) return undefined;
   try {
-    return authUserSchema.parse(JSON.parse(saved));
+    const safeUser = accountSessionUser(authUserSchema.parse(JSON.parse(saved)));
+    sessionStorage.setItem(USER_KEY, JSON.stringify(safeUser));
+    return authUserSchema.parse(safeUser);
   } catch {
     sessionStorage.removeItem(USER_KEY);
     return undefined;
@@ -144,8 +147,16 @@ function currentUser() {
 }
 
 function saveUser(user: AuthUser) {
-  sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+  sessionStorage.setItem(USER_KEY, JSON.stringify(accountSessionUser(user)));
   return user;
+}
+
+function privateProfileRequest(method?: "PATCH", body?: unknown) {
+  const requestedToken = token();
+  return request("/auth/me", { schema: authUserSchema, method, body, token: requestedToken }).then((user) => {
+    if (!requestedToken || token() !== requestedToken) throw new Error("Account session changed.");
+    return saveUser(user);
+  });
 }
 
 function queryString(input: Record<string, unknown>) {
@@ -183,7 +194,7 @@ export const api = {
   }).then(saveToken),
   hasToken: () => Boolean(token()),
   currentUser,
-  me: () => withToken("/auth/me", authUserSchema).then(saveUser),
+  me: () => privateProfileRequest(),
   myBadges: (page = 1, size = 100) => withToken(`/me/badges${pageQuery(page, size)}`, z.array(meBadgeResponseSchema)),
   myStampbook: (status: StampbookFilter = "all", page = 1, size = 100) => withToken(
     `/me/stampbook${queryString({ status: stampbookFilterSchema.parse(status), page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size) })}`,
@@ -213,7 +224,7 @@ export const api = {
     "POST",
     rewardClaimCreateSchema.parse(input),
   ),
-  updateProfile: (input: ProfileUpdate) => withToken("/auth/me", authUserSchema, "PATCH", profileUpdateSchema.parse(input)).then(saveUser),
+  updateProfile: (input: ProfileUpdate) => privateProfileRequest("PATCH", profileUpdateSchema.parse(input)),
   createProfileUploadUrl: (input: ProfileUploadRequest) => withToken(
     "/auth/profile-photo/upload-url",
     profileUploadResponseSchema,

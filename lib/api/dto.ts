@@ -12,11 +12,18 @@ const timestamps = {
 export const authProviderSchema = z.enum(["google", "kakao"]);
 export const genderSchema = z.enum(["male", "female", "other", "unknown"]);
 const phoneNumberSchema = z.string().trim().regex(/^01[016789]-?\d{3,4}-?\d{4}$/);
+const optionalAddressText = (max: number) => z.string().trim().max(max).transform((value) => value || null).nullable().optional();
+const addressInputFields = {
+  postalCode: z.string().trim().regex(/^(?:[0-9]{5})?$/).transform((value) => value || null).nullable().optional(),
+  address: optionalAddressText(500),
+  addressDetail: optionalAddressText(200),
+};
 export const activityCategorySchema = z.enum(["sports", "event", "festival", "tour"]);
 export const courseThemeSchema = z.enum(["healing", "thrill", "photo_spot", "stamp"]);
 export const submissionStatusSchema = z.enum(["pending", "approved", "rejected"]);
 
 export const signupRequestSchema = z.strictObject({
+  ...addressInputFields,
   email: z.email(),
   password: z.string().min(8).max(128),
   birthDate: z.iso.date().nullable().optional(),
@@ -38,6 +45,9 @@ export const oauthLoginRequestSchema = z.strictObject({
   state: z.string().min(1),
 });
 export const authUserSchema = z.strictObject({
+  postalCode: z.string().nullable().default(null),
+  address: z.string().nullable().default(null),
+  addressDetail: z.string().nullable().default(null),
   id: positiveInt,
   email: z.email(),
   nickname: z.string().nullable().default(null),
@@ -60,6 +70,7 @@ export const oauthAuthorizeResponseSchema = z.strictObject({
   authorizationUrl: z.url(),
 });
 export const profileUpdateSchema = z.strictObject({
+  ...addressInputFields,
   nickname: z.string().min(2).max(30).nullable().optional(),
   phoneNumber: phoneNumberSchema.nullable().optional(),
   profileImageKey: z.string().max(500).nullable().optional(),
