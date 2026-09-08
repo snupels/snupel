@@ -131,6 +131,7 @@ function ActivityDetailContent({ historyId }: { historyId: number }) {
               </dl>
               <Link href={"/sports/detail/?id=" + record.activityId} className="mt-6 flex h-11 items-center justify-center gap-2 rounded-xl border border-[#9dcdb0] text-sm font-bold text-[#008f45]">관련 장소 정보 보기<AppIcon name="arrowRight" /></Link>
               {(record.status === "approved" || (record.status === "collected" && record.type === "stamp")) && <Link href="/mypage" className="mt-3 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">나의 패스포트 보기</Link>}
+              <Link href="/community/" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-xl border border-[#9dcdb0] text-sm font-bold text-[#008f45] transition hover:bg-[#e2f1e7]"><AppIcon name="users" className="size-4" />스포츠 피드 보기</Link>
             </aside>
           </div>
         </article>

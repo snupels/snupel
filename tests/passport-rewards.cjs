@@ -42,4 +42,7 @@ assert.ok(myPassport.includes("실물 배지 배송"));
 assert.ok(badges.includes("api.claimReward("), "Preserve the independent badge-shipping workflow");
 assert.ok(badges.includes("claimLock.current"), "Prevent duplicate shipping submissions");
 assert.ok(badges.includes("디지털 배지 · 실물 배지 세트"));
+assert.ok(!badges.includes("패스포트 리워드"));
+assert.ok(!badges.includes('href="/stampbook#rewards"'));
+assert.ok(!source("lib/badgeRewards.ts").includes("숙박"));
 console.log("PASS: passport benefit plans are separate from earned badges and shipping claims");
