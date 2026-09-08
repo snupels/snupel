@@ -12,7 +12,7 @@ const timestamps = {
 export const authProviderSchema = z.enum(["google", "kakao"]);
 export const genderSchema = z.enum(["male", "female", "other", "unknown"]);
 const phoneNumberSchema = z.string().trim().regex(/^01[016789]-?\d{3,4}-?\d{4}$/);
-export const activityCategorySchema = z.enum(["sports", "event", "festival", "tourism"]);
+export const activityCategorySchema = z.enum(["sports", "event", "festival", "tourism", "tour"]);
 export const courseThemeSchema = z.enum(["healing", "thrill", "photo_spot", "stamp"]);
 export const submissionStatusSchema = z.enum(["pending", "approved", "rejected"]);
 
