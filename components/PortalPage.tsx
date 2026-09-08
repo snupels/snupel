@@ -349,7 +349,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     }),
   );
   const recommendationQuery = searchParams.toString();
-  const recommendationRequested = page === "courses";
+  const recommendationRequested = page === "courses" && searchParams.get("recommend") === "1";
   const recommendationNeedsLogin = recommendationRequested && !api.hasToken();
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
@@ -368,7 +368,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   useEffect(() => {
     const publicPage = page === "sports" || page === "events" || page === "missions";
-    if (page === "courses" && recommendationRequested) return;
+    if (page === "courses") return;
     if (!publicPage && !api.hasToken()) return;
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;

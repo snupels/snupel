@@ -13,6 +13,8 @@ assert.match(preferencesSource, /open=\{open\}/);
 assert.match(preferencesSource, /onToggle=\{\(event\) => setOpen\(event\.currentTarget\.open\)\}/);
 assert.match(preferencesSource, /focus-visible:ring-inset focus-visible:ring-white/);
 assert.match(portalSource, /collapsed=\{recommendationPending\s*\|\|\s*Boolean\(coursePlan\)\}/);
+assert.match(portalSource, /recommendationRequested = page === "courses" && searchParams\.get\("recommend"\) === "1"/);
+assert.match(portalSource, /if \(page === "courses"\) return;/);
 const helpers = portalSource.slice(portalSource.indexOf("function kakaoMapPoint("), portalSource.indexOf("function sportCategory("));
 const { outputText } = ts.transpileModule(helpers, {});
 const context = { encodeURIComponent };
