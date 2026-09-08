@@ -26,4 +26,13 @@ assert.equal(
 
 const dtoSource = fs.readFileSync(path.join(__dirname, "../lib/api/dto.ts"), "utf8");
 assert.match(dtoSource, /activityCategorySchema = z\.enum\(\[[^\]]*"tour"/);
-console.log("PASS: recommendation places support deployed categories and Kakao Map links");
+assert.doesNotMatch(dtoSource, /"tourism"/);
+assert.match(dtoSource, /title: z\.string\(\)\.min\(1\)/);
+assert.match(dtoSource, /totalEstimatedMinutes: z\.number\(\)\.int\(\)\.nonnegative\(\)/);
+assert.match(dtoSource, /representativeImageUrl: z\.string\(\)\.nullable\(\)/);
+assert.match(dtoSource, /distanceKm: z\.number\(\)\.nonnegative\(\)/);
+
+assert.doesNotMatch(portalSource, /api\.activities\.get\(stop\.activityId\)/);
+assert.match(portalSource, /recommendation\.legs/);
+assert.match(portalSource, /총 예상 \{coursePlan\.totalEstimatedMinutes\}분/);
+console.log("PASS: recommendation contract renders stops and travel without activity lookups");

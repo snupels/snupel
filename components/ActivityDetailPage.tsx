@@ -13,7 +13,6 @@ const categoryLabels: Record<string, string> = {
   sports: "스포츠",
   event: "이벤트",
   festival: "축제",
-  tourism: "관광",
   tour: "관광",
 };
 

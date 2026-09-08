@@ -12,7 +12,7 @@ const timestamps = {
 export const authProviderSchema = z.enum(["google", "kakao"]);
 export const genderSchema = z.enum(["male", "female", "other", "unknown"]);
 const phoneNumberSchema = z.string().trim().regex(/^01[016789]-?\d{3,4}-?\d{4}$/);
-export const activityCategorySchema = z.enum(["sports", "event", "festival", "tourism", "tour"]);
+export const activityCategorySchema = z.enum(["sports", "event", "festival", "tour"]);
 export const courseThemeSchema = z.enum(["healing", "thrill", "photo_spot", "stamp"]);
 export const submissionStatusSchema = z.enum(["pending", "approved", "rejected"]);
 
@@ -279,11 +279,28 @@ export const courseRecommendationRequestSchema = z.strictObject({
 });
 export const recommendedStopSchema = z.strictObject({
   activityId: z.number().int(),
+  placeName: z.string().nullable(),
+  address: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  representativeImageUrl: z.string().nullable(),
   reason: z.string(),
   estimatedMinutes: positiveInt,
 });
+export const recommendedLegSchema = z.strictObject({
+  fromActivityId: z.number().int(),
+  toActivityId: z.number().int(),
+  distanceKm: z.number().nonnegative(),
+  travelMinutes: z.number().int().nonnegative(),
+});
 export const courseRecommendationResponseSchema = z.strictObject({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  activityMinutes: z.number().int().nonnegative(),
+  travelMinutes: z.number().int().nonnegative(),
+  totalEstimatedMinutes: z.number().int().nonnegative(),
   stops: z.array(recommendedStopSchema),
+  legs: z.array(recommendedLegSchema),
   usedAi: z.boolean(),
   matchScore: z.number().int().min(0).max(100),
 });
