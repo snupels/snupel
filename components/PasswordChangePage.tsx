@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { loginHref } from "@/lib/auth-flow";
 import { AppIcon } from "./AppIcon";
 
 export function PasswordChangePage() {
@@ -15,7 +16,7 @@ export function PasswordChangePage() {
 
   useEffect(() => {
     if (!api.hasToken()) {
-      router.replace("/login");
+      router.replace(loginHref("/account/password/"));
       return;
     }
     api.me().then(() => setAuthChecked(true)).catch(() => router.replace("/login"));
@@ -23,10 +24,12 @@ export function PasswordChangePage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
+    const formElement = event.currentTarget;
     setPending(true);
     setMessage("");
     setError("");
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const currentPassword = String(form.get("currentPassword"));
     const newPassword = String(form.get("newPassword"));
     if (newPassword !== String(form.get("newPasswordConfirm"))) {
@@ -36,7 +39,7 @@ export function PasswordChangePage() {
     }
     try {
       await api.changePassword({ currentPassword, newPassword });
-      event.currentTarget.reset();
+      formElement.reset();
       setMessage("비밀번호가 변경되었습니다.");
     } catch {
       setError("현재 비밀번호가 올바르지 않습니다. 소셜 로그인 계정은 해당 로그인 수단을 이용해 주세요.");

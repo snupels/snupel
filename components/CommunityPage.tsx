@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { type CommunityFeedResponse, type FeedCommentResponse, type CommunityProfileResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
+import { ApiError } from "@/lib/api/repository";
+import { loginHref } from "@/lib/auth-flow";
 import { AppIcon } from "./AppIcon";
 
 type FeedTab = "all" | "mine" | "following" | "liked";
@@ -44,15 +46,23 @@ function CommunityPageContent() {
   const [loadingMore, setLoadingMore] = useState(false);
   const requestId = useRef(0);
   const followLocks = useRef(new Set<number>());
+  const postLocks = useRef(new Set<number>());
   const [comments, setComments] = useState<Record<number, FeedCommentResponse[]>>({});
   const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
   const [busyPostIds, setBusyPostIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const [user] = useState<{ id: number; email: string } | null>(
-    () => api.currentUser() ?? null,
+  const [user, setUser] = useState<{ id: number; email: string } | null>(
+    () => api.hasToken() ? api.currentUser() ?? null : null,
   );
+  const loginUrl = loginHref(`/community/?${searchParams.toString()}`);
+
+  useEffect(() => {
+    const sync = () => setUser(api.hasToken() ? api.currentUser() ?? null : null);
+    window.addEventListener("sportspassport-auth-change", sync);
+    return () => window.removeEventListener("sportspassport-auth-change", sync);
+  }, []);
 
   const loadFeed = useCallback(async (nextTab: FeedTab, nextPage = 1) => {
     const request = ++requestId.current;
@@ -76,9 +86,9 @@ function CommunityPageContent() {
         try { return [id, await api.communityFeed.profile(id)] as const; } catch { return null; }
       }));
       if (request === requestId.current) setProfiles(current => ({ ...current, ...Object.fromEntries(entries.filter(entry => entry !== null)) }));
-    } catch {
+    } catch (failure) {
       if (request !== requestId.current) return;
-      if (nextPage === 1) { setPosts([]); setError("피드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."); }
+      if (nextPage === 1) { setPosts([]); setError(failure instanceof ApiError && failure.status === 404 ? "삭제되었거나 비공개로 변경된 게시글입니다." : "피드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."); }
       else setActionMessage("추가 피드를 불러오지 못했습니다. 다시 시도해 주세요.");
     } finally {
       if (request === requestId.current) { setLoading(false); setLoadingMore(false); }
@@ -144,7 +154,8 @@ function CommunityPageContent() {
       setActionMessage("좋아요를 누르려면 먼저 로그인해 주세요.");
       return;
     }
-    if (busyPostIds.includes(post.id)) return;
+    if (postLocks.current.has(post.id)) return;
+    postLocks.current.add(post.id);
     setBusyPostIds((current) => [...current, post.id]);
     try {
       const engagement = post.likedByMe
@@ -156,6 +167,7 @@ function CommunityPageContent() {
     } catch {
       setActionMessage("좋아요를 반영하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
+      postLocks.current.delete(post.id);
       setBusyPostIds((current) => current.filter((id) => id !== post.id));
     }
   }
@@ -166,7 +178,8 @@ function CommunityPageContent() {
       setActionMessage("댓글을 작성하려면 먼저 로그인해 주세요.");
       return;
     }
-    if (!content || busyPostIds.includes(postId)) return;
+    if (!content || postLocks.current.has(postId)) return;
+    postLocks.current.add(postId);
     setBusyPostIds((current) => [...current, postId]);
     try {
       const comment = await api.communityFeed.addComment(postId, content);
@@ -182,6 +195,7 @@ function CommunityPageContent() {
     } catch {
       setActionMessage("댓글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
+      postLocks.current.delete(postId);
       setBusyPostIds((current) => current.filter((id) => id !== postId));
     }
   }
@@ -232,14 +246,14 @@ function CommunityPageContent() {
         {!viewingPost && !viewingProfile && (tab === "mine" || tab === "liked") && <nav aria-label="내 피드" className="mt-5 flex gap-3">
           {(["mine", "liked"] as const).map(value => <button key={value} onClick={() => selectTab(value)} aria-pressed={tab === value} className={`cursor-pointer rounded-full px-5 py-2 text-sm font-bold ${tab === value ? "bg-[#173a2d] text-white" : "bg-white text-[#66736c]"}`}>{value === "mine" ? "내 게시글" : "좋아요한 게시글"}</button>)}
         </nav>}
-        {actionMessage && <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#815f16]"><span>{actionMessage}</span>{!user && <Link href="/login" className="shrink-0 font-black underline underline-offset-2">로그인</Link>}<button type="button" aria-label="알림 닫기" onClick={() => setActionMessage("")} className="ml-auto cursor-pointer text-lg">×</button></div>}
+        {actionMessage && <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#815f16]"><span>{actionMessage}</span>{!user && <Link href={loginUrl} className="shrink-0 font-black underline underline-offset-2">로그인</Link>}<button type="button" aria-label="알림 닫기" onClick={() => setActionMessage("")} className="ml-auto cursor-pointer text-lg">×</button></div>}
 
         {tab !== "all" && !viewingPost && !viewingProfile && !user ? (
           <section className="mt-8 rounded-[24px] border border-[#dce5df] bg-white px-6 py-16 text-center">
             <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e9f5ed] text-[#008f45]"><AppIcon name="person" className="size-7" /></span>
             <h2 className="mt-5 text-xl font-bold">로그인하고 내 인증 피드를 확인하세요</h2>
             <p className="mt-2 text-sm text-[#748078]">공개에 동의한 승인 완료 인증만 내 피드에 표시됩니다.</p>
-            <Link href="/login" className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white">로그인하기</Link>
+            <Link href={loginUrl} className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white">로그인하기</Link>
           </section>
         ) : loading ? (
           <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label="피드 불러오는 중">
@@ -316,6 +330,11 @@ function CommunityPageContent() {
   );
 }
 
+function CommunityRoute() {
+  const params = useSearchParams();
+  return <CommunityPageContent key={params.toString()} />;
+}
+
 export function CommunityPage() {
-  return <Suspense><CommunityPageContent /></Suspense>;
+  return <Suspense><CommunityRoute /></Suspense>;
 }

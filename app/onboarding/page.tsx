@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { OnboardingPage } from "@/components/OnboardingPage";
 
 export default function Onboarding() {
-  return <OnboardingPage />;
+  return <Suspense><OnboardingPage /></Suspense>;
 }

@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/service";
 import type { AuthProvider } from "@/lib/api/dto";
-import { ApiError } from "@/lib/api/repository";
+import { authDestination, authErrorMessage, OAUTH_SESSION_KEY, parseOAuthSession, safeReturnPath } from "@/lib/auth-flow";
 import { AppIcon } from "./AppIcon";
 import { ConsentDocumentModal, type ConsentDocument } from "./ConsentDocumentModal";
 import { SiteFooter } from "./SiteFooter";
-
-const OAUTH_KEY = "sportspassport-oauth";
 
 export function LoginPage() {
   const router = useRouter();
@@ -21,25 +19,44 @@ export function LoginPage() {
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [consents, setConsents] = useState({ terms: false, privacy: false, email: false, sns: false });
   const [consentDocument, setConsentDocument] = useState<ConsentDocument>(null);
+  const callbackHandled = useRef(false);
+  const next = safeReturnPath(searchParams.get("next"));
 
   useEffect(() => {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
-    const saved = sessionStorage.getItem(OAUTH_KEY);
-    if (!code || !state || !saved) return;
-
-    const { provider, redirectUri } = JSON.parse(saved) as { provider: AuthProvider; redirectUri: string };
-    api.oauthLogin(provider, { code, state, redirectUri })
-      .then((result) => {
-        sessionStorage.removeItem(OAUTH_KEY);
-        router.replace(result.user.onboardingRequired ? "/onboarding" : "/mypage");
-      })
-      .catch(showError)
-      .finally(() => setPending(false));
-  }, [router, searchParams]);
+    const providerError = searchParams.get("error");
+    if (!code && !state && !providerError) return;
+    // A code is one-use. React effect replays and rerenders must not exchange it twice.
+    const timer = setTimeout(() => {
+      if (callbackHandled.current) return;
+      callbackHandled.current = true;
+      let saved = null;
+      try {
+        saved = parseOAuthSession(sessionStorage.getItem(OAUTH_SESSION_KEY), location.origin);
+        sessionStorage.removeItem(OAUTH_SESSION_KEY);
+      } catch { /* A blocked browser storage session is handled as an expired login. */ }
+      history.replaceState(history.state, "", `/login/?next=${encodeURIComponent(saved?.next ?? next)}`);
+      if (providerError) {
+        setError(providerError === "access_denied" ? "소셜 로그인을 취소했습니다. 원하실 때 다시 시작해 주세요." : "소셜 로그인에 실패했습니다. 다시 시도해 주세요.");
+        return;
+      }
+      if (!code || !state || !saved) {
+        setError("로그인 요청을 확인할 수 없습니다. 로그인 버튼을 눌러 이 창에서 다시 시작해 주세요.");
+        return;
+      }
+      setPending(true);
+      setError("");
+      api.oauthLogin(saved.provider, { code, state, redirectUri: saved.redirectUri })
+        .then((result) => router.replace(authDestination(result.user.onboardingRequired, saved.next)))
+        .catch(showError)
+        .finally(() => setPending(false));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [router, searchParams, next]);
 
   function showError(reason: unknown) {
-    setError(reason instanceof ApiError && reason.status === 401 ? "이메일 또는 비밀번호를 확인해 주세요." : "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    setError(authErrorMessage(reason));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -75,10 +92,10 @@ export function LoginPage() {
         await api.login({ email: String(form.get("email")), password: String(form.get("password")) });
       }
       const user = api.currentUser();
-      router.replace(user?.onboardingRequired ? "/onboarding" : "/mypage");
+      router.replace(authDestination(user?.onboardingRequired ?? false, next));
     } catch (reason) {
       if (signup && api.hasToken()) {
-        router.replace("/onboarding");
+        router.replace(authDestination(true, next));
         return;
       }
       showError(reason);
@@ -87,13 +104,15 @@ export function LoginPage() {
     }
   }
 
-  function oauth(provider: AuthProvider) {
+  async function oauth(provider: AuthProvider) {
     setPending(true);
     setError("");
     try {
       const redirectUri = new URL("/login/", location.origin).toString();
-      sessionStorage.setItem(OAUTH_KEY, JSON.stringify({ provider, redirectUri }));
-      location.assign(api.oauthStartUrl(provider, redirectUri));
+      sessionStorage.setItem(OAUTH_SESSION_KEY, JSON.stringify({ provider, redirectUri, next, createdAt: Date.now() }));
+      // The JSON endpoint surfaces configuration errors here instead of leaving users on an API error page.
+      const result = await api.authorize(provider, redirectUri);
+      location.assign(result.authorizationUrl);
     } catch (reason) {
       showError(reason);
       setPending(false);
@@ -117,7 +136,7 @@ export function LoginPage() {
           {!signup && <div className="mt-4 flex items-center justify-center gap-3 text-sm text-[#68736d]"><Link href="/account-help?mode=id" className="hover:text-[#008f45]">아이디 찾기</Link><span className="h-3 w-px bg-[#d7ddd9]" /><Link href="/account-help?mode=password" className="hover:text-[#008f45]">비밀번호 찾기</Link></div>}
           <div className="my-6 flex items-center gap-3 text-xs text-[#98a19c]"><span className="h-px flex-1 bg-[#e4e9e6]" />또는<span className="h-px flex-1 bg-[#e4e9e6]" /></div>
           <div className="grid gap-3"><button type="button" disabled={pending} onClick={() => oauth("google")} className="h-11 rounded-xl border border-[#dfe5e1] text-sm font-medium hover:bg-[#f6f8f7]">Google로 로그인·가입</button><button type="button" disabled={pending} onClick={() => oauth("kakao")} className="h-11 rounded-xl bg-[#fee500] text-sm font-medium text-[#191919]">카카오로 로그인·가입</button></div>
-          <p className="mt-7 text-center text-sm text-[#7a8491]">{signup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"} <button type="button" onClick={() => { setSignup(!signup); setError(""); }} className="font-semibold text-[#008f45]">{signup ? "로그인" : "회원가입"}</button></p>
+          <p className="mt-7 text-center text-sm text-[#7a8491]">{signup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"} <button type="button" disabled={pending} onClick={() => { setSignup(!signup); setError(""); }} className="font-semibold text-[#008f45] disabled:opacity-60">{signup ? "로그인" : "회원가입"}</button></p>
           <Link href="/" className="mt-5 flex items-center justify-center gap-1 text-sm font-semibold text-[#52605a]">로그인 없이 둘러보기<AppIcon name="arrowRight" /></Link>
         </div>
       </main>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { loginHref } from "@/lib/auth-flow";
 import type { AuthUser } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
 import { ConsentDocumentModal, type ConsentDocument } from "./ConsentDocumentModal";
@@ -20,7 +21,7 @@ export function AccountPage() {
 
   useEffect(() => {
     if (!api.hasToken()) {
-      router.replace("/login");
+      router.replace(loginHref("/account/"));
       return;
     }
     api.me().then((profile) => {
@@ -31,7 +32,7 @@ export function AccountPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!user) return;
+    if (!user || pending) return;
     setPending(true);
     setMessage("");
     setError("");

@@ -1,113 +1,136 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { ActivityResponse } from "@/lib/api/dto";
+import type { ActivityHistoryResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
+import { activityHistoryDetailHref, ACTIVITY_HISTORY_STATUS, ACTIVITY_HISTORY_TYPE } from "@/lib/activityHistory";
 import { AppIcon } from "./AppIcon";
-import { SaveActivityButton } from "./SaveActivityButton";
-import fallbackImage from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
-
-const categoryLabels: Record<string, string> = {
-  sports: "스포츠",
-  event: "이벤트",
-  festival: "축제",
-  tour: "관광",
-};
-
-function activityImage(activity: ActivityResponse | null): StaticImageData | string {
-  const imageUrl = activity?.representativeImageUrl;
-  return imageUrl?.startsWith("https://tong.visitkorea.or.kr/") ? imageUrl : fallbackImage;
-}
-
-function coordinate(activity: ActivityResponse) {
-  if (activity.latitude === null || activity.longitude === null) return null;
-  return `${activity.latitude.toFixed(5)}, ${activity.longitude.toFixed(5)}`;
-}
 
 function DetailLoading() {
-  return <div className="mx-auto min-h-[60vh] max-w-[1080px] px-5 py-16 text-sm text-[#68756d]">활동 정보를 불러오는 중입니다.</div>;
+  return <main className="grid min-h-[60vh] place-items-center bg-[#f3f7f4] px-5 text-sm text-[#68756d]">내 활동 기록을 불러오는 중입니다.</main>;
 }
 
 export function ActivityDetailPage() {
-  return <Suspense fallback={<DetailLoading />}><ActivityDetailContent /></Suspense>;
+  return <Suspense fallback={<DetailLoading />}><ActivityDetailRoute /></Suspense>;
 }
 
-function ActivityDetailContent() {
+function ActivityDetailRoute() {
   const searchParams = useSearchParams();
-  const activityId = Number(searchParams.get("id"));
-  const hasActivityId = Number.isInteger(activityId) && activityId > 0;
-  const feedTitle = searchParams.get("title") || "강원 스포츠 인증 활동";
-  const feedPlace = searchParams.get("place") || "강원특별자치도";
-  const feedDate = searchParams.get("date") || "날짜 정보 없음";
-  const feedStatus = searchParams.get("status") || "활동 기록";
-  const [activity, setActivity] = useState<ActivityResponse | null>(null);
-  const [apiError, setApiError] = useState(false);
+  const historyId = Number(searchParams.get("historyId"));
+  if (Number.isSafeInteger(historyId) && historyId > 0) return <ActivityDetailContent key={historyId} historyId={historyId} />;
+  const legacyActivityId = Number(searchParams.get("id"));
+  const hasLegacyId = !searchParams.has("historyId") && Number.isSafeInteger(legacyActivityId) && legacyActivityId > 0;
+  return (
+    <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-5">
+      <div className="max-w-lg rounded-[24px] border border-[#dce5df] bg-white p-8 text-center">
+        <AppIcon name="clipboard" className="mx-auto size-10 text-[#008f45]" />
+        <h1 className="mt-5 text-2xl font-bold">{hasLegacyId ? "내 활동 기록에서 다시 선택해 주세요" : "활동 기록을 찾을 수 없습니다"}</h1>
+        <p className="mt-3 text-sm leading-6 text-[#637069]">{hasLegacyId ? "이전 링크에는 장소 정보만 있어 개인 인증 결과를 확인할 수 없습니다. 내 활동 이력에서 해당 기록을 열어 주세요." : "올바른 활동 기록 링크인지 확인해 주세요."}</p>
+        <Link href="/activity-history" className="mt-6 flex h-12 items-center justify-center rounded-xl bg-[#008f45] font-bold text-white">내 활동 이력 보기</Link>
+        {hasLegacyId && <Link href={"/sports/detail/?id=" + legacyActivityId} className="mt-4 inline-flex text-sm font-bold text-[#008f45]">관련 장소 정보 보기<AppIcon name="arrowRight" /></Link>}
+      </div>
+    </main>
+  );
+}
+
+function ActivityDetailContent({ historyId }: { historyId: number }) {
+  const [record, setRecord] = useState<ActivityHistoryResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!hasActivityId) return;
-    let cancelled = false;
-    api.activities.get(activityId)
-      .then((item) => {
-        if (!cancelled) setActivity(item);
-      })
-      .catch(() => {
-        if (!cancelled) setApiError(true);
-      });
-    return () => {
-      cancelled = true;
+    const reset = () => {
+      setRecord(null);
+      setError("");
+      setRequiresLogin(false);
+      setLoading(true);
+      setRetry((value) => value + 1);
     };
-  }, [activityId, hasActivityId]);
+    window.addEventListener("sportspassport-auth-change", reset);
+    return () => window.removeEventListener("sportspassport-auth-change", reset);
+  }, []);
 
-  if (hasActivityId && !activity && !apiError) return <DetailLoading />;
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(async () => {
+      if (cancelled) return;
+      if (!api.hasToken()) {
+        setRequiresLogin(true);
+        return;
+      }
+      const item = await api.activityHistory.get(historyId);
+      if (!cancelled) setRecord(item);
+    }).catch((reason: unknown) => {
+      if (cancelled) return;
+      const status = typeof reason === "object" && reason && "status" in reason ? Number(reason.status) : 0;
+      if (status === 401) setRequiresLogin(true);
+      else setError(status === 404 || status === 403
+        ? "이 활동 기록을 찾을 수 없거나 내 계정의 기록이 아닙니다."
+        : "활동 기록을 불러오지 못했습니다. 다시 시도해 주세요.");
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [historyId, retry]);
 
-  const title = activity?.placeName ?? feedTitle;
-  const location = activity?.address ?? activity?.sigun ?? activity?.region ?? feedPlace;
-  const coordinates = activity ? coordinate(activity) : null;
+  if (loading) return <DetailLoading />;
+  if (requiresLogin) return (
+    <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-5">
+      <div className="max-w-md rounded-[24px] border border-[#dce5df] bg-white p-8 text-center">
+        <AppIcon name="lock" className="mx-auto size-10 text-[#008f45]" />
+        <h1 className="mt-5 text-2xl font-bold">내 활동 기록은 로그인 후 확인하세요</h1>
+        <p className="mt-3 text-sm leading-6 text-[#637069]">인증 사진과 심사 결과는 해당 기록을 남긴 계정에서만 볼 수 있습니다.</p>
+        <Link href={"/login?next=" + encodeURIComponent(activityHistoryDetailHref(historyId))} className="mt-6 flex h-12 items-center justify-center rounded-xl bg-[#008f45] font-bold text-white">로그인하고 기록 확인하기</Link>
+      </div>
+    </main>
+  );
+  if (!record || error) return (
+    <main className="grid min-h-[65vh] place-items-center bg-[#f3f7f4] px-5">
+      <div className="max-w-md rounded-[24px] border border-[#dce5df] bg-white p-8 text-center">
+        <h1 className="text-xl font-bold">활동 기록을 표시할 수 없어요</h1>
+        <p role="alert" className="mt-3 text-sm leading-6 text-[#637069]">{error || "활동 기록이 없습니다."}</p>
+        <button type="button" onClick={() => { setError(""); setLoading(true); setRetry((value) => value + 1); }} className="mt-6 cursor-pointer rounded-xl border border-[#9dcdb0] px-5 py-3 text-sm font-bold text-[#008f45]">다시 불러오기</button>
+        <Link href="/activity-history" className="mt-5 block text-sm font-bold text-[#008f45]">내 활동 이력으로 돌아가기</Link>
+      </div>
+    </main>
+  );
 
+  const status = ACTIVITY_HISTORY_STATUS[record.status];
+  const title = record.title ?? record.placeName ?? "나의 활동";
   return (
     <main className="min-h-screen bg-[#f3f7f4] px-5 pb-20 pt-10 text-[#172033] sm:px-8 sm:pt-14">
       <div className="mx-auto max-w-[1080px]">
-        <Link href="/activity-feed" className="inline-flex items-center gap-2 text-sm font-semibold text-[#637069] transition hover:text-[#008f45]"><AppIcon name="chevronLeft" className="size-5" />인증 활동으로 돌아가기</Link>
-
+        <Link href="/activity-history" className="inline-flex items-center gap-2 text-sm font-semibold text-[#637069] transition hover:text-[#008f45]"><AppIcon name="chevronLeft" className="size-5" />내 활동 이력으로 돌아가기</Link>
+        <header className="mt-7">
+          <p className="text-sm font-bold text-[#008f45]">{ACTIVITY_HISTORY_TYPE[record.type]}</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{title}</h1>
+          <p className="mt-3 text-sm text-[#637069]">내 계정에 연결된 실제 활동 기록과 심사 결과입니다.</p>
+        </header>
         <article className="mt-7 overflow-hidden rounded-[28px] border border-[#dce6df] bg-white shadow-[0_18px_55px_rgba(23,58,45,0.12)]">
-          <div className="relative aspect-[16/7] min-h-[280px] overflow-hidden bg-[#173a2d]">
-            <Image src={activityImage(activity)} alt={`${title} 장소 이미지`} fill preload sizes="(max-width: 1080px) 100vw, 1080px" className="object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#102c22]/90 via-[#102c22]/20 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-10">
-              <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{feedStatus}</span>
-              <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{title}</h1>
-              <p className="mt-3 flex items-center gap-2 text-sm text-white/75"><AppIcon name="mapPin" />{location}</p>
-            </div>
+          <div className="relative aspect-[4/3] min-h-[260px] max-h-[650px] bg-[#e8efeb]">
+            {record.imageUrl ? <Image src={record.imageUrl} alt={record.type === "submission" ? "내가 제출한 인증 사진" : title + " 활동 사진"} fill sizes="(max-width: 1080px) 100vw, 1080px" className="object-contain" unoptimized /> : <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-4 text-[#74897b]"><AppIcon name="camera" className="size-12" /><p className="text-sm">이 기록에 등록된 사진이 없습니다.</p></div>}
           </div>
-
           <div className="grid gap-8 p-7 sm:p-10 lg:grid-cols-[minmax(0,1fr)_330px]">
             <section>
-              <p className="text-sm font-bold text-[#008f45]">활동 및 장소 정보</p>
-              <h2 className="mt-3 text-2xl font-bold">{feedTitle}</h2>
-              <p className="mt-4 leading-8 text-[#526058]">
-                {activity?.summary ?? (activity ? `API에 등록된 ${title} 장소 정보입니다.` : "이 인증 기록과 연결된 장소 API 상세 정보는 아직 없습니다.")}
-              </p>
-              {!activity && (
-                <div className="mt-7 rounded-2xl border border-[#dce6df] bg-[#f5f8f6] p-5 text-sm leading-6 text-[#69756e]">
-                  인증 기록은 확인할 수 있지만 동일한 장소명이 API에 등록되면 주소, 종목, 대표 이미지와 공식 정보가 이 화면에 자동으로 표시됩니다.
-                </div>
-              )}
+              <span className={"inline-flex rounded-full px-4 py-2 text-sm font-bold " + status.className}>{record.type === "saved" ? "저장됨" : status.label}</span>
+              <h2 className="mt-5 text-xl font-bold">{record.type === "submission" ? "인증 심사 안내" : "활동 기록 안내"}</h2>
+              <p className="mt-3 text-sm leading-7 text-[#526058]">{record.type === "saved" ? "관심 있는 활동으로 저장한 기록입니다. 참여 인증이나 스탬프 획득 기록은 아닙니다." : status.description}</p>
+              {record.status === "rejected" && <div className="mt-6 rounded-2xl border border-[#efcdc7] bg-[#fff0ed] p-5"><h3 className="font-bold text-[#9e4236]">반려 사유</h3><p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#9e4236]">{record.rejectionReason || "별도 반려 사유가 등록되지 않았습니다. 미션의 인증 조건을 다시 확인해 주세요."}</p></div>}
+              {record.courseId && <Link href={"/missions/detail/?id=" + record.courseId} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#008f45] px-5 py-3 text-sm font-bold text-white hover:bg-[#00783a]">{record.status === "rejected" ? "미션 안내에서 다시 인증하기" : "관련 미션 안내 보기"}<AppIcon name="arrowRight" /></Link>}
             </section>
-
             <aside className="h-fit rounded-2xl bg-[#f1f7f3] p-6">
-              <h2 className="font-bold">상세 정보</h2>
+              <h2 className="font-bold">내 활동 상세</h2>
               <dl className="mt-5 space-y-5 text-sm">
-                <div className="flex gap-3"><AppIcon name="calendar" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">활동일</dt><dd className="mt-1 text-[#172033]">{feedDate}</dd></div></div>
-                <div className="flex gap-3"><AppIcon name="mapPin" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">장소</dt><dd className="mt-1 leading-6 text-[#172033]">{location}</dd></div></div>
-                {activity?.sportName && <div className="flex gap-3"><AppIcon name="medal" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">종목</dt><dd className="mt-1 text-[#172033]">{activity.sportName}</dd></div></div>}
-                {activity && <div className="flex gap-3"><AppIcon name="clipboard" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">분류</dt><dd className="mt-1 text-[#172033]">{categoryLabels[activity.category] ?? activity.category}</dd></div></div>}
-                {coordinates && <div className="flex gap-3"><AppIcon name="map" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">좌표</dt><dd className="mt-1 text-[#172033]">{coordinates}</dd></div></div>}
+                <div><dt className="font-semibold text-[#526058]">기록 일시</dt><dd className="mt-1"><time dateTime={record.occurredAt}>{new Date(record.occurredAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "medium", timeStyle: "short" })}</time></dd></div>
+                <div><dt className="font-semibold text-[#526058]">장소</dt><dd className="mt-1 leading-6">{record.placeName ?? "장소 정보 없음"}</dd></div>
+                {record.sigun && <div><dt className="font-semibold text-[#526058]">지역</dt><dd className="mt-1">{record.sigun}</dd></div>}
+                <div><dt className="font-semibold text-[#526058]">활동 유형</dt><dd className="mt-1">{ACTIVITY_HISTORY_TYPE[record.type]}</dd></div>
               </dl>
-              {activity && <SaveActivityButton activityId={activity.id} />}
-              {activity?.sourceUrl && <a href={activity.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 정보 보기<AppIcon name="arrowRight" /></a>}
+              <Link href={"/sports/detail/?id=" + record.activityId} className="mt-6 flex h-11 items-center justify-center gap-2 rounded-xl border border-[#9dcdb0] text-sm font-bold text-[#008f45]">관련 장소 정보 보기<AppIcon name="arrowRight" /></Link>
+              {(record.status === "approved" || (record.status === "collected" && record.type === "stamp")) && <Link href="/mypage" className="mt-3 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">나의 패스포트 보기</Link>}
             </aside>
           </div>
         </article>

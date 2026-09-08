@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">등록된 사진 없음</title>
+  <desc id="desc">이 장소의 공식 사진이 아직 등록되지 않았습니다.</desc>
+  <rect width="1600" height="900" fill="#edf3ef"/>
+  <rect x="708" y="286" width="184" height="148" rx="24" fill="none" stroke="#9cb9a7" stroke-width="8"/>
+  <circle cx="757" cy="330" r="13" fill="#9cb9a7"/>
+  <path d="M715 417l57-57 39 36 34-29 42 45" fill="none" stroke="#9cb9a7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="800" y="525" text-anchor="middle" font-family="sans-serif" font-size="42" font-weight="700" fill="#496454">등록된 사진 없음</text>
+  <text x="800" y="587" text-anchor="middle" font-family="sans-serif" font-size="27" fill="#6b8073">장소와 일정은 아래 안내를 확인해 주세요.</text>
+</svg>

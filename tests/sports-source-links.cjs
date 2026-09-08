@@ -16,5 +16,12 @@ for (const url of ['https://www.data.go.kr/data/3045471/fileData.do', 'http://da
 assert.equal(result.reference('https://www.durunubi.kr/course/1'), true);
 assert.equal(result.reference('https://example.com/course.gpx'), true);
 assert.equal(result.official('https://www.surfyy.com/'), true);
+for (const url of ['잘못된 주소', '', 'javascript:alert(1)', 'data:text/html,test', 'file:///tmp/course.gpx']) {
+  assert.equal(result.reference(url), false);
+  assert.equal(result.official(url), false);
+}
+for (const url of ['https://map.kakao.com/link/search/test', 'https://place.map.kakao.com/123', 'https://kko.to/abc']) {
+  assert.equal(result.official(url), false);
+}
 assert.ok(!source.includes('공공데이터 원문'));
 console.log('PASS: public dataset links hidden; official websites and course resources preserved');

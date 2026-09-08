@@ -12,16 +12,18 @@ const LOGO_PATH =
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(() => api.hasToken());
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const refreshAuth = () => setLoggedIn(api.hasToken());
+    const timer = window.setTimeout(refreshAuth, 0);
     window.addEventListener("sportspassport-auth-change", refreshAuth);
-    return () => window.removeEventListener("sportspassport-auth-change", refreshAuth);
+    return () => { window.clearTimeout(timer); window.removeEventListener("sportspassport-auth-change", refreshAuth); };
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[200] h-16 border-b border-[#e5e7eb] bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur-md">
+    <header onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }} className="fixed inset-x-0 top-0 z-[200] h-16 border-b border-[#e5e7eb] bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur-md">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-10 xl:px-20">
         <Link
           href="/"
@@ -33,7 +35,7 @@ export function AppHeader() {
               <path d={LOGO_PATH} stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.66667" />
             </svg>
           </span>
-          <span className="hidden w-[156px] md:block">
+          <span className="w-[156px] md:block">
             <span className="block whitespace-nowrap font-['Inter','Noto_Sans_KR',sans-serif] text-base font-semibold leading-6 text-[#007a3d]">
               강원 스포츠 패스포트
             </span>
@@ -43,7 +45,7 @@ export function AppHeader() {
           </span>
         </Link>
 
-        <nav className="app-header-nav flex h-full min-w-0 flex-1 items-center gap-4 overflow-x-auto px-1 md:justify-center lg:gap-8" aria-label="주요 메뉴">
+        <nav className="app-header-nav hidden h-full min-w-0 flex-1 items-center gap-4 overflow-x-auto px-1 md:flex md:justify-center lg:gap-8" aria-label="주요 메뉴">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -83,7 +85,15 @@ export function AppHeader() {
             </button>
           )}
         </div>
+        <button type="button" onClick={() => setMenuOpen(open => !open)} aria-expanded={menuOpen} aria-controls="mobile-navigation" className="ml-auto cursor-pointer rounded-lg border border-[#d1d5dc] px-3 py-2 text-sm font-bold text-[#007a3d] md:hidden">{menuOpen ? "닫기" : "메뉴"}</button>
       </div>
+      {menuOpen && <nav id="mobile-navigation" aria-label="모바일 메뉴" className="max-h-[calc(100dvh-64px)] overflow-y-auto border-b border-[#dce5df] bg-white p-4 shadow-lg md:hidden">
+        {[...NAV_ITEMS, { href: "/map", label: "지역별 지도" }, { href: "/community", label: "스포츠 피드" }].map(item => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} aria-current={pathname === item.href || pathname.startsWith(`${item.href}/`) ? "page" : undefined} className="block rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[#edf5ef]">{item.label}</Link>)}
+        <div className="mt-3 flex gap-3 border-t border-[#e5e7eb] pt-4">
+          <Link href={loggedIn ? "/account" : "/login"} onClick={() => setMenuOpen(false)} className="flex-1 rounded-xl bg-[#007a3d] px-4 py-3 text-center text-sm font-bold text-white">{loggedIn ? "마이페이지" : "로그인·회원가입"}</Link>
+          {loggedIn && <button type="button" onClick={() => { api.logout(); setMenuOpen(false); router.push("/"); router.refresh(); }} className="cursor-pointer rounded-xl border border-[#d1d5dc] px-4 py-3 text-sm">로그아웃</button>}
+        </div>
+      </nav>}
     </header>
   );
 }

@@ -11,7 +11,7 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly body: unknown,
   ) {
-    super(typeof body === "object" && body && "detail" in body ? String(body.detail) : `API 요청 실패 (${status})`);
+    super(typeof body === "object" && body && "message" in body ? String(body.message) : typeof body === "object" && body && "detail" in body ? String(body.detail) : `API 요청 실패 (${status})`);
   }
 }
 
@@ -23,12 +23,13 @@ type RequestOptions<T> = {
   schema: z.ZodType<T>;
 };
 
-export async function request<T>(path: string, { method = "GET", body, token, schema }: RequestOptions<T>): Promise<T> {
-  return requestUrl(apiUrl(path), { method, body, token, schema });
+export async function request<T>(path: string, options: RequestOptions<T>): Promise<T> {
+  return requestUrl(apiUrl(path), options);
 }
 
 export async function requestUrl<T>(url: string, { method = "GET", body, token, credentials = "include", schema }: RequestOptions<T>): Promise<T> {
   const response = await fetch(url, {
+    signal: AbortSignal.timeout(45000),
     method,
     credentials,
     headers: {

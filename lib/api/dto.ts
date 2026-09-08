@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
 const nullableUrl = z.url().nullable();
-const apiDateTime = z.iso.datetime({ local: true });
+const apiDateTime = z.iso.datetime({ local: true, offset: true });
 const timestamps = {
   id: positiveInt,
   createdAt: apiDateTime,
@@ -293,6 +293,7 @@ export const weatherQuerySchema = z.strictObject({
   longitude: z.number().min(-180).max(180),
 });
 export const weatherResponseSchema = z.strictObject({
+  source: z.enum(["kma", "open_meteo"]).default("kma"),
   forecastAt: apiDateTime,
   temperatureC: z.number().nullable(),
   precipitationProbability: z.number().int().nullable(),

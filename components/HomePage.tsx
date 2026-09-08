@@ -4,15 +4,12 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { ApiError } from "@/lib/api/repository";
 import { passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
 import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
 import digitalTourCardImage from "@/imports/LandingPage/digital-tour-card-gangwon-hero.png";
-import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
-import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
-import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
-import eventImage4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
 import mountainSportsImage from "@/imports/SportsAI/sports-ai-mountain.jpg";
 import winterSportsImage from "@/imports/SportsAI/sports-ai-snow.jpg";
 import waterSportsImage from "@/imports/SportsAI/sports-ai-water.jpg";
@@ -38,7 +35,7 @@ const heroChallenges: Array<{
 }> = [
   {
     image: hongcheonMarathonImage,
-    tag: "참가 접수중",
+    tag: "접수 현황은 공식 사이트 확인",
     title: "2026 홍천사랑마라톤대회",
     description: "홍천강을 따라 함께 달리는 러닝 페스티벌. 홍천종합운동장에서 힘차게 출발하세요.",
     date: "2026.10.04(일) 09:00",
@@ -98,18 +95,26 @@ const gangwonWeatherRegions = [
 
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(true);
+  const [weatherSource, setWeatherSource] = useState<"kma" | "open_meteo">("kma");
+  const [weatherRetry, setWeatherRetry] = useState(0);
+  const [weatherFailed, setWeatherFailed] = useState(false);
+  const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherRegionIndex, setWeatherRegionIndex] = useState(2);
   const [temperature, setTemperature] = useState<number | null>(null);
   const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
-  const [eventCards, setEventCards] = useState<Array<{ image: StaticImageData | string; tag: string; title: string; date: string; reward: string; href?: string }>>([]);
+  const [eventCards, setEventCards] = useState<Array<{ image: string | null; tag: string; title: string; date: string; reward: string; href?: string }>>([]);
   const [eventMessage, setEventMessage] = useState("행사를 불러오는 중…");
-  const [passportProfile, setPassportProfile] = useState({ displayName: "", stampCount: 0, level: "Level 1 Beginner", authenticated: false });
+  const [passportProfile, setPassportProfile] = useState<{ displayName: string; stampCount: number | null; level: string | null; status: "loading" | "guest" | "ready" | "error" }>({ displayName: "", stampCount: null, level: null, status: "loading" });
+  const [passportRetry, setPassportRetry] = useState(0);
   const heroChallenge = heroChallenges[heroIndex];
   const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
   const showPreviousHero = () => setHeroIndex((current) => (current - 1 + heroChallenges.length) % heroChallenges.length);
   const showNextHero = () => setHeroIndex((current) => (current + 1) % heroChallenges.length);
   const changeWeatherRegion = (direction: -1 | 1) => {
+    setWeatherLoading(true);
+    setWeatherFailed(false);
     setTemperature(null);
     setTemperatureRange("날씨 불러오는 중");
     setWeatherDetail("날씨 정보 확인 중");
@@ -122,12 +127,18 @@ export default function HomePage() {
     api.weather({ latitude: weatherRegion.latitude, longitude: weatherRegion.longitude })
       .then((weather) => {
         if (cancelled) return;
+        setWeatherLoading(false);
+        setWeatherFailed(false);
+        setWeatherSource(weather.source);
         setTemperature(weather.temperatureC === null ? null : Math.round(weather.temperatureC));
         setTemperatureRange(weather.precipitationProbability === null ? "강수 확률 확인 중" : `강수 확률 ${weather.precipitationProbability}%`);
-        setWeatherDetail([weather.sky, weather.precipitationType].filter(Boolean).join(" · ") || "날씨 정보 확인 중");
+        const labels: Record<string, string> = { clear: "맑음", cloudy: "구름 많음", overcast: "흐림", none: "", rain: "비", rain_snow: "비·눈", snow: "눈", shower: "소나기" };
+        setWeatherDetail([labels[weather.sky ?? ""], labels[weather.precipitationType ?? ""]].filter(Boolean).join(" · ") || "날씨 정보 확인 중");
       })
       .catch(() => {
         if (cancelled) return;
+        setWeatherLoading(false);
+        setWeatherFailed(true);
         setTemperatureRange("날씨를 불러오지 못했습니다");
         setWeatherDetail("잠시 후 다시 확인해 주세요");
       });
@@ -135,10 +146,13 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [weatherRegion.latitude, weatherRegion.longitude]);
+  }, [weatherRegion.latitude, weatherRegion.longitude, weatherRetry]);
 
   useEffect(() => {
+    if (!autoPlay || weatherLoading) return;
     const timer = window.setTimeout(() => {
+      setWeatherLoading(true);
+      setWeatherFailed(false);
       setTemperature(null);
       setTemperatureRange("날씨 불러오는 중");
       setWeatherDetail("날씨 정보 확인 중");
@@ -146,28 +160,51 @@ export default function HomePage() {
     }, 8000);
 
     return () => window.clearTimeout(timer);
-  }, [weatherRegionIndex]);
+  }, [weatherRegionIndex, autoPlay, weatherLoading]);
 
   useEffect(() => {
+    if (!autoPlay) return;
     const timer = window.setTimeout(() => {
       setHeroIndex((current) => (current + 1) % heroChallenges.length);
     }, 7000);
 
     return () => window.clearTimeout(timer);
-  }, [heroIndex]);
+  }, [heroIndex, autoPlay]);
 
   useEffect(() => {
-    const user = api.currentUser();
-    if (!api.hasToken()) return;
-    const displayName = user?.nickname || user?.email.split("@")[0] || "패스포트 회원";
-
-    api.myStampbook()
-      .then((stampbook) => {
-        const stampCount = stampbook.summary.collected;
-        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, stampCount > 0)), authenticated: true });
-      })
-      .catch(() => setPassportProfile((current) => ({ ...current, displayName, authenticated: true })));
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => { if (media.matches) setAutoPlay(false); };
+    const timer = window.setTimeout(update, 0);
+    media.addEventListener("change", update);
+    return () => { window.clearTimeout(timer); media.removeEventListener("change", update); };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let requestId = 0;
+    const loadPassport = async () => {
+      const request = ++requestId;
+      const user = api.currentUser();
+      if (!api.hasToken()) {
+        setPassportProfile({ displayName: "", stampCount: null, level: null, status: "guest" });
+        return;
+      }
+      const displayName = user?.nickname || user?.email.split("@")[0] || "패스포트 회원";
+      setPassportProfile({ displayName, stampCount: null, level: null, status: "loading" });
+      try {
+        const stampbook = await api.myStampbook();
+        if (cancelled || request !== requestId) return;
+        const stampCount = stampbook.summary.collected;
+        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, stampCount > 0)), status: "ready" });
+      } catch (error) {
+        if (cancelled || request !== requestId) return;
+        setPassportProfile({ displayName: error instanceof ApiError && error.status === 401 ? "" : displayName, stampCount: null, level: null, status: error instanceof ApiError && error.status === 401 ? "guest" : "error" });
+      }
+    };
+    const timer = window.setTimeout(() => void loadPassport(), 0);
+    window.addEventListener("sportspassport-auth-change", loadPassport);
+    return () => { cancelled = true; window.clearTimeout(timer); window.removeEventListener("sportspassport-auth-change", loadPassport); };
+  }, [passportRetry]);
 
   useEffect(() => {
     api.events.list({ page: 1, size: 100 })
@@ -176,18 +213,19 @@ export default function HomePage() {
           setEventMessage("현재 등록된 행사가 없습니다.");
           return;
         }
-        const sportsFirst = [...items]
+        const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+        const sportsFirst = items.filter(item => !item.endsAt || item.endsAt.slice(0, 10) >= today)
           .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
           .slice(0, 4);
-        setEventCards(sportsFirst.map((item, index) => ({
-          image: item.representativeImageUrl ?? [eventImage1, eventImage2, eventImage3, eventImage4][index % 4],
+        setEventCards(sportsFirst.map((item) => ({
+          image: item.representativeImageUrl,
           tag: item.sportName ? "스포츠 행사" : item.category === "festival" ? "축제" : "이벤트",
           title: item.placeName ?? item.sportName ?? `강원 행사 #${item.id}`,
           date: item.startsAt ? item.startsAt.slice(0, 10).replaceAll("-", ".") : "일정 확인 중",
           reward: item.hasMission ? "패스포트 미션 참여 가능" : (item.sigun ?? item.region ?? "강원특별자치도"),
           href: `/events/detail?id=${item.id}`,
         })));
-        setEventMessage("");
+        setEventMessage(sportsFirst.length ? "" : "현재 예정된 행사가 없습니다. 새 소식을 준비하고 있습니다.");
       })
       .catch(() => setEventMessage("행사를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요."));
   }, []);
@@ -214,7 +252,8 @@ export default function HomePage() {
               <p className="mt-3 flex items-center gap-1.5 rounded-lg border border-[#f3d76c] bg-[#fff9df] px-2.5 py-2 text-[11px] text-[#9b6900]">
                 <AppIcon name="activity" className="size-3.5" /> {weatherDetail}
               </p>
-              <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="mt-2 block text-right text-[9px] text-[#87918c] underline-offset-2 hover:underline">Weather data by Open-Meteo.com</a>
+              {weatherFailed && <button type="button" onClick={() => { setWeatherLoading(true); setWeatherFailed(false); setTemperatureRange("날씨 불러오는 중"); setWeatherRetry(value => value + 1); }} className="mt-2 cursor-pointer text-xs font-semibold text-[#007a3d] underline">날씨 다시 불러오기</button>}
+              <a href={weatherSource === "open_meteo" ? "https://open-meteo.com/" : "https://www.weather.go.kr/"} target="_blank" rel="noreferrer" className="mt-2 block text-right text-[9px] text-[#87918c] underline-offset-2 hover:underline">{weatherSource === "open_meteo" ? "Weather data by Open-Meteo.com" : "날씨 제공: 기상청"}</a>
             </aside>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
@@ -239,6 +278,7 @@ export default function HomePage() {
               <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
                 <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
                 <span className="min-w-9 text-center">{heroIndex + 1} / {heroChallenges.length}</span>
+                <button type="button" onClick={() => setAutoPlay(value => !value)} aria-pressed={!autoPlay} className="cursor-pointer rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">{autoPlay ? "자동 넘김 멈춤" : "자동 넘김 시작"}</button>
                 <button type="button" onClick={showNextHero} aria-label="다음 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronRight" /></button>
                 <div className="ml-1 flex gap-1.5" aria-label="챌린지 선택">
                   {heroChallenges.map((challenge, index) => (
@@ -257,16 +297,17 @@ export default function HomePage() {
 
             <aside className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
               <h2 className="text-xs font-semibold">나의 패스포트</h2>
-              {passportProfile.authenticated ? <>
+              {passportProfile.status !== "guest" ? <>
                 <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">
                   <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="mountain" className="size-6" /></span>
-                  <strong className="mt-2 block text-base">{passportProfile.displayName}</strong>
-                  <span className="mt-1 block text-xs font-medium text-white/75">{passportProfile.level}</span>
+                  <strong className="mt-2 block text-base">{passportProfile.displayName || "내 패스포트 확인 중"}</strong>
+                  <span className="mt-1 block text-xs font-medium text-white/75">{passportProfile.level ?? (passportProfile.status === "error" ? "등급을 불러오지 못했습니다" : "등급 확인 중…")}</span>
                 </div>
                 <div className="mt-3 rounded-lg bg-[#f3f5f4] p-3 text-center">
                   <span className="block text-[10px] text-[#7a8491]">보유 스탬프</span>
-                  <strong className="mt-1 block text-lg text-[#008f45]">{passportProfile.stampCount}개</strong>
+                  <strong className="mt-1 block text-lg text-[#008f45]">{passportProfile.stampCount === null ? "—" : `${passportProfile.stampCount}개`}</strong>
                 </div>
+                {passportProfile.status === "error" && <div role="status" className="mt-3 text-center text-xs text-[#7a5350]"><p>정보를 불러오지 못했습니다.</p><button type="button" onClick={() => setPassportRetry(value => value + 1)} className="mt-2 cursor-pointer font-bold text-[#007a3d] underline">다시 불러오기</button></div>}
                 <Link href="/passport" className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-[#008f45] text-xs font-semibold text-white transition hover:bg-[#00783a]">패스포트 보기</Link>
               </> : <Link href="/login" className="mt-3 flex min-h-44 flex-col items-center justify-center rounded-xl bg-[#008f45] p-4 text-center text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2">
                 <span className="flex size-12 items-center justify-center rounded-full bg-white/15"><AppIcon name="lock" className="size-6" /></span>
@@ -302,7 +343,7 @@ export default function HomePage() {
           {eventCards.length === 0 && <p role="status" className="mt-7 rounded-2xl border border-[#dfe8e2] bg-white p-8 text-center text-sm text-[#6f7a87]">{eventMessage}</p>}
           <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {eventCards.map((event) => {
-              const card = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt={`${event.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>;
+              const card = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden">{event.image ? <Image src={event.image} alt={`${event.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center bg-[#e6eee9] text-sm text-[#68736d]">행사 이미지 준비 중</div>}<span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>;
               return event.href ? <Link key={event.title} href={event.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{card}</Link> : <div key={event.title}>{card}</div>;
             })}
           </div>
