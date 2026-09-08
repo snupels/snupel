@@ -9,6 +9,8 @@ import {
   authProviderSchema,
   authResponseSchema,
   authUserSchema,
+  usernameSchema,
+  usernameAvailabilitySchema,
   badgeInputSchema,
   badgeResponseSchema,
   collectedBadgeCreateSchema,
@@ -84,6 +86,7 @@ import {
   type ProfileUploadRequest,
   type RewardClaimCreate,
   type PasswordResetConfirm,
+  type PasswordResetRequest,
   type PasswordVerify,
   type PasswordChange,
   type SignupRequest,
@@ -177,6 +180,7 @@ const pageSizeSchema = positiveIntSchema.max(100);
 
 export const api = {
   health: () => request("/health", { schema: z.record(z.string(), z.string()) }),
+  checkUsername: (username: string) => request(`/auth/username-availability${queryString({ username: usernameSchema.parse(username) })}`, { schema: usernameAvailabilitySchema }),
   signup: (input: SignupRequest) => request("/auth/signup", { method: "POST", body: signupRequestSchema.parse(input), schema: authResponseSchema }).then(saveToken),
   login: (input: LoginRequest) => request("/auth/login", { method: "POST", body: loginRequestSchema.parse(input), schema: authResponseSchema }).then(saveToken),
   authorize: (provider: AuthProvider, redirectUri: string) => {
@@ -236,9 +240,9 @@ export const api = {
     body: accountReminderSchema.parse({ email }),
     schema: messageResponseSchema,
   }),
-  requestPasswordReset: (email: string) => request("/auth/password-reset/request", {
+  requestPasswordReset: (input: PasswordResetRequest) => request("/auth/password-reset/request", {
     method: "POST",
-    body: passwordResetRequestSchema.parse({ email }),
+    body: passwordResetRequestSchema.parse(input),
     schema: messageResponseSchema,
   }),
   confirmPasswordReset: (input: PasswordResetConfirm) => request("/auth/password-reset/confirm", {

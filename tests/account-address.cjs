@@ -18,7 +18,7 @@ const user = dto.authUserSchema.parse({
   id: 1, email: "member@example.com", nickname: "회원", phoneNumber: "01012345678",
   onboardingRequired: false, postalCode: "01234", address: "테스트용 기본주소", addressDetail: "테스트용 상세주소",
 });
-const signup = { email: "member@example.com", password: "test-only-password", nickname: "회원", phoneNumber: "01012345678", agreeTerms: true, agreePrivacy: true };
+const signup = { username: "test_member", email: "member@example.com", password: "test-only-password", nickname: "회원", phoneNumber: "01012345678", agreeTerms: true, agreePrivacy: true };
 assert.ok(dto.signupRequestSchema.safeParse(signup).success, "address remains optional for existing clients");
 assert.equal(dto.authUserSchema.parse({ id: 1, email: "member@example.com" }).address, null);
 const normalized = dto.signupRequestSchema.parse({ ...signup, postalCode: " 01234 ", address: " 기본주소 ", addressDetail: " 상세주소 " });

@@ -9,9 +9,10 @@ function transpile(file, exports, context) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText, { exports, ...context });
 }
-const flow = {}, address = {};
+const flow = {}, address = {}, dto = {};
 transpile("lib/auth-flow.ts", flow, { require, URL, Date });
 transpile("lib/accountAddress.ts", address, { require });
+transpile("lib/api/dto.ts", dto, { require });
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 function deferred() {
   let resolve, reject;
@@ -27,7 +28,7 @@ function find(tree, predicate) {
 
 function setup(component) {
   const profile = {
-    id: 11, email: "first@example.invalid", nickname: "첫 사용자", phoneNumber: "01011112222",
+    id: 11, username: "first_user", email: "first@example.invalid", nickname: "첫 사용자", phoneNumber: "01011112222",
     onboardingRequired: component === "OnboardingPage", marketingEmailAgreed: false, marketingSnsAgreed: false,
     postalCode: "24200", address: "강원특별자치도 춘천시 테스트길", addressDetail: "101호",
   };
@@ -65,6 +66,7 @@ function setup(component) {
       if (name === "react") return hooks;
       if (name === "next/navigation") return { useRouter: () => router, useSearchParams: () => new URLSearchParams("next=/missions/") };
       if (name === "@/lib/api/service") return { api };
+      if (name === "@/lib/api/dto") return dto;
       if (name === "@/lib/api/repository") return { ApiError: class ApiError extends Error {} };
       if (name === "@/lib/auth-flow") return flow;
       if (name === "@/lib/accountAddress") return address;
