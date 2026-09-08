@@ -45,6 +45,7 @@ export const oauthLoginRequestSchema = z.strictObject({
   state: z.string().min(1),
 });
 export const authUserSchema = z.strictObject({
+  username: z.string().nullable().optional(),
   postalCode: z.string().nullable().default(null),
   address: z.string().nullable().default(null),
   addressDetail: z.string().nullable().default(null),
