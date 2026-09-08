@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -12,10 +12,6 @@ import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
-import image1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
-import image2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
-import image3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
-import image4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
 
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
 
@@ -37,7 +33,7 @@ type PageConfig = {
   sectionDescription: string;
 };
 
-type PortalCard = { image: string | typeof image1; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
+type PortalCard = { image: string | StaticImageData; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
 
 type CoursePlan = {
   title: string;
@@ -54,12 +50,12 @@ const configs: Record<PortalPageKey, PageConfig> = {
   sports: {
     eyebrow: "스포츠 탐색",
     title: "강원 곳곳의 스포츠를 한눈에",
-    description: "지역과 종목, 난이도를 기준으로 지금 즐길 수 있는 스포츠를 찾아보세요.",
+    description: "지역과 종목을 골라 강원의 스포츠 장소와 이용 정보를 찾아보세요.",
     icon: "mountain",
     action: { label: "맞춤 코스 보기", href: "/courses" },
     stats: [],
-    sectionTitle: "지금 인기 있는 스포츠",
-    sectionDescription: "계절과 지역을 고려해 가장 반응이 좋은 활동을 골랐습니다.",
+    sectionTitle: "강원 스포츠 장소",
+    sectionDescription: "공공 관광정보를 바탕으로 장소와 이용 정보를 확인해 보세요.",
   },
   courses: {
     eyebrow: "맞춤 코스",
@@ -78,7 +74,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     icon: "award",
     action: { label: "내 패스포트", href: "/mypage" },
     stats: [],
-    sectionTitle: "이번 달 추천 미션",
+    sectionTitle: "참여할 수 있는 미션",
     sectionDescription: "처음 참여해도 완료 조건을 쉽게 이해할 수 있는 미션입니다.",
   },
   events: {
@@ -89,7 +85,7 @@ const configs: Record<PortalPageKey, PageConfig> = {
     action: { label: "미션과 함께 보기", href: "/missions" },
     stats: [],
     sectionTitle: "다가오는 행사",
-    sectionDescription: "접수 상태와 일정이 확인된 행사만 보여드립니다.",
+    sectionDescription: "행사 일정과 장소를 확인하고, 참가 접수는 공식 안내에서 확인해 주세요.",
   },
   mypage: {
     eyebrow: "마이페이지",
@@ -122,7 +118,7 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
   events: [{ label: "지역", key: "region", items: regions }],
 };
 
-const cardImages = [image1, image2, image3, image4];
+const unavailablePhoto = "/place-image-unavailable.svg";
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
 const sportsPageSize = 20;
 const KAKAO_MAP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
@@ -248,8 +244,8 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
     const events = await api.events.list({ page: 1, size: 100 });
     return [...events]
       .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
-      .map((activity, index) => ({
-      image: activity.representativeImageUrl ?? cardImages[index % cardImages.length],
+      .map((activity) => ({
+      image: activity.representativeImageUrl ?? unavailablePhoto,
       tag: activity.sportName ? "스포츠 행사" : activity.category === "festival" ? "축제" : "이벤트",
       title: activity.placeName ?? activity.sportName ?? `행사 #${activity.id}`,
       description: activity.summary ?? "강원에서 열리는 스포츠 행사입니다.",
@@ -259,8 +255,8 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
       }));
   }
   if (page === "courses") {
-    return (await api.courses.list()).map((course, index) => ({
-      image: cardImages[index % cardImages.length],
+    return (await api.courses.list()).map((course) => ({
+      image: course.representativeImageUrl ?? unavailablePhoto,
       tag: themeLabels[course.theme],
       title: course.title ?? `${themeLabels[course.theme]} 코스 #${course.id}`,
       description: course.description ?? (course.recommendedCompanion ? `${course.recommendedCompanion}와 함께하기 좋은 코스` : "추천 스포츠 코스"),
@@ -294,8 +290,8 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
   }
 
   return (await api.activities.list())
-    .map((activity, index) => ({
-      image: cardImages[index % cardImages.length],
+    .map((activity) => ({
+      image: activity.representativeImageUrl ?? unavailablePhoto,
       tag: activity.category === "sports" ? "스포츠" : activity.category === "event" ? "이벤트" : "축제",
       title: activity.sportName ?? activity.placeName ?? `활동 #${activity.id}`,
       description: activity.placeName ? `${activity.placeName}에서 즐기는 강원 스포츠 활동` : "강원 스포츠 활동",
@@ -305,7 +301,13 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
 }
 
 export function PortalPage({ page }: { page: PortalPageKey }) {
-  return <Suspense><PortalPageContent page={page} /></Suspense>;
+  return <Suspense><PortalPageRoute page={page} /></Suspense>;
+}
+
+function PortalPageRoute({ page }: { page: PortalPageKey }) {
+  const query = useSearchParams().toString();
+  // A new recommendation must not briefly display the previous route's result.
+  return <PortalPageContent key={page === "courses" ? `${page}:${query}` : page} page={page} />;
 }
 
 function PortalPageContent({ page }: { page: PortalPageKey }) {
@@ -328,6 +330,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const [coursePlan, setCoursePlan] = useState<CoursePlan | null>(null);
   const [kakaoPlacesReady, setKakaoPlacesReady] = useState(false);
   const [apiMessage, setApiMessage] = useState("");
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const recommendationPending = recommendationRequested && !recommendationNeedsLogin && remoteCards === null && !apiMessage;
   const [sportsPage, setSportsPage] = useState(1);
   const [hasMoreSports, setHasMoreSports] = useState(true);
@@ -349,6 +353,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       .then((cards) => {
         if (cancelled) return;
         setRemoteCards(cards);
+        setInitialLoadFailed(false);
         if (page === "sports") {
           setSportsPage(1);
           setHasMoreSports(cards.length === sportsPageSize);
@@ -364,7 +369,8 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           retryTimer = setTimeout(requestCards, 1500);
           return;
         }
-        setApiMessage("데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.");
+        setInitialLoadFailed(true);
+        setApiMessage("데이터를 불러오지 못했습니다. 다시 불러오기를 눌러 주세요.");
       });
 
     void requestCards();
@@ -372,7 +378,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [page, recommendationRequested]);
+  }, [page, recommendationRequested, retryAttempt]);
 
   useEffect(() => {
     if (page !== "courses" || !recommendationRequested) return;
@@ -402,12 +408,13 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         const category = sportCategory(params.get("sport"), stop.placeName);
         const title = stop.placeName ?? `추천 장소 #${stop.activityId}`;
         return {
-          image: stop.representativeImageUrl ?? cardImages[index % cardImages.length],
+          image: stop.representativeImageUrl ?? unavailablePhoto,
           tag: themeLabels[theme],
           title,
           description: stop.reason,
           meta: [stop.address ?? "주소 정보 없음", `활동 약 ${stop.estimatedMinutes}분`].join(" · "),
           icon: sportIcon(category),
+          href: `/sports/detail/?id=${stop.activityId}`,
           mapHref: kakaoPlaceHref(title, params.get("sigun")),
           order: index + 1,
           latitude: stop.latitude,
@@ -523,7 +530,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
-      {page === "courses" && KAKAO_MAP_KEY && <Script id="kakao-places-sdk" src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=services`} strategy="afterInteractive" onReady={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} onError={() => { kakaoLookupRef.current = ""; setKakaoPlacesReady(false); }} />}
+      {page === "courses" && KAKAO_MAP_KEY && <Script id="kakao-map-sdk" src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=clusterer,services`} strategy="afterInteractive" onReady={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} onError={() => { kakaoLookupRef.current = ""; setKakaoPlacesReady(false); }} />}
       <section className="bg-gradient-to-b from-[#e6f0e9] to-[#f3f7f4] px-4 pb-10 pt-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1180px]">
           <div className="relative flex min-h-[320px] flex-col justify-end gap-8 overflow-hidden rounded-[28px] bg-[#173a2d] p-7 shadow-[0_24px_70px_rgba(28,72,51,0.18)] sm:p-10 lg:flex-row lg:items-end lg:justify-between">
@@ -549,7 +556,13 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div><h2 className="text-2xl font-bold">{config.sectionTitle}</h2><p className="mt-2 text-sm text-[#6f7a87]">{config.sectionDescription}</p></div>
-            {page !== "courses" && <form action={`/${page}`} role="search" className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-[#dbe4de] bg-[#f5f7f6] px-3"><AppIcon name="search" className="size-4 text-[#738078]" /><label htmlFor={`${page}-search`} className="sr-only">{config.eyebrow} 검색</label><input id={`${page}-search`} name="q" type="search" placeholder="검색어를 입력하세요" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" /></form>}
+            {page !== "courses" && <form key={searchParams.toString()} action={`/${page}`} role="search" className="flex w-full max-w-sm items-center gap-2 rounded-xl border border-[#dbe4de] bg-[#f5f7f6] px-3">
+              {activeSportFilters.map((value) => <input key={`sport-${value}`} type="hidden" name="sport" value={value} />)}
+              {activeRegionFilters.map((value) => <input key={`region-${value}`} type="hidden" name="region" value={value} />)}
+              <label htmlFor={`${page}-search`} className="sr-only">{config.eyebrow} 검색</label>
+              <input id={`${page}-search`} name="q" defaultValue={activeFilters.q ?? ""} type="search" placeholder="장소명이나 지역을 검색하세요" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" />
+              <button type="submit" aria-label="검색" className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#008f45] hover:bg-[#e5f3ea] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#008f45]"><AppIcon name="search" className="size-4" /></button>
+            </form>}
           </div>
           {page !== "courses" && pageFilters.length > 0 && <div className="mt-6 space-y-3 border-y border-[#e4ebe6] py-4">
             {pageFilters.map((group) => <div key={group.key} className="flex items-center gap-3">
@@ -578,7 +591,16 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               </div>
             </div>)}
           </div>}
-          {(recommendationNeedsLogin || recommendationPending || apiMessage) && <p className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">{recommendationNeedsLogin ? "맞춤 코스 추천은 로그인이 필요합니다. 상단의 로그인 버튼으로 로그인한 뒤 다시 추천받아 주세요." : recommendationPending ? "강릉시 힐링 코스를 추천하고 있습니다." : apiMessage}</p>}
+          {(recommendationNeedsLogin || recommendationPending || apiMessage) && <div role="status" className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">
+            <p>{recommendationNeedsLogin ? "로그인하면 선택한 조건으로 맞춤 코스를 추천받을 수 있어요." : recommendationPending ? `${searchParams.get("sigun") || "강릉시"}의 선택한 조건에 맞는 코스를 추천하고 있습니다.` : apiMessage}</p>
+            {recommendationNeedsLogin && <Link href={`/login?next=${encodeURIComponent(`/courses/?${recommendationQuery}`)}`} className="mt-3 inline-flex rounded-lg bg-[#008f45] px-4 py-2 font-bold text-white">로그인하고 추천받기</Link>}
+            {initialLoadFailed && <button type="button" onClick={() => { setInitialLoadFailed(false); setApiMessage(""); setRetryAttempt((attempt) => attempt + 1); }} className="mt-3 cursor-pointer rounded-lg border border-[#9dcdb0] px-4 py-2 font-bold text-[#00783a]">다시 불러오기</button>}
+          </div>}
+          {page !== "courses" && remoteCards === null && !initialLoadFailed && <p role="status" className="mt-6 text-sm text-[#637069]">{config.eyebrow} 정보를 불러오는 중입니다…</p>}
+          {remoteCards !== null && cards.length === 0 && !recommendationNeedsLogin && !apiMessage && <div className="mt-6 rounded-2xl border border-[#dfe8e2] p-8 text-center">
+            <p className="text-sm text-[#637069]">{page === "sports" && hasMoreSports ? "조건에 맞는 장소를 찾기 위해 다음 스포츠 정보를 불러오고 있습니다." : "선택한 조건에 맞는 결과가 없습니다. 검색어나 지역·종목을 바꿔 보세요."}</p>
+            <Link href={`/${page}`} className="mt-4 inline-flex text-sm font-bold text-[#008f45]">검색 조건 초기화</Link>
+          </div>}
           {coursePlan && <section aria-labelledby="recommended-course-title" className="mt-6 flex flex-col gap-6 rounded-[24px] border border-[#cfe1d5] bg-[#f3f8f5] p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold text-[#008f45]">나만의 추천 일정</p>

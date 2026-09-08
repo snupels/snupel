@@ -40,6 +40,7 @@ function metadataText(
 function isReferenceSource(url: string) {
   try {
     const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
     const hostname = parsed.hostname.toLowerCase();
     // Dataset catalog pages are not visitor information; retain actual course resources.
     if (hostname === "data.go.kr" || hostname.endsWith(".data.go.kr")) return false;
@@ -47,7 +48,7 @@ function isReferenceSource(url: string) {
       || hostname === "www.durunubi.kr"
       || /\.(?:gpx|zip)$/i.test(parsed.pathname);
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -60,9 +61,14 @@ function referenceSourceLabel(url: string) {
 function isOfficialFacilityWebsite(url: string) {
   if (isReferenceSource(url)) return false;
   try {
-    const hostname = new URL(url).hostname.toLowerCase();
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    const hostname = parsed.hostname.toLowerCase();
     return hostname !== "go.kr"
       && !hostname.endsWith(".go.kr")
+      && hostname !== "map.kakao.com"
+      && hostname !== "place.map.kakao.com"
+      && hostname !== "kko.to"
       && hostname !== "durunubi.kr"
       && hostname !== "www.durunubi.kr";
   } catch {
@@ -82,12 +88,16 @@ function DetailLoading() {
 }
 
 export function SportsDetailPage() {
-  return <Suspense fallback={<DetailLoading />}><SportsDetailContent /></Suspense>;
+  return <Suspense fallback={<DetailLoading />}><SportsDetailRoute /></Suspense>;
 }
 
-function SportsDetailContent() {
+function SportsDetailRoute() {
   const searchParams = useSearchParams();
   const activityId = Number(searchParams.get("id"));
+  return <SportsDetailContent key={activityId} activityId={activityId} />;
+}
+
+function SportsDetailContent({ activityId }: { activityId: number }) {
   const validId = Number.isInteger(activityId) && activityId > 0;
   const [activity, setActivity] = useState<ActivityResponse | null>(null);
   const [error, setError] = useState("");
@@ -123,6 +133,7 @@ function SportsDetailContent() {
   }
 
   const title = activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`;
+  const isSportsPlace = activity.category === "sports";
   const location = activity.address ?? activity.sigun ?? activity.region ?? "강원특별자치도";
   const phone = metadataText(activity.metadata, ["phone", "tel", "전화", "연락처"]);
   const hours = metadataText(activity.metadata, ["opentime", "usetime", "운영시간", "이용시간"]);
@@ -170,10 +181,10 @@ function SportsDetailContent() {
           {photoSource && <p className="px-7 pt-3 text-right text-xs text-[#637069] sm:px-10">사진 출처: <a href={photoSource.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{photoSource.label}</a></p>}
           <div className="grid gap-10 p-7 sm:p-10 lg:grid-cols-[minmax(0,1fr)_340px]">
             <section>
-              <p className="text-sm font-bold text-[#008f45]">스포츠 장소 소개</p>
-              <h2 className="mt-3 text-2xl font-bold">{title}에서 즐기는 스포츠</h2>
+              <p className="text-sm font-bold text-[#008f45]">{isSportsPlace ? "스포츠 장소 소개" : "여행 장소 소개"}</p>
+              <h2 className="mt-3 text-2xl font-bold">{title} 이용 안내</h2>
               <p className="mt-5 whitespace-pre-line leading-8 text-[#526058]">
-                {activity.summary ?? `${title}의 스포츠 활동 정보입니다. 자세한 운영 정보는 공식 정보 페이지에서 확인해 주세요.`}
+                {activity.summary ?? `${title}의 장소 정보입니다. 운영 시간과 이용 조건은 방문 전 안내처에 확인해 주세요.`}
               </p>
               <div className="mt-8 rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
                 <h3 className="font-bold">주소</h3>

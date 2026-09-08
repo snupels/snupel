@@ -15,13 +15,13 @@ export const BADGE_REWARD_MILESTONES: BadgeRewardMilestone[] = [
   {
     threshold: 6,
     title: "실물 배지 6종 세트",
-    description: "배지 6개를 달성하면 획득한 실물 배지 6종 세트를 배송합니다.",
-    fulfillment: "배송",
+    description: "배지 6개 달성 후 실물 배지 6종 세트의 배송을 신청할 수 있습니다. 숙박 할인권·굿즈와는 별도입니다.",
+    fulfillment: "실물 배지 배송 신청",
   },
   {
     threshold: 12,
     title: "실물 배지 12종 풀세트",
-    description: "배지 12개를 모두 달성하면 실물 배지 12종 풀세트를 배송합니다.",
-    fulfillment: "배송",
+    description: "배지 12개를 모두 달성하면 실물 배지 12종 풀세트의 배송을 신청할 수 있습니다. 진행 상태는 신청 후 확인해 주세요.",
+    fulfillment: "실물 배지 배송 신청",
   },
 ];

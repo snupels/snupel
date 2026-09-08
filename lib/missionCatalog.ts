@@ -1,7 +1,13 @@
 import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
 
 type CourseItineraryStop = CourseItineraryResponse["stops"][number];
-const SPORT_CATEGORIES: Record<string, string> = { MOUNTAIN: "산악스포츠", SNOW: "동계스포츠", WATER: "수상스포츠", ATHLETICS: "육상스포츠", OLYMPIC: "올림픽 레거시" };
+const SPORT_CATEGORIES: Record<string, string> = {
+  mountain: "산악스포츠", hiking: "산악스포츠", mtb: "산악스포츠", paragliding: "산악스포츠", zipline: "산악스포츠", zipwire: "산악스포츠", 산악스포츠: "산악스포츠",
+  snow: "동계스포츠", ski: "동계스포츠", snowboarding: "동계스포츠", skating: "동계스포츠", ice: "동계스포츠", 동계스포츠: "동계스포츠",
+  water: "수상스포츠", marine: "수상스포츠", surfing: "수상스포츠", rafting: "수상스포츠", kayaking: "수상스포츠", canoe: "수상스포츠", sailing: "수상스포츠", 수상스포츠: "수상스포츠",
+  athletics: "육상스포츠", marathon: "육상스포츠", running: "육상스포츠", cycling: "육상스포츠", trekking: "육상스포츠", walking: "육상스포츠", 육상스포츠: "육상스포츠",
+  olympic: "올림픽 레거시", olympic_legacy: "올림픽 레거시", 올림픽레거시: "올림픽 레거시",
+};
 
 export type MissionPresentation = {
   category: string;
@@ -20,7 +26,10 @@ export type MissionPresentation = {
 };
 
 export function missionPresentation(course: CourseResponse, stop?: CourseItineraryStop | null): MissionPresentation {
-  const category = SPORT_CATEGORIES[course.sportName ?? ""] ?? course.sportName ?? ({ sports: "스포츠", event: "이벤트", festival: "축제", tour: "관광" }[course.category]);
+  // Legacy event missions have no course sport; their actual certification place does.
+  const sport = course.sportName?.trim() || stop?.sportName?.trim();
+  const category = (sport ? SPORT_CATEGORIES[sport.toLowerCase().replace(/\s+/g, "")] ?? sport : null)
+    ?? ({ sports: "스포츠", event: "이벤트", festival: "축제", tour: "관광" }[course.category]);
   const region = stop?.address?.split(" ").find((part) => part.endsWith("시") || part.endsWith("군"))?.replace(/[시군]$/, "");
   return {
     category,

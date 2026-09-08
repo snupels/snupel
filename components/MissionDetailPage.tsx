@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AppIcon } from "./AppIcon";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
+import { missionPhotoError } from "@/lib/missionPhoto";
 import { sportsImage } from "@/lib/sportsImage";
 import { ApiError } from "@/lib/api/repository";
 import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
@@ -21,6 +22,10 @@ function errorMessage(reason: unknown) {
 
 export function MissionDetailPage() {
   const courseId = Number(useSearchParams().get("id"));
+  return <MissionDetailContent key={courseId} courseId={courseId} />;
+}
+
+function MissionDetailContent({ courseId }: { courseId: number }) {
   const validCourseId = Number.isInteger(courseId) && courseId > 0;
   const [course, setCourse] = useState<CourseResponse | null>(null);
   const [itinerary, setItinerary] = useState<CourseItineraryResponse | null>(null);
@@ -31,16 +36,24 @@ export function MissionDetailPage() {
   const [completed, setCompleted] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
   const [feedCaption, setFeedCaption] = useState("");
+  const submissionLock = useRef(false);
 
   useEffect(() => {
     if (!validCourseId) return;
+    let cancelled = false;
     Promise.all([api.courses.get(courseId), api.courseItinerary(courseId)])
       .then(([courseData, itineraryData]) => {
+        if (cancelled) return;
+        if (!courseData.isPublished || courseData.category !== "event" || !itineraryData.stops.length) {
+          setMessage("현재 참여할 수 없는 미션입니다. 미션 목록에서 다른 도전을 선택해 주세요.");
+          return;
+        }
         setCourse(courseData);
         setItinerary(itineraryData);
       })
-      .catch(() => setMessage("미션 정보를 불러오지 못했습니다."))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!cancelled) setMessage("미션 정보를 불러오지 못했습니다."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [courseId, validCourseId]);
 
   const previewUrl = useMemo(() => photo ? URL.createObjectURL(photo) : "", [photo]);
@@ -50,17 +63,20 @@ export function MissionDetailPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submissionLock.current || completed) return;
     if (!api.hasToken()) {
       setMessage("로그인 후 인증을 신청할 수 있습니다.");
       return;
     }
     const stop = itinerary?.stops[0];
     if (!stop || !photo) return;
-    if (photo.size > 10 * 1024 * 1024) {
-      setMessage("사진은 10MB 이하로 올려 주세요.");
+    const validationError = missionPhotoError(photo);
+    if (validationError) {
+      setMessage(validationError);
       return;
     }
 
+    submissionLock.current = true;
     setSubmitting(true);
     setMessage("");
     try {
@@ -84,6 +100,7 @@ export function MissionDetailPage() {
     } catch (reason) {
       setMessage(errorMessage(reason));
     } finally {
+      submissionLock.current = false;
       setSubmitting(false);
     }
   }
@@ -132,26 +149,33 @@ export function MissionDetailPage() {
             <ol className="mt-5 grid gap-4 sm:grid-cols-3">
               {mission.steps.map((item, index) => <li key={item} className="rounded-2xl border border-[#e3ebe5] p-5"><span className="flex size-8 items-center justify-center rounded-full bg-[#008f45] text-sm font-black text-white">{index + 1}</span><p className="mt-3 text-sm font-semibold">{item}</p></li>)}
             </ol>
-            <p className="mt-5 text-xs leading-5 text-[#7b877f]">제출한 사진은 미션 인증 심사에만 사용되며 운영자 확인 후 스탬프가 지급됩니다.</p>
+            <p className="mt-5 text-xs leading-5 text-[#7b877f]">사진으로 인증을 심사하며 운영자 확인 후 스탬프가 지급됩니다. 피드 공개에 동의한 경우에만 승인된 사진이 스포츠 피드에 표시됩니다.</p>
           </div>
         </section>
 
         <form onSubmit={submit} className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 shadow-[0_16px_50px_rgba(36,73,50,0.10)] lg:sticky lg:top-24">
           <h2 className="text-xl font-bold">참여 인증하기</h2>
-          {!api.hasToken() ? <div className="mt-5 rounded-2xl bg-[#f3f7f4] p-5 text-center"><p className="text-sm leading-6 text-[#66736b]">로그인하면 참여 사진으로 인증을 신청할 수 있어요.</p><Link href="/login" className="mt-4 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하기</Link></div> : <>
+          {!api.hasToken() ? <div className="mt-5 rounded-2xl bg-[#f3f7f4] p-5 text-center"><p className="text-sm leading-6 text-[#66736b]">로그인하면 참여 사진으로 인증을 신청할 수 있어요.</p><Link href={`/login?next=${encodeURIComponent(`/missions/detail/?id=${courseId}`)}`} className="mt-4 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하고 이 미션 참여하기</Link></div> : <>
             <label className="mt-5 block text-sm font-bold" htmlFor="mission-photo">인증 사진</label>
             <label htmlFor="mission-photo" className="mt-2 flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#cbdacf] bg-[#f8faf8] text-center">
               {previewUrl ? <span className="relative block min-h-52 w-full"><Image src={previewUrl} alt="선택한 인증 사진" fill className="object-cover" unoptimized /></span> : <span className="px-5 text-sm text-[#718078]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" />{mission.photoPrompt}<br /><small>JPG, PNG, WEBP · 최대 10MB</small></span>}
             </label>
-            <input id="mission-photo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={completed} onChange={(event) => setPhoto(event.target.files?.[0] ?? null)} />
+            <input id="mission-photo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={completed || submitting} onChange={(event) => {
+              const selectedPhoto = event.target.files?.[0] ?? null;
+              const validationError = selectedPhoto ? missionPhotoError(selectedPhoto) : null;
+              setMessage(validationError ?? "");
+              setPhoto(validationError ? null : selectedPhoto);
+              if (validationError) event.target.value = "";
+            }} />
             <label className="mt-5 flex items-start gap-3 rounded-xl bg-[#f3f7f4] p-4 text-sm">
-              <input type="checkbox" checked={shareToFeed} disabled={completed} onChange={(event) => setShareToFeed(event.target.checked)} className="mt-0.5 size-4 accent-[#008f45]" />
+              <input type="checkbox" checked={shareToFeed} disabled={completed || submitting} onChange={(event) => setShareToFeed(event.target.checked)} className="mt-0.5 size-4 accent-[#008f45]" />
               <span><strong className="block">승인 후 스포츠 피드에 공개</strong><span className="mt-1 block text-xs leading-5 text-[#718078]">선택하지 않으면 인증 기록은 나에게만 보입니다.</span></span>
             </label>
-            {shareToFeed && <textarea value={feedCaption} onChange={(event) => setFeedCaption(event.target.value)} maxLength={300} disabled={completed} aria-label="피드에 함께 올릴 글" placeholder="사진과 함께 나눌 이야기를 적어주세요. (선택)" className="mt-3 min-h-24 w-full resize-y rounded-xl border border-[#cbdacf] p-3 text-sm outline-none focus:border-[#008f45]" />}
+            {shareToFeed && <textarea value={feedCaption} onChange={(event) => setFeedCaption(event.target.value)} maxLength={300} disabled={completed || submitting} aria-label="피드에 함께 올릴 글" placeholder="사진과 함께 나눌 이야기를 적어주세요. (선택)" className="mt-3 min-h-24 w-full resize-y rounded-xl border border-[#cbdacf] p-3 text-sm outline-none focus:border-[#008f45]" />}
             <button type="submit" disabled={!photo || submitting || completed} className="mt-6 flex h-13 w-full cursor-pointer items-center justify-center rounded-xl bg-[#008f45] text-sm font-black text-white transition hover:bg-[#00783a] disabled:cursor-not-allowed disabled:bg-[#aab7af]">{completed ? "인증 접수 완료" : submitting ? "인증 제출 중..." : "사진으로 인증 신청"}</button>
           </>}
           {message && <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm leading-6 ${completed ? "bg-[#e9f7ee] text-[#08743a]" : "bg-[#fff2f0] text-[#a03d32]"}`}>{message}</p>}
+          {completed && <Link href="/activity-history" className="mt-4 flex h-11 items-center justify-center rounded-xl border border-[#9dcdb0] text-sm font-bold text-[#00783a]">내 인증 신청 확인하기<AppIcon name="arrowRight" /></Link>}
           {mission.officialUrl && <a href={mission.officialUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">{mission.officialLabel ?? "공식 안내"} <AppIcon name="arrowRight" /></a>}
         </form>
       </div>

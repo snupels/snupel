@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppIcon } from "./AppIcon";
 
 export function SiteFooter() {
   return (
@@ -10,8 +9,9 @@ export function SiteFooter() {
           <p className="mt-2 text-xs">도전하고, 인증하고, 강원의 스포츠를 즐겨보세요.</p>
         </div>
         <div className="flex flex-wrap gap-5 text-xs">
-          <span className="flex items-center gap-1.5"><AppIcon name="phone" />033-000-0000</span>
-          <span className="flex items-center gap-1.5"><AppIcon name="mail" />sports@gangwon.go.kr</span>
+          <Link href="/terms/service" className="hover:text-white hover:underline">이용약관</Link>
+          <Link href="/terms/privacy" className="font-bold hover:text-white hover:underline">개인정보 처리방침</Link>
+          <a href="https://www.instagram.com/gangwonsportspassport/" target="_blank" rel="noopener noreferrer" className="hover:text-white hover:underline">공식 인스타그램</a>
         </div>
       </div>
     </footer>

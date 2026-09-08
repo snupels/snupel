@@ -19,10 +19,11 @@ const groups: Array<{
   },
   {
     title: "어떤 스포츠를 즐기고 싶나요?",
-    description: "전체 선택 가능",
+    description: "종목 1개 또는 전체를 선택하세요",
     name: "sport",
     items: [
       { label: "전체", value: "", icon: "medal" },
+      { label: "등산", value: "hiking", icon: "mountain" },
       { label: "트레킹", value: "trekking", icon: "mountain" },
       { label: "해양 레저", value: "marine", icon: "waves" },
       { label: "스키", value: "ski", icon: "snowflake" },

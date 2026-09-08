@@ -1,26 +1,20 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
 import { SaveActivityButton } from "./SaveActivityButton";
-import eventImage1 from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
-import eventImage2 from "@/imports/LandingPage/9193ff8f95dcbcb73f018d079496fad4bcfa1dec.png";
-import eventImage3 from "@/imports/LandingPage/a92d1f052a5f15d9f49f62dad2a919d5f418da27.png";
-import eventImage4 from "@/imports/LandingPage/9509675bc89588078354909012b6022f47332ef9.png";
-
-const fallbackImages: StaticImageData[] = [eventImage1, eventImage2, eventImage3, eventImage4];
 
 function formatDate(value: string | null | undefined) {
   return value ? value.slice(0, 10).replaceAll("-", ".") : "일정 확인 중";
 }
 
 function detailImage(event: ActivityResponse) {
-  return event.representativeImageUrl || fallbackImages[(event.id - 1) % fallbackImages.length];
+  return event.representativeImageUrl || "/place-image-unavailable.svg";
 }
 
 function calendarFile(event: ActivityResponse, title: string, location: string) {
@@ -54,20 +48,25 @@ function calendarFile(event: ActivityResponse, title: string, location: string) 
 }
 
 export function EventDetailPage() {
-  return <Suspense fallback={<DetailLoading />}><EventDetailContent /></Suspense>;
+  return <Suspense fallback={<DetailLoading />}><EventDetailRoute /></Suspense>;
 }
 
 function DetailLoading() {
   return <div className="mx-auto min-h-[60vh] max-w-[1100px] px-4 py-16 text-sm text-[#68756d] sm:px-6">행사 정보를 불러오는 중입니다.</div>;
 }
 
-function EventDetailContent() {
+function EventDetailRoute() {
   const searchParams = useSearchParams();
   const eventId = Number(searchParams.get("id"));
+  return <EventDetailContent key={eventId} eventId={eventId} />;
+}
+
+function EventDetailContent({ eventId }: { eventId: number }) {
   const invalidEventId = !Number.isInteger(eventId) || eventId <= 0;
   const [event, setEvent] = useState<ActivityResponse | null>(null);
   const [error, setError] = useState("");
   const [posterOpen, setPosterOpen] = useState(false);
+  const posterDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (invalidEventId) return;
@@ -75,7 +74,12 @@ function EventDetailContent() {
     let cancelled = false;
     api.activities.get(eventId)
       .then((item) => {
-        if (!cancelled) setEvent(item);
+        if (cancelled) return;
+        if (item.category !== "event" && item.category !== "festival") {
+          setError("행사 정보가 아닙니다. 행사 목록에서 확인해 주세요.");
+          return;
+        }
+        setEvent(item);
       })
       .catch(() => {
         if (!cancelled) setError("행사 정보를 불러오지 못했습니다.");
@@ -89,14 +93,12 @@ function EventDetailContent() {
     if (!posterOpen) return;
 
     const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (keyboardEvent: KeyboardEvent) => {
-      if (keyboardEvent.key === "Escape") setPosterOpen(false);
-    };
+    const previousFocus = document.activeElement;
+    posterDialogRef.current?.showModal();
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
+      if (previousFocus instanceof HTMLElement) previousFocus.focus();
     };
   }, [posterOpen]);
 
@@ -127,10 +129,10 @@ function EventDetailContent() {
         <article className="mt-6 overflow-hidden rounded-[28px] border border-[#dce6df] bg-white shadow-[0_18px_55px_rgba(23,58,45,0.12)]">
           <div className="relative aspect-[16/8] min-h-[320px] overflow-hidden bg-[#102019]">
             <Image src={posterImage} alt="" fill sizes="(max-width: 1100px) 100vw, 1100px" className="scale-110 object-cover opacity-30 blur-xl" />
-            <Image src={posterImage} alt={`${title} 포스터`} fill preload sizes="(max-width: 1100px) 100vw, 1100px" className="object-contain" />
-            <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute left-5 top-5 z-30 cursor-zoom-in rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur transition hover:bg-[#102c22] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white">
+            <Image src={posterImage} alt={event.representativeImageUrl ? `${title} 행사 이미지` : "등록된 행사 사진이 없습니다"} fill preload sizes="(max-width: 1100px) 100vw, 1100px" className="object-contain" />
+            {event.representativeImageUrl && <button type="button" onClick={() => setPosterOpen(true)} aria-label={`${title} 포스터 크게 보기`} className="absolute left-5 top-5 z-30 cursor-zoom-in rounded-full border border-white/30 bg-[#102c22]/80 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur transition hover:bg-[#102c22] focus-visible:outline focus-visible:outline-4 focus-visible:outline-white">
               포스터 크게 보기
-            </button>
+            </button>}
             <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[#102c22]/90 via-transparent to-transparent" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-7 text-white sm:p-10">
               <span className="inline-flex rounded-full bg-[#00a94f] px-3 py-1 text-xs font-bold">{event.sportName ? "스포츠 행사" : "이벤트"}</span>
@@ -161,15 +163,15 @@ function EventDetailContent() {
       </div>
     </main>
     {posterOpen && (
-      <div role="dialog" aria-modal="true" aria-label={`${title} 고화질 포스터`} onClick={closePoster} className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-3 sm:p-6">
-        <div className="relative h-full w-full max-w-[1500px] cursor-default" onClick={(mouseEvent) => mouseEvent.stopPropagation()}>
+      <dialog ref={posterDialogRef} aria-label={`${title} 고화질 포스터`} onCancel={closePoster} onClick={(mouseEvent) => { if (mouseEvent.target === mouseEvent.currentTarget) closePoster(); }} className="fixed inset-0 z-[100] m-0 h-dvh w-screen max-h-none max-w-none cursor-zoom-out bg-black/90 p-3 backdrop:bg-black/60 sm:p-6">
+        <div className="relative mx-auto h-full w-full max-w-[1500px] cursor-default" onClick={(mouseEvent) => mouseEvent.stopPropagation()}>
           <Image src={posterImage} alt={`${title} 고화질 포스터`} fill sizes="100vw" className="object-contain" />
-          <a href={`/events/detail?id=${event.id}`} className="absolute right-2 top-2 z-20 rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:right-4 sm:top-4">닫기 ×</a>
+          <button type="button" onClick={closePoster} className="absolute right-2 top-2 z-20 cursor-pointer rounded-full border border-white/30 bg-black/75 px-4 py-2 text-sm font-bold text-white shadow-lg backdrop-blur focus-visible:outline focus-visible:outline-2 focus-visible:outline-white sm:right-4 sm:top-4">닫기 ×</button>
           {typeof posterImage === "string" && (
             <a href={posterImage} target="_blank" rel="noopener noreferrer" className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/30 bg-black/75 px-5 py-2 text-sm font-bold text-white shadow-lg backdrop-blur sm:bottom-4">원본 이미지 열기</a>
           )}
         </div>
-      </div>
+      </dialog>
     )}
     </>
   );
