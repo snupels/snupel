@@ -9,6 +9,8 @@ const portalSource = fs.readFileSync(path.join(__dirname, "../components/PortalP
 const preferencesSource = fs.readFileSync(path.join(__dirname, "../components/CoursePreferences.tsx"), "utf8");
 assert.doesNotMatch(preferencesSource, /백엔드 추천 결과를 바로 확인해보세요/);
 assert.match(preferencesSource, /다른 코스 보기/);
+assert.match(preferencesSource, /open=\{open\} onToggle=\{\(event\) => setOpen\(event\.currentTarget\.open\)\}/);
+assert.match(preferencesSource, /focus-visible:ring-inset focus-visible:ring-white/);
 assert.match(portalSource, /collapsed=\{recommendationPending \|\| Boolean\(coursePlan\)\}/);
 const helpers = portalSource.slice(portalSource.indexOf("function kakaoMapPoint("), portalSource.indexOf("function sportCategory("));
 const { outputText } = ts.transpileModule(helpers, {});
