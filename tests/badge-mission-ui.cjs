@@ -12,6 +12,7 @@ vm.runInNewContext(ts.transpileModule(source("lib/badgeCatalog.ts"), {
 const { BADGE_CATALOG, earnedBadgeCatalogIds } = context.exports;
 
 assert.equal(BADGE_CATALOG.length, 12);
+assert.deepEqual([...BADGE_CATALOG.filter((item) => item.missionAvailable === false).map((item) => item.id)], [3, 11]);
 assert.equal(BADGE_CATALOG.find((item) => item.id === 2).description, "산악 미션 첫 완료");
 assert.equal(BADGE_CATALOG.find((item) => item.id === 10).description, "서로 다른 미션 3개 완료");
 assert.equal(BADGE_CATALOG.find((item) => item.id === 10).ruleKey, "three_missions");
@@ -30,6 +31,8 @@ assert.equal(earnedBadgeCatalogIds([{ badgeId: 2, ruleKey: "unknown" }, { badgeI
 const badges = source("components/BadgesPage.tsx");
 assert.ok(badges.includes("earnedBadgeCatalogIds(badges)"));
 assert.ok(badges.includes("earnedIds.size"));
+assert.ok(badges.includes("!earned && badge.missionAvailable === false &&"));
+assert.ok(badges.includes("연계 미션 준비 중"));
 assert.ok(!badges.includes("badges.length"));
 assert.ok(badges.includes("미션의 사진 인증이 승인되고 배지 조건을 달성하면 디지털 배지가 기록됩니다."));
 assert.ok(!badges.includes("패스포트 리워드"));
