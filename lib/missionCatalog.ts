@@ -2,11 +2,11 @@ import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
 
 type CourseItineraryStop = CourseItineraryResponse["stops"][number];
 const SPORT_CATEGORIES: Record<string, string> = {
-  mountain: "산악스포츠", hiking: "산악스포츠", mtb: "산악스포츠", paragliding: "산악스포츠", zipline: "산악스포츠", zipwire: "산악스포츠", 산악스포츠: "산악스포츠",
-  snow: "동계스포츠", ski: "동계스포츠", snowboarding: "동계스포츠", skating: "동계스포츠", ice: "동계스포츠", 동계스포츠: "동계스포츠",
-  water: "수상스포츠", marine: "수상스포츠", surfing: "수상스포츠", rafting: "수상스포츠", kayaking: "수상스포츠", canoe: "수상스포츠", sailing: "수상스포츠", 수상스포츠: "수상스포츠",
-  athletics: "육상스포츠", marathon: "육상스포츠", running: "육상스포츠", cycling: "육상스포츠", trekking: "육상스포츠", walking: "육상스포츠", 육상스포츠: "육상스포츠",
-  olympic: "올림픽 레거시", olympic_legacy: "올림픽 레거시", 올림픽레거시: "올림픽 레거시",
+  mountain: "산악스포츠", hiking: "산악스포츠", mtb: "산악스포츠", paragliding: "산악스포츠", zipline: "산악스포츠", zipwire: "산악스포츠", 산악스포츠: "산악스포츠", 등산: "산악스포츠", 산악: "산악스포츠", 패러글라이딩: "산악스포츠", 짚와이어: "산악스포츠", 짚라인: "산악스포츠",
+  snow: "동계스포츠", ski: "동계스포츠", snowboarding: "동계스포츠", skating: "동계스포츠", ice: "동계스포츠", 동계스포츠: "동계스포츠", 스키: "동계스포츠", 스노보드: "동계스포츠", 스케이트: "동계스포츠", 빙상스포츠: "동계스포츠",
+  water: "수상스포츠", marine: "수상스포츠", surfing: "수상스포츠", rafting: "수상스포츠", kayaking: "수상스포츠", canoe: "수상스포츠", sailing: "수상스포츠", 수상스포츠: "수상스포츠", 서핑: "수상스포츠", 래프팅: "수상스포츠", 카약: "수상스포츠", 카누: "수상스포츠", 해양레저: "수상스포츠",
+  athletics: "육상스포츠", marathon: "육상스포츠", running: "육상스포츠", cycling: "육상스포츠", trekking: "육상스포츠", walking: "육상스포츠", 육상스포츠: "육상스포츠", 마라톤: "육상스포츠", 러닝: "육상스포츠", 달리기: "육상스포츠", 자전거: "육상스포츠", 트레킹: "육상스포츠", 걷기: "육상스포츠",
+  olympic: "올림픽 레거시", olympic_legacy: "올림픽 레거시", 올림픽레거시: "올림픽 레거시", 올림픽: "올림픽 레거시",
 };
 
 export type MissionPresentation = {
