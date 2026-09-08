@@ -1,6 +1,6 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -35,8 +35,9 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null }>;
 };
+
+type PortalCard = { image: string | typeof image1; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
 
 type CoursePlan = {
   title: string;
@@ -59,12 +60,6 @@ const configs: Record<PortalPageKey, PageConfig> = {
     stats: [],
     sectionTitle: "지금 인기 있는 스포츠",
     sectionDescription: "계절과 지역을 고려해 가장 반응이 좋은 활동을 골랐습니다.",
-    cards: [
-      { image: image1, tag: "트레일런", title: "설악산 능선 트레일", description: "초록 능선을 따라 달리는 중급 트레일 코스", meta: "고성 · 12.4km", icon: "mountain" },
-      { image: image2, tag: "MTB", title: "청산 MTB 파크", description: "숲길과 다운힐을 함께 즐기는 산악자전거 코스", meta: "정선 · 3시간", icon: "activity" },
-      { image: image3, tag: "래프팅", title: "내린천 수상 스포츠", description: "시원한 계곡에서 즐기는 팀 래프팅 체험", meta: "인제 · 2시간", icon: "waves" },
-      { image: image4, tag: "라이딩", title: "강촌 호반 라이딩", description: "북한강 풍경을 따라 달리는 편안한 자전거길", meta: "춘천 · 28km", icon: "person" },
-    ],
   },
   courses: {
     eyebrow: "맞춤 코스",
@@ -75,12 +70,6 @@ const configs: Record<PortalPageKey, PageConfig> = {
     stats: [],
     sectionTitle: "추천 맞춤 코스",
     sectionDescription: "추천 장소를 방문 순서대로 연결한 하나의 일정입니다.",
-    cards: [
-      { image: image1, tag: "1박 2일", title: "대관령 하늘길 트레킹", description: "트레킹과 목장 풍경을 함께 즐기는 주말 코스", meta: "중급 · 5시간", icon: "mountain" },
-      { image: image3, tag: "당일", title: "동해 패들 & 서핑", description: "오전 패들보드와 오후 서핑을 잇는 바다 코스", meta: "초급 · 6시간", icon: "waves" },
-      { image: image4, tag: "1박 2일", title: "춘천 라이딩 & 미식", description: "호반 라이딩 뒤 지역 음식을 즐기는 여유로운 일정", meta: "초중급 · 30km", icon: "person" },
-      { image: image2, tag: "당일", title: "정선 MTB 어드벤처", description: "숲길 라이딩과 케이블카 전망을 묶은 활동형 코스", meta: "중급 · 4시간", icon: "activity" },
-    ],
   },
   missions: {
     eyebrow: "패스포트 미션",
@@ -91,12 +80,6 @@ const configs: Record<PortalPageKey, PageConfig> = {
     stats: [],
     sectionTitle: "이번 달 추천 미션",
     sectionDescription: "처음 참여해도 완료 조건을 쉽게 이해할 수 있는 미션입니다.",
-    cards: [
-      { image: image1, tag: "주간", title: "트레일 10km 완주", description: "지정 트레일 코스에서 10km 이상 활동을 기록하세요.", meta: "보상 · 능선 스탬프", icon: "medal" },
-      { image: image2, tag: "지역", title: "정선 스포츠 2곳 방문", description: "정선의 스포츠 명소 두 곳에서 방문 인증을 남기세요.", meta: "보상 · 500 포인트", icon: "mapPin" },
-      { image: image3, tag: "체험", title: "수상 스포츠 첫 도전", description: "래프팅, 카약, 서핑 중 한 종목에 참여하세요.", meta: "보상 · 물결 배지", icon: "waves" },
-      { image: image4, tag: "월간", title: "강원 3개 지역 탐험", description: "서로 다른 세 지역에서 스포츠 활동을 완료하세요.", meta: "보상 · 탐험가 스탬프", icon: "trophy" },
-    ],
   },
   events: {
     eyebrow: "이벤트 · 축제",
@@ -107,28 +90,16 @@ const configs: Record<PortalPageKey, PageConfig> = {
     stats: [],
     sectionTitle: "다가오는 행사",
     sectionDescription: "접수 상태와 일정이 확인된 행사만 보여드립니다.",
-    cards: [
-      { image: image1, tag: "06.16", title: "양양 서프 트레일 2026", description: "산과 바다를 잇는 양양 대표 트레일 대회", meta: "접수 중 · 양양", icon: "calendar" },
-      { image: image2, tag: "06.17", title: "청산 MTB 페스티벌", description: "레이스와 가족 체험이 함께 열리는 MTB 축제", meta: "접수 중 · 정선", icon: "activity" },
-      { image: image3, tag: "06.20", title: "내린천 래프팅 축제", description: "래프팅 경기와 초보자 체험 프로그램", meta: "무료 체험 · 인제", icon: "waves" },
-      { image: image4, tag: "06.23", title: "강촌 바이크 페스티벌", description: "호반 라이딩과 자전거 문화를 즐기는 주말", meta: "현장 접수 · 춘천", icon: "person" },
-    ],
   },
   mypage: {
     eyebrow: "마이페이지",
-    title: "홍길동님의 강원 스포츠 패스포트",
+    title: "나의 강원 스포츠 패스포트",
     description: "방문 기록, 스탬프, 진행 중인 미션과 다음 리워드를 한눈에 확인하세요.",
     icon: "trophy",
     action: { label: "새 미션 찾기", href: "/missions" },
-    stats: [{ value: "7", label: "모은 스탬프" }, { value: "5", label: "인증 장소" }, { value: "3", label: "다음 리워드까지" }],
+    stats: [],
     sectionTitle: "최근 활동",
     sectionDescription: "인증 기록과 이어서 도전할 활동을 정리했습니다.",
-    cards: [
-      { image: image1, tag: "완료", title: "설악산 트레일 챌린지", description: "10km 완주 기록이 패스포트에 반영되었습니다.", meta: "2026.06.12", icon: "medal" },
-      { image: image2, tag: "진행 중", title: "정선 스포츠 2곳 방문", description: "한 곳을 인증했습니다. 한 곳이 더 남았습니다.", meta: "1 / 2 완료", icon: "mapPin" },
-      { image: image3, tag: "추천", title: "내린천 수상 스포츠", description: "현재 스탬프 조합과 가장 잘 맞는 다음 활동입니다.", meta: "리워드 +300", icon: "waves" },
-      { image: image4, tag: "리워드", title: "탐험가 레벨 2", description: "스탬프 세 개를 더 모으면 새로운 혜택이 열립니다.", meta: "진행률 70%", icon: "award" },
-    ],
   },
 };
 
@@ -253,7 +224,7 @@ function activityDate(startsAt?: string | null, endsAt?: string | null) {
   return startsAt ? format(startsAt) : "일정 확인 중";
 }
 
-async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PageConfig["cards"]> {
+async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[]> {
   if (page === "sports") {
     return (await api.sports.list({ page: dataPage, size: sportsPageSize }))
       .map((activity) => {
@@ -353,7 +324,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const recommendationNeedsLogin = recommendationRequested && !api.hasToken();
   const config = configs[page];
   const pageFilters = filterGroups[page] ?? [];
-  const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
+  const [remoteCards, setRemoteCards] = useState<PortalCard[] | null>(null);
   const [coursePlan, setCoursePlan] = useState<CoursePlan | null>(null);
   const [kakaoPlacesReady, setKakaoPlacesReady] = useState(false);
   const [apiMessage, setApiMessage] = useState("");
@@ -427,7 +398,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     }).then((recommendation) => {
       if (cancelled) return;
 
-      const recommendedCards: PageConfig["cards"] = recommendation.stops.map((stop, index) => {
+      const recommendedCards: PortalCard[] = recommendation.stops.map((stop, index) => {
         const category = sportCategory(params.get("sport"), stop.placeName);
         const title = stop.placeName ?? `추천 장소 #${stop.activityId}`;
         return {
@@ -538,8 +509,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     return () => observer.disconnect();
   }, [hasMoreSports, loadMoreError, page, remoteCards, sportsPage]);
 
-  const fallbackCards = page === "courses" || page === "missions" ? [] : config.cards;
-  const cards = ((recommendationNeedsLogin ? [] : remoteCards) ?? fallbackCards).filter((card) => {
+  const cards = (recommendationNeedsLogin ? [] : remoteCards ?? []).filter((card) => {
     if (card.hidden) return false;
     const query = activeFilters.q?.toLowerCase();
     const matchesSport = page === "courses" || activeSportFilters.length === 0 || activeSportFilters.some((sport) => (

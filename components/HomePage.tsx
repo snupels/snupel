@@ -68,13 +68,6 @@ const heroChallenges: Array<{
   },
 ];
 
-const fallbackEvents: Array<{ image: StaticImageData | string; tag: string; title: string; date: string; reward: string; href?: string }> = [
-  { image: eventImage1, tag: "트레일런", title: "양양 서프 트레일 2026", date: "2026.05.16 ~ 06.18", reward: "MTB 코스 완주 스탬프" },
-  { image: eventImage2, tag: "MTB", title: "청산 MTB 페스티벌 2026", date: "2026.05.17", reward: "MTB 코스 완주 스탬프" },
-  { image: eventImage3, tag: "축제", title: "인제 내린천 래프팅 축제", date: "2026.06.20 ~ 06.22", reward: "래프팅 체험 스탬프" },
-  { image: eventImage4, tag: "MTB", title: "강촌 바이크래 페스티벌", date: "2026.05.23 ~ 06.29", reward: "코인 앱 완주 스탬프" },
-];
-
 const quickLinks: Array<{ icon: AppIconName; title: string; description: string; href?: string }> = [
   { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "일정에 저장", description: "관심 활동과 행사를 내 일정에 모아보세요.", href: "https://calendar.google.com/calendar/u/0/r" },
@@ -103,20 +96,14 @@ const gangwonWeatherRegions = [
   { name: "양양군", latitude: 38.0754, longitude: 128.619 },
 ] as const;
 
-const weatherLabels: Record<number, string> = {
-  0: "맑음", 1: "대체로 맑음", 2: "부분적으로 흐림", 3: "흐림",
-  45: "안개", 48: "서리 안개", 51: "약한 이슬비", 53: "이슬비", 55: "강한 이슬비",
-  61: "약한 비", 63: "비", 65: "강한 비", 71: "약한 눈", 73: "눈", 75: "강한 눈",
-  80: "약한 소나기", 81: "소나기", 82: "강한 소나기", 95: "뇌우", 96: "우박을 동반한 뇌우", 99: "강한 우박 뇌우",
-};
-
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [weatherRegionIndex, setWeatherRegionIndex] = useState(2);
   const [temperature, setTemperature] = useState<number | null>(null);
   const [temperatureRange, setTemperatureRange] = useState("날씨 불러오는 중");
   const [weatherDetail, setWeatherDetail] = useState("날씨 정보 확인 중");
-  const [eventCards, setEventCards] = useState(fallbackEvents);
+  const [eventCards, setEventCards] = useState<Array<{ image: StaticImageData | string; tag: string; title: string; date: string; reward: string; href?: string }>>([]);
+  const [eventMessage, setEventMessage] = useState("행사를 불러오는 중…");
   const [passportProfile, setPassportProfile] = useState({ displayName: "", stampCount: 0, level: "Level 1 Beginner", authenticated: false });
   const heroChallenge = heroChallenges[heroIndex];
   const weatherRegion = gangwonWeatherRegions[weatherRegionIndex];
@@ -132,12 +119,12 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
 
-    api.openMeteoWeather({ latitude: weatherRegion.latitude, longitude: weatherRegion.longitude })
+    api.weather({ latitude: weatherRegion.latitude, longitude: weatherRegion.longitude })
       .then((weather) => {
         if (cancelled) return;
-        setTemperature(Math.round(weather.current.temperature_2m));
-        setTemperatureRange(`최고 ${Math.round(weather.daily.temperature_2m_max[0])}° · 최저 ${Math.round(weather.daily.temperature_2m_min[0])}°C`);
-        setWeatherDetail(`${weatherLabels[weather.current.weather_code] ?? "날씨 확인 중"} · 습도 ${weather.current.relative_humidity_2m}%`);
+        setTemperature(weather.temperatureC === null ? null : Math.round(weather.temperatureC));
+        setTemperatureRange(weather.precipitationProbability === null ? "강수 확률 확인 중" : `강수 확률 ${weather.precipitationProbability}%`);
+        setWeatherDetail([weather.sky, weather.precipitationType].filter(Boolean).join(" · ") || "날씨 정보 확인 중");
       })
       .catch(() => {
         if (cancelled) return;
@@ -172,16 +159,12 @@ export default function HomePage() {
   useEffect(() => {
     const user = api.currentUser();
     if (!api.hasToken()) return;
-    const displayName = user?.email.split("@")[0] || "패스포트 회원";
+    const displayName = user?.nickname || user?.email.split("@")[0] || "패스포트 회원";
 
-    Promise.all([api.passports.list(), api.collectedStamps.list()])
-      .then(async ([passports, stamps]) => {
-        const userPassports = passports.filter((passport) => !user || passport.userId === user.id);
-        const passportIds = new Set(userPassports.map((passport) => passport.id));
-        const stampCount = passportIds.size > 0 ? stamps.filter((stamp) => passportIds.has(stamp.passportId)).length : stamps.length;
-        const missionResults = await Promise.allSettled(userPassports.map((passport) => api.passportMissions(passport.id, 1, 100)));
-        const completedFirstMission = missionResults.some((result) => result.status === "fulfilled" && result.value.some((mission) => mission.completed));
-        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, completedFirstMission)), authenticated: true });
+    api.myStampbook()
+      .then((stampbook) => {
+        const stampCount = stampbook.summary.collected;
+        setPassportProfile({ displayName, stampCount, level: passportLevelLabel(resolvePassportLevel(stampCount, stampCount > 0)), authenticated: true });
       })
       .catch(() => setPassportProfile((current) => ({ ...current, displayName, authenticated: true })));
   }, []);
@@ -189,7 +172,10 @@ export default function HomePage() {
   useEffect(() => {
     api.events.list({ page: 1, size: 100 })
       .then((items) => {
-        if (items.length === 0) return;
+        if (items.length === 0) {
+          setEventMessage("현재 등록된 행사가 없습니다.");
+          return;
+        }
         const sportsFirst = [...items]
           .sort((first, second) => Number(Boolean(second.sportName)) - Number(Boolean(first.sportName)))
           .slice(0, 4);
@@ -201,8 +187,9 @@ export default function HomePage() {
           reward: item.hasMission ? "패스포트 미션 참여 가능" : (item.sigun ?? item.region ?? "강원특별자치도"),
           href: `/events/detail?id=${item.id}`,
         })));
+        setEventMessage("");
       })
-      .catch(() => undefined);
+      .catch(() => setEventMessage("행사를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요."));
   }, []);
 
   return (
@@ -312,6 +299,7 @@ export default function HomePage() {
       <section className="bg-[#f3f7f4] py-12">
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <div className="flex items-center justify-between"><h2 className="text-xl font-bold">지금 강원에서 열리는 행사</h2><Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-[#008f45]">전체보기<AppIcon name="arrowRight" /></Link></div>
+          {eventCards.length === 0 && <p role="status" className="mt-7 rounded-2xl border border-[#dfe8e2] bg-white p-8 text-center text-sm text-[#6f7a87]">{eventMessage}</p>}
           <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {eventCards.map((event) => {
               const card = <article className="group h-full overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-lg"><div className="relative aspect-[4/2.35] overflow-hidden"><Image src={event.image} alt={`${event.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><span className="absolute left-3 top-3 rounded-md bg-white/95 px-2 py-1 text-xs font-semibold">{event.tag}</span></div><div className="p-4"><h3 className="font-bold">{event.title}</h3><p className="mt-2 flex items-center gap-1.5 text-xs text-[#6d7884]"><AppIcon name="calendar" />{event.date}</p><p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#008f45]"><AppIcon name="award" />{event.reward}</p></div></article>;

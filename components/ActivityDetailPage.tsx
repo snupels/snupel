@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import type { ActivityResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { AppIcon } from "./AppIcon";
+import { SaveActivityButton } from "./SaveActivityButton";
 import fallbackImage from "@/imports/LandingPage/205ec17d713405bedcfab3cf69b55f31151a8bf3.png";
 
 const categoryLabels: Record<string, string> = {
@@ -105,6 +106,7 @@ function ActivityDetailContent() {
                 {activity && <div className="flex gap-3"><AppIcon name="clipboard" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">분류</dt><dd className="mt-1 text-[#172033]">{categoryLabels[activity.category] ?? activity.category}</dd></div></div>}
                 {coordinates && <div className="flex gap-3"><AppIcon name="map" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">좌표</dt><dd className="mt-1 text-[#172033]">{coordinates}</dd></div></div>}
               </dl>
+              {activity && <SaveActivityButton activityId={activity.id} />}
               {activity?.sourceUrl && <a href={activity.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 정보 보기<AppIcon name="arrowRight" /></a>}
             </aside>
           </div>
