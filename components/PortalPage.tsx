@@ -2,6 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
+import Script from "next/script";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/service";
@@ -34,7 +35,7 @@ type PageConfig = {
   stats: Array<{ value: string; label: string }>;
   sectionTitle: string;
   sectionDescription: string;
-  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean }>;
+  cards: Array<{ image: StaticImageData | string; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null }>;
 };
 
 type CoursePlan = {
@@ -153,20 +154,55 @@ const filterGroups: Partial<Record<PortalPageKey, FilterGroup[]>> = {
 const cardImages = [image1, image2, image3, image4];
 const themeLabels = { healing: "힐링", thrill: "스릴", photo_spot: "포토 스팟", stamp: "스탬프" };
 const sportsPageSize = 20;
+const KAKAO_MAP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
+
+type KakaoPlaceResult = { id: string; place_name: string; x: string; y: string };
+type KakaoPlacesSdk = {
+  maps: {
+    load(callback: () => void): void;
+    LatLng: new (latitude: number, longitude: number) => object;
+    services: {
+      Status: { OK: string };
+      Places: new () => {
+        keywordSearch(query: string, callback: (results: KakaoPlaceResult[], status: string) => void, options: { location: object; radius: number }): void;
+      };
+    };
+  };
+};
 
 function kakaoMapPoint(title: string, latitude: number, longitude: number) {
   return `${encodeURIComponent(title)},${latitude},${longitude}`;
 }
 
-function kakaoRouteHref(stops: Array<{ title: string; latitude: number | null; longitude: number | null }>) {
-  if (stops.length < 2 || stops.length > 7 || stops.some((stop) => stop.latitude === null || stop.longitude === null)) return null;
-  return `https://map.kakao.com/link/by/car/${stops.map((stop) => kakaoMapPoint(stop.title, stop.latitude!, stop.longitude!)).join("/")}`;
+function kakaoRouteHref(stops: Array<{ title: string; latitude: number | null; longitude: number | null; placeId?: string | null }>) {
+  if (stops.length < 2 || stops.length > 7 || stops.some((stop) => !stop.placeId && (stop.latitude === null || stop.longitude === null))) return null;
+  return `https://map.kakao.com/link/by/car/${stops.map((stop) => stop.placeId ?? kakaoMapPoint(stop.title, stop.latitude!, stop.longitude!)).join("/")}`;
 }
 
-function kakaoPlaceHref(title: string, latitude: number | null, longitude: number | null, address?: string | null) {
-  return latitude === null || longitude === null
-    ? `https://map.kakao.com/link/search/${encodeURIComponent([title, address].filter(Boolean).join(" "))}`
-    : `https://map.kakao.com/link/map/${kakaoMapPoint(title, latitude, longitude)}`;
+function kakaoPlaceHref(title: string, sigun?: string | null, placeId?: string | null) {
+  return placeId
+    ? `https://map.kakao.com/link/map/${placeId}`
+    : `https://map.kakao.com/link/search/${encodeURIComponent([title, sigun].filter(Boolean).join(" "))}`;
+}
+
+function findKakaoPlaceId(title: string, latitude: number | null, longitude: number | null) {
+  const kakao = window.kakao as unknown as KakaoPlacesSdk | undefined;
+  if (!kakao || latitude === null || longitude === null) return Promise.resolve(null);
+  const normalizedTitle = title.replace(/\s+/g, "");
+  return new Promise<string | null>((resolve) => {
+    new kakao.maps.services.Places().keywordSearch(title, (results, status) => {
+      if (status !== kakao.maps.services.Status.OK) return resolve(null);
+      const matches = results.filter((result) => {
+        const name = result.place_name.replace(/\s+/g, "");
+        return name.includes(normalizedTitle) || normalizedTitle.includes(name);
+      });
+      const nearest = matches.sort((a, b) => (
+        (Number(a.y) - latitude) ** 2 + (Number(a.x) - longitude) ** 2
+        - (Number(b.y) - latitude) ** 2 - (Number(b.x) - longitude) ** 2
+      ))[0];
+      resolve(nearest?.id ?? null);
+    }, { location: new kakao.maps.LatLng(latitude, longitude), radius: 2000 });
+  });
 }
 
 function sportCategory(sportName: string | null, placeName?: string | null) {
@@ -319,6 +355,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const pageFilters = filterGroups[page] ?? [];
   const [remoteCards, setRemoteCards] = useState<PageConfig["cards"] | null>(null);
   const [coursePlan, setCoursePlan] = useState<CoursePlan | null>(null);
+  const [kakaoPlacesReady, setKakaoPlacesReady] = useState(false);
   const [apiMessage, setApiMessage] = useState("");
   const recommendationPending = recommendationRequested && !recommendationNeedsLogin && remoteCards === null && !apiMessage;
   const [sportsPage, setSportsPage] = useState(1);
@@ -327,6 +364,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const [loadMoreError, setLoadMoreError] = useState(false);
   const sportsSentinelRef = useRef<HTMLDivElement>(null);
   const sportsLoadingRef = useRef(false);
+  const kakaoLookupRef = useRef("");
 
   useEffect(() => {
     const publicPage = page === "sports" || page === "events" || page === "missions";
@@ -399,8 +437,11 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           description: stop.reason,
           meta: [stop.address ?? "주소 정보 없음", `활동 약 ${stop.estimatedMinutes}분`].join(" · "),
           icon: sportIcon(category),
-          mapHref: kakaoPlaceHref(title, stop.latitude, stop.longitude, stop.address),
+          mapHref: kakaoPlaceHref(title, params.get("sigun")),
           order: index + 1,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
+          sigun: params.get("sigun"),
         };
       });
       setRemoteCards(recommendedCards);
@@ -433,6 +474,41 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
     return () => { cancelled = true; };
   }, [page, recommendationQuery, recommendationRequested]);
+
+  const kakaoLookupKey = page === "courses" && remoteCards
+    ? `${recommendationQuery}:${remoteCards.map((card) => card.title).join("|")}`
+    : "";
+
+  useEffect(() => {
+    if (!kakaoPlacesReady || !remoteCards?.length || !kakaoLookupKey || kakaoLookupRef.current === kakaoLookupKey) return;
+    kakaoLookupRef.current = kakaoLookupKey;
+    let cancelled = false;
+
+    void Promise.all(remoteCards.map((card) => (
+      findKakaoPlaceId(card.title, card.latitude ?? null, card.longitude ?? null).catch(() => null)
+    ))).then((placeIds) => {
+      if (cancelled) return;
+      const enrichedCards = remoteCards.map((card, index) => ({
+        ...card,
+        kakaoPlaceId: placeIds[index],
+        mapHref: kakaoPlaceHref(card.title, card.sigun, placeIds[index]),
+      }));
+      setRemoteCards(enrichedCards);
+      setCoursePlan((plan) => plan ? {
+        ...plan,
+        mapHref: kakaoRouteHref(enrichedCards.map((card) => ({
+          title: card.title,
+          latitude: card.latitude ?? null,
+          longitude: card.longitude ?? null,
+          placeId: card.kakaoPlaceId,
+        }))),
+      } : plan);
+    }).catch(() => {
+      if (!cancelled) kakaoLookupRef.current = "";
+    });
+
+    return () => { cancelled = true; };
+  }, [kakaoLookupKey, kakaoPlacesReady, remoteCards]);
 
   useEffect(() => {
     const sentinel = sportsSentinelRef.current;
@@ -477,6 +553,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
+      {page === "courses" && KAKAO_MAP_KEY && <Script id="kakao-places-sdk" src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false&libraries=services`} strategy="afterInteractive" onReady={() => (window.kakao as unknown as KakaoPlacesSdk | undefined)?.maps.load(() => setKakaoPlacesReady(true))} onError={() => { kakaoLookupRef.current = ""; setKakaoPlacesReady(false); }} />}
       <section className="bg-gradient-to-b from-[#e6f0e9] to-[#f3f7f4] px-4 pb-10 pt-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1180px]">
           <div className="relative flex min-h-[320px] flex-col justify-end gap-8 overflow-hidden rounded-[28px] bg-[#173a2d] p-7 shadow-[0_24px_70px_rgba(28,72,51,0.18)] sm:p-10 lg:flex-row lg:items-end lg:justify-between">
