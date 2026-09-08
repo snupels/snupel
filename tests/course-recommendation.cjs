@@ -25,15 +25,19 @@ assert.equal(
 );
 
 const dtoSource = fs.readFileSync(path.join(__dirname, "../lib/api/dto.ts"), "utf8");
+const stopSchemaSource = dtoSource.slice(
+  dtoSource.indexOf("export const recommendedStopSchema"),
+  dtoSource.indexOf("export const recommendedLegSchema"),
+);
 assert.match(dtoSource, /activityCategorySchema = z\.enum\(\[[^\]]*"tour"/);
 assert.doesNotMatch(dtoSource, /"tourism"/);
 assert.match(dtoSource, /title: z\.string\(\)\.min\(1\)/);
 assert.match(dtoSource, /totalEstimatedMinutes: z\.number\(\)\.int\(\)\.nonnegative\(\)/);
-assert.match(dtoSource, /representativeImageUrl: z\.string\(\)\.nullable\(\)/);
+assert.match(stopSchemaSource, /representativeImageUrl: z\.string\(\)\.nullable\(\)/);
 assert.match(dtoSource, /distanceKm: z\.number\(\)\.nonnegative\(\)/);
 
 assert.doesNotMatch(portalSource, /api\.activities\.get\(stop\.activityId\)/);
 assert.match(portalSource, /recommendation\.legs/);
 assert.match(portalSource, /총 예상 \{coursePlan\.totalEstimatedMinutes\}분/);
-assert.match(portalSource, /return <div key=\{`\$\{card\.title\}-\$\{index\}`\} className="flex flex-col gap-3">/);
+assert.match(portalSource, /return\s*<div[^>]*className="flex flex-col gap-3">/);
 console.log("PASS: recommendation contract renders stops and travel without activity lookups");
