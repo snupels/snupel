@@ -35,4 +35,5 @@ assert.match(dtoSource, /distanceKm: z\.number\(\)\.nonnegative\(\)/);
 assert.doesNotMatch(portalSource, /api\.activities\.get\(stop\.activityId\)/);
 assert.match(portalSource, /recommendation\.legs/);
 assert.match(portalSource, /총 예상 \{coursePlan\.totalEstimatedMinutes\}분/);
+assert.match(portalSource, /return <div key=\{`\$\{card\.title\}-\$\{index\}`\} className="flex flex-col gap-3">/);
 console.log("PASS: recommendation contract renders stops and travel without activity lookups");
