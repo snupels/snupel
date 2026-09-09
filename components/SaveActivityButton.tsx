@@ -43,12 +43,14 @@ function SaveActivityControl({ activityId, returnTo }: { activityId: number; ret
       if (saved) await api.savedActivities.remove(activityId);
       else await api.savedActivities.save(activityId);
       setSaved(!saved);
+      window.dispatchEvent(new Event("sportspassport-saved-change"));
     } catch { setError("저장 상태를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요."); }
     finally { lock.current = false; setBusy(false); }
   }
 
   return <div>
-    <button type="button" onClick={() => void toggle()} disabled={busy || loading || Boolean(error)} aria-pressed={saved} className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white text-sm font-bold text-[#008f45] disabled:opacity-60"><AppIcon name={saved ? "checkCircle" : "award"} />{loading ? "저장 상태 확인 중…" : busy ? "처리 중…" : saved ? "저장됨 · 취소" : "관심 활동 저장"}</button>
+    <button type="button" onClick={() => void toggle()} disabled={busy || loading || Boolean(error)} aria-pressed={saved} className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white text-sm font-bold text-[#008f45] disabled:opacity-60"><AppIcon name={saved ? "checkCircle" : "calendar"} />{loading ? "저장 상태 확인 중…" : busy ? "처리 중…" : saved ? "저장됨 · 취소" : "관심 행사 저장"}</button>
+    {saved && !loading && <Link href="/saved-events/" className="mt-3 block text-center text-sm font-bold text-[#008f45] underline">행사 저장 목록 보기</Link>}
     {error && <p role="alert" className="mt-2 text-sm text-red-700">{error} <button type="button" onClick={() => { setLoading(true); setRetry(value => value + 1); }} className="underline">다시 확인</button></p>}
   </div>;
 }

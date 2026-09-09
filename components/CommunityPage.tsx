@@ -324,7 +324,6 @@ function CommunityPageContent() {
           </section>
         )}
         {!loading && !error && hasMore && !(tab !== "all" && !user) && <div className="mt-8 text-center"><button disabled={loadingMore} onClick={() => void loadFeed(tab, page + 1)} className="cursor-pointer rounded-full border border-[#cbdcd0] bg-white px-6 py-3 text-sm font-bold disabled:opacity-50">{loadingMore ? "불러오는 중…" : "게시글 더 보기"}</button></div>}
-        <p className="mt-8 text-center text-xs text-[#89958c]">운영자 데모는 실제 방문 인증이 아니며 스탬프가 지급되지 않습니다.</p>
       </div>
     </main>
   );
