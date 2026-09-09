@@ -209,6 +209,9 @@ export const api = {
     save: (activityId: number) => withToken(`/me/saved-activities/${itemIdSchema.parse(activityId)}`, savedActivityResponseSchema, "POST"),
     remove: (activityId: number) => withToken(`/me/saved-activities/${itemIdSchema.parse(activityId)}`, emptySchema, "DELETE"),
   },
+  savedEvents: {
+    list: (page = 1, size = 20) => withToken(`/me/saved-activities${queryString({ page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size), eventsOnly: true })}`, z.array(savedActivityResponseSchema)),
+  },
   activityHistory: {
     list: (input: { page?: number; size?: number; q?: string; status?: ActivityHistoryStatus } = {}) => withToken(
       `/me/activity-history${queryString({

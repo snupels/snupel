@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { ActivityHistoryResponse, ActivityHistoryStatus } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
-import { activityHistoryDetailHref, ACTIVITY_HISTORY_STATUS, ACTIVITY_HISTORY_TYPE } from "@/lib/activityHistory";
+import { activityHistoryDetailHref, ACTIVITY_HISTORY_STATUS, ACTIVITY_HISTORY_TYPE, isMissionHistory } from "@/lib/activityHistory";
 import { AppIcon } from "./AppIcon";
 
 const PAGE_SIZE = 20;
@@ -43,8 +43,9 @@ export function ActivityHistoryPage() {
         <header className="mt-8 rounded-[28px] bg-[linear-gradient(135deg,#006f3b,#009b52)] px-6 py-8 text-white shadow-lg sm:px-10">
           <p className="text-xs font-bold tracking-[0.18em] text-white/60">MY ACTIVITY HISTORY</p>
           <h1 className="mt-2 text-3xl font-bold">나의 활동 이력</h1>
-          <p className="mt-3 text-sm text-white/70">내 사진 인증의 심사 상태와 스탬프 획득, 관심 활동 기록을 확인하세요.</p>
+          <p className="mt-3 text-sm text-white/70">미션 사진 인증의 심사 상태와 스탬프 획득 기록을 확인하세요. 저장한 행사는 행사 저장에서 따로 볼 수 있습니다.</p>
           <nav aria-label="활동 이어가기" className="mt-6 flex flex-wrap gap-3">
+            <Link href="/saved-events/" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-[#00783a] transition hover:bg-[#e9f5ed]"><AppIcon name="calendar" className="size-4" />행사 저장 보기</Link>
             <Link href="/community/" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-[#00783a] transition hover:bg-[#e9f5ed] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><AppIcon name="users" className="size-4" />스포츠 피드 보기</Link>
             <Link href="/missions" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/60 px-5 text-sm font-bold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">참여할 미션 찾기<AppIcon name="arrowRight" className="size-4" /></Link>
           </nav>
@@ -89,7 +90,8 @@ function HistoryResults({ filter, query }: { filter: HistoryFilter; query: strin
         status: filter === "all" ? undefined : filter,
       });
       if (version !== requestVersion.current) return;
-      setActivities((previous) => nextPage === 1 ? rows : [...new Map([...previous, ...rows].map((item) => [item.id, item])).values()]);
+      const missionRows = rows.filter(isMissionHistory);
+      setActivities((previous) => nextPage === 1 ? missionRows : [...new Map([...previous, ...missionRows].map((item) => [item.id, item])).values()]);
       setPage(nextPage);
       setHasMore(rows.length === PAGE_SIZE);
     } catch (reason) {
