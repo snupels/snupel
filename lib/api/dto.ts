@@ -404,6 +404,7 @@ export const stampSubmissionCreateSchema = z.strictObject({
   passport_id: positiveInt.optional(),
   stamp_id: positiveInt,
   object_key: z.string().min(1).max(500),
+  extra_object_keys: z.array(z.string().min(1).max(500)).max(4).optional(),
   share_to_feed: z.boolean().optional(),
   feed_caption: z.string().max(300).nullable().optional(),
 });
@@ -428,6 +429,7 @@ export const stampSubmissionResponseSchema = z.object({
   reviewedAt: apiDateTime.nullable(),
   rejectionReason: z.string().nullable(),
   proofUrl: z.string().nullable().optional(),
+  proofUrls: z.array(z.string()).max(5).optional(),
   shareToFeed: z.boolean().default(false),
   feedCaption: z.string().nullable().default(null),
   activity: z.object({
@@ -501,6 +503,7 @@ export const communityFeedResponseSchema = z.object({
   isDemo: z.boolean().default(false),
   id: positiveInt,
   proofUrl: z.string().nullable(),
+  proofUrls: z.array(z.string()).max(5).optional(),
   caption: z.string().nullable(),
   authorId: positiveInt,
   authorName: z.string(),

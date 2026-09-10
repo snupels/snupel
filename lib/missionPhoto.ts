@@ -1,5 +1,12 @@
 const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 export const MAX_MISSION_PHOTO_BYTES = 10 * 1024 * 1024;
+export const MAX_MISSION_PHOTOS = 5;
+
+export function missionPhotosError(photos: ReadonlyArray<{ type: string; size: number }>): string | null {
+  if (!photos.length) return "인증 사진을 한 장 이상 선택해 주세요.";
+  if (photos.length > MAX_MISSION_PHOTOS) return "사진은 최대 5장까지 올릴 수 있습니다.";
+  return photos.map(missionPhotoError).find(Boolean) ?? null;
+}
 
 /** Keep client guidance aligned with the upload API; the server still validates uploads. */
 export function missionPhotoError(photo: { type: string; size: number }): string | null {

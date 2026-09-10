@@ -9,6 +9,7 @@ import { api } from "@/lib/api/service";
 import { ApiError } from "@/lib/api/repository";
 import { loginHref } from "@/lib/auth-flow";
 import { AppIcon } from "./AppIcon";
+import { ProofGallery } from "./ProofGallery";
 
 type FeedTab = "all" | "mine" | "following" | "liked";
 
@@ -59,7 +60,11 @@ function CommunityPageContent() {
   const loginUrl = loginHref(`/community/?${searchParams.toString()}`);
 
   useEffect(() => {
-    const sync = () => setUser(api.hasToken() ? api.currentUser() ?? null : null);
+    const sync = () => {
+      requestId.current++;
+      setCommentDrafts({}); setProfiles({}); setActionMessage("");
+      setUser(api.hasToken() ? api.currentUser() ?? null : null);
+    };
     window.addEventListener("sportspassport-auth-change", sync);
     return () => window.removeEventListener("sportspassport-auth-change", sync);
   }, []);
@@ -81,7 +86,7 @@ function CommunityPageContent() {
       if (request !== requestId.current) return;
       setPosts(current => nextPage === 1 ? result : [...new Map([...current, ...result].map(post => [post.id, post])).values()]);
       setPage(nextPage); setHasMore(!viewingPost && result.length === 20);
-      const ids = [...new Set([...result.map(post => post.authorId), ...(viewingProfile ? [profileUserId] : [])])];
+      const ids = [...new Set([...result.map(post => post.authorId), ...(viewingProfile ? [profileUserId] : []), ...(user ? [user.id] : [])])];
       const entries = await Promise.all(ids.map(async id => {
         try { return [id, await api.communityFeed.profile(id)] as const; } catch { return null; }
       }));
@@ -93,7 +98,7 @@ function CommunityPageContent() {
     } finally {
       if (request === requestId.current) { setLoading(false); setLoadingMore(false); }
     }
-  }, [profileUserId, viewingProfile, viewingPost, postId]);
+  }, [profileUserId, viewingProfile, viewingPost, postId, user]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setTab("all"); void loadFeed("all"); }, 0);
@@ -119,6 +124,8 @@ function CommunityPageContent() {
     try {
       const updated = profiles[id].followedByMe ? await api.communityFeed.unfollow(id) : await api.communityFeed.follow(id);
       setProfiles(current => ({ ...current, [id]: updated }));
+      const ownProfile = await api.communityFeed.profile(user.id).catch(() => null);
+      if (ownProfile) setProfiles(current => ({ ...current, [user.id]: ownProfile }));
       if (tab === "following" && !updated.followedByMe) setPosts(current => current.filter(post => post.authorId !== id));
     } catch { setActionMessage("팔로우 상태를 변경하지 못했습니다. 다시 시도해 주세요."); }
     finally { followLocks.current.delete(id); setBusyUsers(current => current.filter(value => value !== id)); }
@@ -222,6 +229,12 @@ function CommunityPageContent() {
             <p className="mt-3 max-w-xl text-sm leading-6 text-[#66736c]">
               강원에서 즐긴 스포츠 순간을 나누고, 관심 있는 탐험가를 팔로우해 보세요.
             </p>
+            {!viewingProfile && user && <Link href={`/community?user=${user.id}`} className="mt-5 inline-flex flex-wrap items-center gap-4 rounded-2xl border border-[#dce5df] bg-[#f6faf7] px-5 py-3 text-sm transition hover:border-[#008f45]">
+              {profiles[user.id]?.profileImageUrl && <Image src={profiles[user.id].profileImageUrl!} alt="내 프로필" width={44} height={44} className="size-11 rounded-full object-cover" />}
+              <strong>{profiles[user.id]?.name ?? "내 프로필"}</strong>
+              {profiles[user.id] ? <><span>팔로워 <strong>{profiles[user.id].followerCount}</strong></span><span>팔로잉 <strong>{profiles[user.id].followingCount}</strong></span></> : <span className="text-xs text-[#66736c]">프로필에서 팔로우 정보 확인</span>}
+              <span className="text-xs font-bold text-[#008f45]">내 피드 보기 →</span>
+            </Link>}
             {viewingProfile && profiles[profileUserId] && <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
               {profiles[profileUserId].profileImageUrl && <Image src={profiles[profileUserId].profileImageUrl!} alt="작성자 프로필" width={56} height={56} className="size-14 rounded-full object-cover" />}
               <span>팔로워 <strong>{profiles[profileUserId].followerCount}</strong></span><span>팔로잉 <strong>{profiles[profileUserId].followingCount}</strong></span>
@@ -273,13 +286,14 @@ function CommunityPageContent() {
           </section>
         ) : (
           <section className={viewingPost ? "mt-8" : "mt-8 grid grid-cols-2 items-start gap-2 sm:gap-4 xl:grid-cols-4"}>
-            {posts.map((post, index) => {
+            {posts.map((post) => {
               const liked = post.likedByMe;
               const postTags = tags(post);
-              if (!viewingPost) return <Link key={post.id} href={`/community?post=${post.id}`} aria-label={`${post.authorName}님의 ${post.placeName ?? "스포츠"} 게시글 보기`} className="relative block aspect-square cursor-pointer overflow-hidden rounded-xl bg-[#e7ece8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#008f45]">
+              if (!viewingPost) return <article key={post.id} className="relative"><Link href={`/community?post=${post.id}`} aria-label={`${post.authorName}님의 ${post.placeName ?? "스포츠"} 게시글 보기`} className="relative block aspect-square cursor-pointer overflow-hidden rounded-xl bg-[#e7ece8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#008f45]">
                 {post.proofUrl ? <Image src={post.proofUrl} alt={post.isDemo ? "운영자 데모 안내" : `${post.placeName ?? "강원 스포츠"} 인증 사진`} fill sizes="(max-width: 1280px) 50vw, 25vw" className="object-cover transition hover:scale-105" /> : <span className="flex h-full items-center justify-center text-sm text-[#66736c]">사진을 불러올 수 없습니다</span>}
                 {post.isDemo && <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-[#12653d]">운영자 DEMO</span>}
-              </Link>;
+                {(post.proofUrls?.length ?? 0) > 1 && <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white">사진 {post.proofUrls!.length}장</span>}
+              </Link><Link href={`/community?user=${post.authorId}`} aria-label={`${post.authorName}의 프로필 보기`} className="absolute bottom-2 left-2 flex max-w-[90%] items-center gap-2 rounded-full bg-white/95 py-1 pl-1 pr-3 text-xs font-bold text-[#173a2d] shadow hover:bg-white">{post.authorProfileImageUrl ? <Image src={post.authorProfileImageUrl} alt="" width={28} height={28} className="size-7 rounded-full object-cover" /> : <span className="flex size-7 items-center justify-center rounded-full bg-[#e2efe7] text-[10px]">{initials(post.authorName)}</span>}<span className="truncate">{post.authorName}</span></Link></article>;
               return (
                 <article key={post.id} className="overflow-hidden rounded-[22px] border border-[#dde6e0] bg-white shadow-[0_4px_16px_rgba(23,58,45,0.07)]">
                   <header className="flex items-center gap-3 px-4 py-3.5">
@@ -290,8 +304,8 @@ function CommunityPageContent() {
                     </div>
                     {followButton(post.authorId)}
                   </header>
-                  <div className="relative h-[min(75vh,760px)] min-h-72 overflow-hidden bg-[#e7ece8]">
-                    {post.proofUrl ? <Image src={post.proofUrl} alt={post.isDemo ? "운영자 데모 안내 이미지" : `${post.placeName ?? "강원 스포츠"} 인증 사진`} fill preload={index === 0} sizes="(max-width: 1120px) 100vw, 1120px" className="object-contain" /> : <div className="flex h-full items-center justify-center text-[#819087]"><AppIcon name="instagram" className="size-10" /></div>}
+                  <div className="relative">
+                    <ProofGallery key={post.id} urls={post.proofUrls?.length ? post.proofUrls : post.proofUrl ? [post.proofUrl] : []} label={post.isDemo ? "운영자 데모 안내 이미지" : `${post.placeName ?? "강원 스포츠"} 인증 사진`} />
                     {post.isDemo && <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-[#12653d]">운영자 DEMO · 실제 인증 아님</span>}
                   </div>
                   <div className="p-4">

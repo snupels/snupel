@@ -12,7 +12,7 @@ vm.runInNewContext(ts.transpileModule(source("lib/badgeCatalog.ts"), {
 const { BADGE_CATALOG, earnedBadgeCatalogIds } = context.exports;
 
 assert.equal(BADGE_CATALOG.length, 12);
-assert.deepEqual([...BADGE_CATALOG.filter((item) => item.missionAvailable === false).map((item) => item.id)], [3, 11]);
+assert.deepEqual([...BADGE_CATALOG.filter((item) => item.missionAvailable === false).map((item) => item.id)], []);
 assert.equal(BADGE_CATALOG.find((item) => item.id === 2).description, "산악 미션 첫 완료");
 assert.equal(BADGE_CATALOG.find((item) => item.id === 10).description, "서로 다른 미션 3개 완료");
 assert.equal(BADGE_CATALOG.find((item) => item.id === 10).ruleKey, "three_missions");
