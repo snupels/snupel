@@ -15,7 +15,7 @@ const categories: Array<{ image?: string; icon?: AppIconName; title: string; des
   { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝", filter: "산악스포츠" },
   { icon: "snowflake", title: "동계 스포츠", description: "스키 · 스노보드", filter: "동계스포츠" },
   { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트", filter: "수상스포츠" },
-  { icon: "person", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠" },
+  { icon: "running", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠" },
   { image: "/olympic-rings-white.svg", title: "올림픽 레거시", description: "스키점프 · 경기장 투어", filter: "올림픽레거시" },
 ];
 
@@ -329,7 +329,7 @@ export default function HomePage() {
           <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {categories.map((category) => <Link key={category.title} href={{ pathname: "/sports", query: { sport: category.filter } }} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white text-left shadow-sm transition hover:-translate-y-1 hover:border-[#9ac4aa] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
               <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-white">
-                {category.image ? <Image src={category.image} alt={`${category.title} 대표 이미지`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-contain p-5" /> : category.icon && <span className="flex size-28 items-center justify-center rounded-full bg-[#edf6f0] text-[#008f45] transition duration-300 group-hover:scale-105 group-hover:bg-[#e0f0e6]"><AppIcon name={category.icon} className="size-16" strokeWidth={1.6} /></span>}
+                {category.image ? <Image src={category.image} alt={`${category.title} 대표 이미지`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-contain p-5" /> : category.icon && <AppIcon name={category.icon} className="size-20 text-[#008f45] transition duration-300 group-hover:scale-105 sm:size-24" strokeWidth={1.6} />}
               </span>
               <span className="block border-t border-[#edf1ee] p-4"><strong className="block text-sm">{category.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{category.description}</span></span>
             </Link>)}

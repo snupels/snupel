@@ -38,6 +38,13 @@ import {
   type LucideProps,
 } from "lucide-react";
 
+function RunningPerson({ className, ...props }: LucideProps) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <circle cx="15.5" cy="4" r="1.8" fill="currentColor" stroke="none" />
+    <path d="m8 8 4-1 4 4 4 1M12 7l-2 6 5 3-1 5M10 13l-4 5H2M8 8l-3 4" />
+  </svg>;
+}
+
 function OlympicRings({ className, ...props }: LucideProps) {
   return (
     <svg
@@ -88,6 +95,7 @@ const icons = {
   newspaper: Newspaper,
   olympicRings: OlympicRings,
   person: PersonStanding,
+  running: RunningPerson,
   phone: Phone,
   search: Search,
   smile: Smile,
