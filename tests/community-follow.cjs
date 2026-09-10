@@ -23,5 +23,6 @@ assert.ok(ui.includes('api.communityFeed.liked'));
 assert.ok(ui.includes('좋아요한 게시글'));
 assert.ok(!ui.includes('savedPostIds'));
 assert.ok(!ui.includes('name="bookmark"'));
-assert.ok(ui.includes('className="object-contain"'));
+assert.ok(ui.includes('<ProofGallery'));
+assert.ok(fs.readFileSync(path.join(__dirname, '../components/ProofGallery.tsx'), 'utf8').includes('className="object-contain"'));
 console.log('PASS: community profile privacy, validation, following and demo rendering guards');

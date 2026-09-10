@@ -1,0 +1,50 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Standalone regression test. */
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const ts = require("typescript");
+const React = require("react");
+const { renderToStaticMarkup } = require("react-dom/server");
+const read = file => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+function load(file, requireMock = require) {
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(read(file), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText, { exports, require: requireMock, URL });
+  return exports;
+}
+const { missionPhotosError } = load("lib/missionPhoto.ts");
+const photo = { type: "image/jpeg", size: 1024 };
+assert.equal(missionPhotosError(Array(5).fill(photo)), null);
+assert.match(missionPhotosError(Array(6).fill(photo)), /5장/);
+assert.match(missionPhotosError([]), /한 장/);
+assert.match(missionPhotosError([photo, { ...photo, size: 0 }]), /내용이 없는/);
+assert.match(missionPhotosError([photo, { ...photo, type: "image/svg+xml" }]), /JPG/);
+const dto = load("lib/api/dto.ts");
+const request = { stamp_id: 1, object_key: "cover", extra_object_keys: ["second", "third"], share_to_feed: true, feed_caption: "오늘의 도전" };
+assert.ok(dto.stampSubmissionCreateSchema.safeParse(request).success);
+assert.ok(!dto.stampSubmissionCreateSchema.safeParse({ ...request, extra_object_keys: Array(5).fill("x") }).success);
+const { ProofGallery } = load("components/ProofGallery.tsx", name => {
+  if (name === "next/image") return { __esModule: true, default: ({ src, alt }) => React.createElement("img", { src, alt }) };
+  if (name === "./AppIcon") return { AppIcon: () => null };
+  return require(name);
+});
+const gallery = renderToStaticMarkup(React.createElement(ProofGallery, { urls: ["/1.jpg", "/2.jpg"], label: "미션 인증" }));
+assert.match(gallery, /다음 사진/);
+assert.match(gallery, /사진 2 보기/);
+assert.match(gallery, /1 \/ 2/);
+const single = renderToStaticMarkup(React.createElement(ProofGallery, { urls: ["/1.jpg"], label: "미션 인증" }));
+assert.doesNotMatch(single, /다음 사진/);
+const form = read("components/MissionDetailPage.tsx");
+assert.match(form, /type="file" multiple/);
+assert.match(form, /extra_object_keys: keys.slice\(1\)/);
+assert.match(form, /피드에 함께 올릴 글/);
+assert.match(form, /version !== authVersion.current/);
+assert.match(form, /URL.revokeObjectURL/);
+const feed = read("components/CommunityPage.tsx");
+assert.match(feed, /proofUrls/);
+assert.match(feed, /내 피드 보기/);
+assert.match(feed, /profiles\[user.id\].followerCount/);
+assert.match(feed, /profiles\[user.id\].followingCount/);
+assert.match(feed, /href=\{`\/community\?user=\$\{post.authorId\}`\}/);
+assert.match(feed, /href=\{`\/community\?user=\$\{comment.authorId\}`\}/);
+console.log("PASS: multi-photo validation, gallery, captions, counts and public profile navigation");
