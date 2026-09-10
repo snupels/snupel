@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { api } from "@/lib/api/service";
 import { ApiError } from "@/lib/api/repository";
 import { passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
@@ -11,12 +11,12 @@ import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-ma
 import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
 import digitalTourCardImage from "@/imports/LandingPage/digital-tour-card-gangwon-hero.png";
 
-const categories: Array<{ image?: string; icon?: AppIconName; title: string; description: string; filter: string }> = [
-  { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝", filter: "산악스포츠" },
-  { icon: "snowflake", title: "동계 스포츠", description: "스키 · 스노보드", filter: "동계스포츠" },
-  { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트", filter: "수상스포츠" },
-  { icon: "running", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠" },
-  { image: "/olympic-rings-white.svg", title: "올림픽 레거시", description: "스키점프 · 경기장 투어", filter: "올림픽레거시" },
+const categories: Array<{ image?: string; icon?: AppIconName; title: string; description: string; filter: string; color: string; tint: string }> = [
+  { icon: "mountain", title: "산악 스포츠", description: "산악자전거 · 트레일 러닝", filter: "산악스포츠", color: "#008f45", tint: "#f0f8f3" },
+  { icon: "snowflake", title: "동계 스포츠", description: "스키 · 스노보드", filter: "동계스포츠", color: "#38a9da", tint: "#f0f9fd" },
+  { icon: "waves", title: "수상 스포츠", description: "래프팅 · 카약 · 보트", filter: "수상스포츠", color: "#2475d5", tint: "#f0f5fd" },
+  { icon: "running", title: "육상 스포츠", description: "마라톤 · 트레킹 · 워킹", filter: "육상스포츠", color: "#ed7926", tint: "#fff6ee" },
+  { image: "/olympic-rings-white.svg", title: "올림픽 레거시", description: "스키점프 · 경기장 투어", filter: "올림픽레거시", color: "#536477", tint: "#f5f7f9" },
 ];
 
 const heroChallenges: Array<{
@@ -327,11 +327,12 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
           <h2 className="text-lg font-bold">이번 주말, 나에게 맞는 강원 스포츠 코스는?</h2>
           <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {categories.map((category) => <Link key={category.title} href={{ pathname: "/sports", query: { sport: category.filter } }} className="group overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white text-left shadow-sm transition hover:-translate-y-1 hover:border-[#9ac4aa] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">
+            {categories.map((category) => <Link key={category.title} href={{ pathname: "/sports", query: { sport: category.filter } }} style={{ "--sport-color": category.color, "--sport-tint": category.tint } as CSSProperties} className="group relative overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white text-left shadow-sm transition duration-300 hover:border-[var(--sport-color)] hover:shadow-lg motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sport-color)]">
+              <span aria-hidden="true" className="absolute inset-x-5 top-0 z-10 h-[3px] rounded-b-full bg-[var(--sport-color)] opacity-75 transition-opacity group-hover:opacity-100" />
               <span className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-white">
-                {category.image ? <Image src={category.image} alt={`${category.title} 대표 이미지`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-contain p-5" /> : category.icon && <AppIcon name={category.icon} className="size-20 text-[#008f45] transition duration-300 group-hover:scale-105 sm:size-24" strokeWidth={1.6} />}
+                {category.image ? <Image src={category.image} alt={`${category.title} 대표 이미지`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-contain p-5" /> : category.icon && <AppIcon name={category.icon} className="size-20 text-[var(--sport-color)] transition duration-300 motion-safe:group-hover:scale-110 sm:size-24" strokeWidth={1.6} />}
               </span>
-              <span className="block border-t border-[#edf1ee] p-4"><strong className="block text-sm">{category.title}</strong><span className="mt-1 block text-xs text-[#7a8491]">{category.description}</span></span>
+              <span className="block border-t border-[#edf1ee] bg-[var(--sport-tint)] p-4"><span className="flex items-center justify-between gap-2"><strong className="block text-sm">{category.title}</strong><AppIcon name="arrowRight" className="size-4 text-[var(--sport-color)] transition-transform motion-safe:group-hover:translate-x-1" /></span><span className="mt-1 block text-xs text-[#626e7a]">{category.description}</span></span>
             </Link>)}
           </div>
         </div>
