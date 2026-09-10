@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { AppIcon, type AppIconName } from "./AppIcon";
 
@@ -18,7 +20,7 @@ export function CourseGuide() {
         {steps.map((step, index) => <article key={step.title} className="flex flex-col rounded-2xl border border-[#dfe8e2] bg-white p-6">
           <div className="flex items-center justify-between"><AppIcon name={step.icon} className="size-6 text-[#008f45]" /><span className="text-xs font-bold text-[#8da395]">STEP 0{index + 1}</span></div>
           <h3 className="mt-5 font-bold">{step.title}</h3><p className="mb-6 mt-3 text-sm leading-6 text-[#627168]">{step.text}</p>
-          <Link href={step.href} className="mt-auto inline-flex items-center gap-2 text-sm font-bold text-[#00783a] hover:underline">{step.action}<AppIcon name="arrowRight" /></Link>
+          <Link href={step.href} onClick={step.href.startsWith("#") ? () => window.dispatchEvent(new Event("sportspassport-course-settings")) : undefined} className="mt-auto inline-flex items-center gap-2 text-sm font-bold text-[#00783a] hover:underline">{step.action}<AppIcon name="arrowRight" /></Link>
         </article>)}
       </div>
     </div>
