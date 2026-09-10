@@ -73,6 +73,7 @@ const portal = load(portalSource, (name) => {
   if (name === "@/lib/api/service") return { api: { hasToken: () => false } };
   if (name === "./AppIcon") return { AppIcon: () => null };
   if (name === "./CoursePreferences") return { CoursePreferences: () => null };
+  if (name === "./CourseGuide") return { CourseGuide: () => null };
   if (name.endsWith(".png")) return { src: "/fixture.png", width: 100, height: 100 };
   return {};
 });

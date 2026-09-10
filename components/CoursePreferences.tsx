@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppIcon, type AppIconName } from "./AppIcon";
 
 const groups: Array<{
@@ -57,9 +57,15 @@ const groups: Array<{
 
 export function CoursePreferences({ values = {}, collapsed = false }: { values?: Record<string, string | string[] | undefined>; collapsed?: boolean }) {
   const [open, setOpen] = useState(!collapsed);
+  useEffect(() => {
+    const reveal = () => { if (window.location.hash === "#course-preferences") setOpen(true); };
+    const timer = window.setTimeout(reveal, 0);
+    window.addEventListener("hashchange", reveal);
+    return () => { window.clearTimeout(timer); window.removeEventListener("hashchange", reveal); };
+  }, []);
 
   return (
-    <section className="bg-[#f3f7f4] px-4 py-12 sm:px-6">
+    <section id="course-preferences" className="scroll-mt-24 bg-[#f3f7f4] px-4 py-12 sm:px-6">
       <form action="/courses" className="mx-auto max-w-[1180px] overflow-hidden rounded-[28px] border border-[#dce6df] bg-white shadow-sm">
         <input type="hidden" name="recommend" value="1" />
         <input type="hidden" name="region" value="강원특별자치도" />
