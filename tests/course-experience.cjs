@@ -1,0 +1,20 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Standalone regression test. */
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const read = file => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+const portal = read("components/PortalPage.tsx");
+const guide = read("components/CourseGuide.tsx");
+assert.ok(portal.includes('recommendation.usedAi ? "AI 맞춤 추천'));
+assert.ok(portal.includes("이번에는 AI 결과를 사용하지 않고"));
+assert.ok(portal.includes("같은 조건으로 다시 추천"));
+assert.ok(portal.includes("recommendationRequested, recommendationAttempt]"));
+assert.ok(portal.includes("disabled={recommendationPending}"));
+assert.ok(portal.includes("setRemoteCards(null); setCoursePlan(null); setApiMessage"));
+assert.ok(portal.includes('page === "courses" ? <CourseGuide />'));
+for (const link of ["#course-preferences", "/map/", "/missions/", "/community/"]) assert.ok(guide.includes(`href: "${link}"`));
+assert.ok(guide.includes("추천 장소 방문만으로 스탬프가 지급되지는"));
+assert.ok(guide.includes("실제 자동차 경로"));
+assert.ok(read("components/CoursePreferences.tsx").includes('id="course-preferences"'));
+assert.ok(read("components/CoursePreferences.tsx").includes('window.addEventListener("hashchange", reveal)'));
+console.log("PASS: honest AI status, retry and repeat controls, course use guide and existing navigation");

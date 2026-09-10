@@ -13,6 +13,7 @@ import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacilit
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
+import { CourseGuide } from "./CourseGuide";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
@@ -335,6 +336,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
   const [kakaoPlacesReady, setKakaoPlacesReady] = useState(false);
   const [apiMessage, setApiMessage] = useState("");
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [recommendationAttempt, setRecommendationAttempt] = useState(0);
   const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const recommendationPending = recommendationRequested && !recommendationNeedsLogin && remoteCards === null && !apiMessage;
   const [sportsPage, setSportsPage] = useState(1);
@@ -442,7 +444,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         }))),
       } : null);
       setApiMessage(recommendedCards.length
-        ? `추천 일치도 ${recommendation.matchScore}% · ${recommendation.usedAi ? "AI 맞춤 추천" : "조건 기반 추천"}`
+        ? `${recommendation.usedAi ? "AI 맞춤 추천 · AI가 장소와 방문 순서를 구성했습니다." : "조건 기반 추천 · 이번에는 AI 결과를 사용하지 않고 조건과 이동 동선으로 구성했습니다."} 조건 적합도 ${recommendation.matchScore}점 (내부 계산값)`
         : "선택한 조건에 맞는 추천 코스가 없습니다. 지역이나 종목을 바꿔 다시 시도해 주세요.");
     }).catch((error: unknown) => {
       if (cancelled) return;
@@ -455,7 +457,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     });
 
     return () => { cancelled = true; };
-  }, [page, recommendationQuery, recommendationRequested]);
+  }, [page, recommendationQuery, recommendationRequested, recommendationAttempt]);
 
   const kakaoLookupKey = page === "courses" && remoteCards
     ? `${recommendationQuery}:${remoteCards.map((card) => card.title).join("|")}`
@@ -600,6 +602,10 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             {recommendationNeedsLogin && <Link href={`/login?next=${encodeURIComponent(`/courses/?${recommendationQuery}`)}`} className="mt-3 inline-flex rounded-lg bg-[#008f45] px-4 py-2 font-bold text-white">로그인하고 추천받기</Link>}
             {initialLoadFailed && <button type="button" onClick={() => { setInitialLoadFailed(false); setApiMessage(""); setRetryAttempt((attempt) => attempt + 1); }} className="mt-3 cursor-pointer rounded-lg border border-[#9dcdb0] px-4 py-2 font-bold text-[#00783a]">다시 불러오기</button>}
           </div>}
+          {page === "courses" && recommendationRequested && !recommendationNeedsLogin && <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" disabled={recommendationPending} onClick={() => { setRemoteCards(null); setCoursePlan(null); setApiMessage(""); kakaoLookupRef.current = ""; setRecommendationAttempt(value => value + 1); }} className="cursor-pointer rounded-xl border border-[#9dcdb0] px-5 py-3 text-sm font-bold text-[#00783a] disabled:cursor-wait disabled:opacity-50">{recommendationPending ? "코스 구성 중…" : "같은 조건으로 다시 추천"}</button>
+            <p className="text-xs text-[#68756d]">후보가 적으면 같은 코스가 나올 수 있습니다.</p>
+          </div>}
           {page !== "courses" && remoteCards === null && !initialLoadFailed && <p role="status" className="mt-6 text-sm text-[#637069]">{config.eyebrow} 정보를 불러오는 중입니다…</p>}
           {remoteCards !== null && cards.length === 0 && !recommendationNeedsLogin && !apiMessage && <div className="mt-6 rounded-2xl border border-[#dfe8e2] p-8 text-center">
             <p className="text-sm text-[#637069]">{page === "sports" && hasMoreSports ? "조건에 맞는 장소를 찾기 위해 다음 스포츠 정보를 불러오고 있습니다." : "선택한 조건에 맞는 결과가 없습니다. 검색어나 지역·종목을 바꿔 보세요."}</p>
@@ -637,7 +643,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         </div>
       </section>
 
-      <section className="bg-[#f3f7f4] py-12">
+      {page === "courses" ? <CourseGuide /> : <section className="bg-[#f3f7f4] py-12">
         <div className="mx-auto grid max-w-[1180px] gap-5 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           {portalQuickLinks.map((item) => {
             const content = <><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></>;
@@ -646,7 +652,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             return item.href ? <a key={item.title} href={item.href} target="_blank" rel="noopener noreferrer" className={`${className} cursor-pointer transition hover:border-[#9ac4aa] hover:shadow-md`}>{content}</a> : <div key={item.title} className={className}>{content}</div>;
           })}
         </div>
-      </section>
+      </section>}
     </div>
   );
 }
