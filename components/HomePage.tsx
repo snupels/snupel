@@ -274,7 +274,6 @@ export default function HomePage() {
               <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
                 <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
                 <span className="min-w-9 text-center">{heroIndex + 1} / {heroChallenges.length}</span>
-                <button type="button" onClick={() => setAutoPlay(value => !value)} aria-pressed={!autoPlay} className="cursor-pointer rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">{autoPlay ? "자동 넘김 멈춤" : "자동 넘김 시작"}</button>
                 <button type="button" onClick={showNextHero} aria-label="다음 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronRight" /></button>
                 <div className="ml-1 flex gap-1.5" aria-label="챌린지 선택">
                   {heroChallenges.map((challenge, index) => (
