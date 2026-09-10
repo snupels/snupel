@@ -59,9 +59,11 @@ export function CoursePreferences({ values = {}, collapsed = false }: { values?:
   const [open, setOpen] = useState(!collapsed);
   useEffect(() => {
     const reveal = () => { if (window.location.hash === "#course-preferences") setOpen(true); };
+    const openSettings = () => setOpen(true);
     const timer = window.setTimeout(reveal, 0);
     window.addEventListener("hashchange", reveal);
-    return () => { window.clearTimeout(timer); window.removeEventListener("hashchange", reveal); };
+    window.addEventListener("sportspassport-course-settings", openSettings);
+    return () => { window.clearTimeout(timer); window.removeEventListener("hashchange", reveal); window.removeEventListener("sportspassport-course-settings", openSettings); };
   }, []);
 
   return (

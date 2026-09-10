@@ -17,4 +17,7 @@ assert.ok(guide.includes("추천 장소 방문만으로 스탬프가 지급되�
 assert.ok(guide.includes("실제 자동차 경로"));
 assert.ok(read("components/CoursePreferences.tsx").includes('id="course-preferences"'));
 assert.ok(read("components/CoursePreferences.tsx").includes('window.addEventListener("hashchange", reveal)'));
+assert.ok(guide.includes('window.dispatchEvent(new Event("sportspassport-course-settings"))'));
+assert.ok(read("components/CoursePreferences.tsx").includes('window.addEventListener("sportspassport-course-settings", openSettings)'));
+assert.ok(read("components/CoursePreferences.tsx").includes('window.removeEventListener("sportspassport-course-settings", openSettings)'));
 console.log("PASS: honest AI status, retry and repeat controls, course use guide and existing navigation");
