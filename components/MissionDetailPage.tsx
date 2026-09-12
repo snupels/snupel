@@ -156,7 +156,6 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
               {[
                 ["activity", "카테고리", mission.category],
                 ["mapPin", "지역", mission.region],
-                ["calendar", mission.scheduleLabel, mission.schedule],
                 ["mapPin", "인증 장소", itinerary.stops[0]?.address ?? mission.region],
                 ["camera", "인증 조건", mission.proof],
                 ["medal", "지급 스탬프", mission.reward],

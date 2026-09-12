@@ -13,7 +13,6 @@ import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacilit
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
-import { CourseGuide } from "./CourseGuide";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
@@ -391,6 +390,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     if (!api.hasToken()) return;
 
     const params = new URLSearchParams(recommendationQuery);
+    const selectedSigun = params.get("sigun") === "all" ? null : params.get("sigun") || "강릉시";
     const selectedTheme = params.get("theme");
     const theme = selectedTheme === "thrill" || selectedTheme === "photo_spot" || selectedTheme === "stamp"
       ? selectedTheme
@@ -404,7 +404,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     api.courseRecommendations({
       theme,
       region: params.get("region") || "강원특별자치도",
-      sigun: params.get("sigun") || "강릉시",
+      sigun: selectedSigun,
       sport: params.get("sport") || null,
       availableMinutes: selectedMinutes,
     }).then((recommendation) => {
@@ -420,12 +420,11 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           description: courseStopReason(stop.reason, recommendation.stops),
           meta: [stop.address ?? "주소 정보 없음", `활동 약 ${stop.estimatedMinutes}분`].join(" · "),
           icon: sportIcon(category),
-          href: `/sports/detail/?id=${stop.activityId}`,
-          mapHref: kakaoPlaceHref(title, params.get("sigun")),
+          mapHref: kakaoPlaceHref(title, selectedSigun),
           order: index + 1,
           latitude: stop.latitude,
           longitude: stop.longitude,
-          sigun: params.get("sigun"),
+          sigun: selectedSigun,
         };
       });
       setRemoteCards(recommendedCards);
@@ -445,7 +444,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       } : null);
       setApiMessage(recommendedCards.length
         ? `${recommendation.usedAi ? "AI 맞춤 추천 · AI가 장소와 방문 순서를 구성했습니다." : "조건 기반 추천 · 이번에는 AI 결과를 사용하지 않고 조건과 이동 동선으로 구성했습니다."} 조건 적합도 ${recommendation.matchScore}점 (내부 계산값)`
-        : "선택한 조건에 맞는 추천 코스가 없습니다. 지역이나 종목을 바꿔 다시 시도해 주세요.");
+        : "선택한 지역에 해당 종목의 미방문 장소가 없거나 이용 시간이 부족합니다. 지역을 ‘강원 전체’로 넓히거나 활동 시간을 늘려 다시 추천받아 보세요.");
     }).catch((error: unknown) => {
       if (cancelled) return;
       setRemoteCards([]);
@@ -598,7 +597,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             </div>)}
           </div>}
           {(recommendationNeedsLogin || recommendationPending || apiMessage) && <div role="status" className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">
-            <p>{recommendationNeedsLogin ? "로그인하면 선택한 조건으로 맞춤 코스를 추천받을 수 있어요." : recommendationPending ? `${searchParams.get("sigun") || "강릉시"}의 선택한 조건에 맞는 코스를 추천하고 있습니다.` : apiMessage}</p>
+            <p>{recommendationNeedsLogin ? "로그인하면 선택한 조건으로 맞춤 코스를 추천받을 수 있어요." : recommendationPending ? `${searchParams.get("sigun") === "all" ? "강원 전체" : searchParams.get("sigun") || "강릉시"}의 선택한 조건에 맞는 코스를 추천하고 있습니다.` : apiMessage}</p>
             {recommendationNeedsLogin && <Link href={`/login?next=${encodeURIComponent(`/courses/?${recommendationQuery}`)}`} className="mt-3 inline-flex rounded-lg bg-[#008f45] px-4 py-2 font-bold text-white">로그인하고 추천받기</Link>}
             {initialLoadFailed && <button type="button" onClick={() => { setInitialLoadFailed(false); setApiMessage(""); setRetryAttempt((attempt) => attempt + 1); }} className="mt-3 cursor-pointer rounded-lg border border-[#9dcdb0] px-4 py-2 font-bold text-[#00783a]">다시 불러오기</button>}
           </div>}
@@ -628,7 +627,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           </section>}
           <div className={`mt-8 grid gap-5 sm:grid-cols-2 ${page === "courses" ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
             {cards.map((card, index) => {
-              const content = <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{card.order && <span className="flex size-7 items-center justify-center rounded-full bg-[#008f45] text-xs font-bold text-white" aria-label={`${card.order}번째 장소`}>{card.order}</span>}<span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="flex flex-1 flex-col p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}{card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}<p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p>{card.mapHref && <div className="mt-auto flex gap-2 border-t border-[#edf1ee] pt-4"><a href={card.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#fae100] px-3 text-xs font-bold text-[#191919] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a7d00]"><AppIcon name="map" />카카오맵</a>{card.href && <Link href={card.href} className="inline-flex h-9 items-center justify-center rounded-lg border border-[#dce5df] px-3 text-xs font-bold text-[#526058] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">상세</Link>}</div>}</div></article>;
+              const content = <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-xl"><div className="relative aspect-[4/2.5] overflow-hidden"><Image src={card.image} alt={`${card.title} 대표 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-300 group-hover:scale-105" /><div className="absolute left-3 top-3 flex flex-wrap gap-1.5">{card.order && <span className="flex size-7 items-center justify-center rounded-full bg-[#008f45] text-xs font-bold text-white" aria-label={`${card.order}번째 장소`}>{card.order}</span>}<span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[#344054]">{card.tag}</span>{card.secondaryTag && <span className="rounded-lg bg-[#173a2d]/95 px-2.5 py-1 text-xs font-semibold text-white">{card.secondaryTag}</span>}</div></div><div className="flex flex-1 flex-col p-5"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={card.icon} className="size-4" /></span><h3 className="mt-4 font-bold">{card.title}</h3>{card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}{card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}<p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p>{card.mapHref && <div className="mt-auto flex gap-2 border-t border-[#edf1ee] pt-4"><a href={card.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#fae100] px-3 text-xs font-bold text-[#191919] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a7d00]"><AppIcon name="map" />카카오맵</a></div>}</div></article>;
               const leg = page === "courses" ? coursePlan?.legs[index - 1] : undefined;
               return <div key={`${card.title}-${index}`} className="flex flex-col gap-3">{leg && <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#b9d5c3] bg-[#e8f3ec] px-3 py-2 text-xs font-semibold text-[#405149]"><AppIcon name="map" className="size-4 text-[#008f45]" />추정 거리 약 {leg.distanceKm.toFixed(1)}km · 예상 이동 약 {leg.travelMinutes}분</div>}{card.mapHref ? <div className="group">{content}</div> : card.href ? <Link href={card.href} className="group block cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45]">{content}</Link> : <div>{content}</div>}</div>;
             })}
@@ -643,7 +642,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         </div>
       </section>
 
-      {page === "courses" ? <CourseGuide /> : <section className="bg-[#f3f7f4] py-12">
+      {page !== "courses" && <section className="bg-[#f3f7f4] py-12">
         <div className="mx-auto grid max-w-[1180px] gap-5 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
           {portalQuickLinks.map((item) => {
             const content = <><span className="flex size-10 items-center justify-center rounded-xl bg-[#e8f3ec] text-[#008f45]"><AppIcon name={item.icon} className="size-5" /></span><h3 className="mt-4 font-bold">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#6f7a87]">{item.text}</p></>;
