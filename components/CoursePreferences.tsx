@@ -12,10 +12,10 @@ const groups: Array<{
   {
     title: "어느 지역을 여행하고 싶나요?",
     name: "sigun",
-    items: [
+    items: [{ label: "강원 전체", value: "all", icon: "mapPin" as AppIconName }, ...[
       "춘천시", "원주시", "강릉시", "동해시", "태백시", "속초시", "삼척시", "홍천군", "횡성군",
       "영월군", "평창군", "정선군", "철원군", "화천군", "양구군", "인제군", "고성군", "양양군",
-    ].map((value) => ({ label: value, value, icon: "mapPin" as AppIconName })),
+    ].map((value) => ({ label: value, value, icon: "mapPin" as AppIconName }))],
   },
   {
     title: "어떤 스포츠를 즐기고 싶나요?",
