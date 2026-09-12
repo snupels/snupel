@@ -7,8 +7,9 @@ export default function SavedEventsPage() {
       <Link href="/mypage/" className="text-sm font-semibold text-[#637069] hover:text-[#008f45]">← 나의 패스포트로 돌아가기</Link>
       <header className="mt-8 rounded-[28px] bg-[linear-gradient(135deg,#006f3b,#009b52)] px-6 py-8 text-white sm:px-10">
         <p className="text-xs font-bold tracking-[0.18em] text-white/60">SAVED EVENTS</p>
-        <h1 className="mt-2 text-3xl font-bold">행사 저장</h1>
-        <p className="mt-3 text-sm text-white/80">관심 있는 행사와 축제를 따로 모아보세요.</p>
+        <h1 className="mt-2 text-3xl font-bold">내 행사 일정</h1>
+        <p className="mt-3 text-sm text-white/80">관심 행사로 저장한 축제와 스포츠 행사를 모아보고 Google 캘린더에 추가하세요.</p>
+        <p className="mt-2 text-xs leading-6 text-white/80">캘린더 버튼을 누르면 일정 추가 화면이 열립니다. 날짜를 확인하고 Google 캘린더에서 저장해 주세요. 사이트의 행사 저장과는 별개이며 자동 동기화되지 않습니다.</p>
         <nav aria-label="행사와 미션" className="mt-6 flex flex-wrap gap-3"><Link href="/activity-history/" className="rounded-xl border border-white/60 px-5 py-3 text-sm font-bold hover:bg-white/10">미션 활동 보기</Link><Link href="/events/" className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#00783a] hover:bg-[#e9f5ed]">이벤트·축제 둘러보기</Link></nav>
       </header>
       <SavedEventsSection />

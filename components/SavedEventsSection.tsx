@@ -8,6 +8,7 @@ import { api } from "@/lib/api/service";
 import { loginHref } from "@/lib/auth-flow";
 import { isSavedEvent, savedEventHref, savedEventPeriod } from "@/lib/savedEvents";
 import { AppIcon } from "./AppIcon";
+import { googleCalendarHref } from "@/lib/eventCalendar";
 
 export function SavedEventsSection({ compact = false }: { compact?: boolean }) {
   const [session, setSession] = useState<{ authenticated: boolean; version: number } | null>(null);
@@ -82,7 +83,8 @@ function SavedEventResults({ compact }: { compact: boolean }) {
 
 export function SavedEventCard({ item, compact = false }: { item: SavedActivityResponse; compact?: boolean }) {
   const title = item.activity.placeName || "저장한 행사";
-  return <Link href={savedEventHref(item)} className={`group block overflow-hidden rounded-2xl border border-[#dce5df] transition hover:border-[#91bea1] hover:shadow-md focus-visible:outline-2 focus-visible:outline-[#008f45] ${compact ? "bg-[#f6f8f7] p-4" : "bg-white"}`}>
+  const calendarHref = googleCalendarHref(item.activity);
+  return <article className={`overflow-hidden rounded-2xl border border-[#dce5df] ${compact ? "bg-[#f6f8f7]" : "bg-white"}`}><Link href={savedEventHref(item)} className={`group block transition hover:bg-[#f1f7f3] focus-visible:outline-2 focus-visible:outline-[#008f45] ${compact ? "p-4" : ""}`}>
     {!compact && <div className="relative aspect-[4/3] bg-[#edf2ee]">{item.activity.representativeImageUrl ? <Image src={item.activity.representativeImageUrl} alt={`${title} 행사 이미지`} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw" className="object-contain" unoptimized /> : <span className="flex h-full items-center justify-center text-[#90a097]"><AppIcon name="calendar" className="size-10" /></span>}</div>}
     <div className={compact ? "" : "p-5"}>
       <span className="text-xs font-bold text-[#008f45]">행사 저장</span>
@@ -92,5 +94,5 @@ export function SavedEventCard({ item, compact = false }: { item: SavedActivityR
       <p className="mt-2 text-xs text-[#8a9490]">저장일 {item.createdAt.slice(0, 10).replaceAll("-", ".")}</p>
       {!compact && <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[#008f45]">행사 자세히 보기<AppIcon name="arrowRight" className="size-4" /></span>}
     </div>
-  </Link>;
+  </Link>{!compact && <div className="px-5 pb-5">{calendarHref ? <a href={calendarHref} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#008f45] px-2 py-2 text-xs font-bold text-[#008f45] hover:bg-[#e8f5ed] focus-visible:outline-2 focus-visible:outline-[#008f45]"><AppIcon name="calendar" />Google 캘린더에 추가</a> : <p className="text-xs text-[#68756d]">일정 확인 후 캘린더에 추가할 수 있어요.</p>}</div>}</article>;
 }

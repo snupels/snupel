@@ -32,6 +32,7 @@ const dependencies = (api, hooks = React) => name => {
   if (name === "@/lib/api/service") return { api };
   if (name === "@/lib/auth-flow") return flow;
   if (name === "@/lib/savedEvents") return helpers;
+  if (name === "@/lib/eventCalendar") return load("lib/eventCalendar.ts");
   if (name === "./AppIcon") return { AppIcon: () => null };
   if (name === "next/link") return { __esModule: true, default: ({ children, ...props }) => React.createElement("a", props, children) };
   if (name === "next/image") return { __esModule: true, default: ({ src, alt }) => React.createElement("img", { src, alt }) };
@@ -42,6 +43,8 @@ const card = renderToStaticMarkup(React.createElement(SavedEventCard, { item: { 
 assert.match(card, /href="\/events\/detail\/\?id=101"/);
 assert.match(card, /행사 &lt;script&gt;/);
 assert.match(card, /행사 저장/); assert.match(card, /저장일/);
+assert.match(card, /calendar.google.com\/calendar\/render/);
+assert.doesNotMatch(card, /<a\s[^>]*>(?:(?!<\/a>)[\s\S])*<a\s/, "calendar and detail links must not be nested");
 assert.doesNotMatch(card, /수집 완료|승인 완료|인증 완료|\/missions\/detail/);
 for (const name of ["components/MyPassportPage.tsx", "components/ActivityHistoryPage.tsx"]) assert.ok(read(name).includes(".filter(isMissionHistory)"));
 const passport = read("components/MyPassportPage.tsx");

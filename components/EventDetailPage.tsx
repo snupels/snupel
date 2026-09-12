@@ -9,6 +9,7 @@ import type { ActivityResponse } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
 import { SaveActivityButton } from "./SaveActivityButton";
 import { eventParticipation } from "@/lib/eventParticipation";
+import { googleCalendarHref } from "@/lib/eventCalendar";
 
 function formatDate(value: string | null | undefined) {
   return value ? value.slice(0, 10).replaceAll("-", ".") : "일정 확인 중";
@@ -16,36 +17,6 @@ function formatDate(value: string | null | undefined) {
 
 function detailImage(event: ActivityResponse) {
   return event.representativeImageUrl || "/place-image-unavailable.svg";
-}
-
-function calendarFile(event: ActivityResponse, title: string, location: string) {
-  if (!event.startsAt) return null;
-  const date = (value: string) => value.slice(0, 10).replaceAll("-", "");
-  const nextDay = (value: string) => {
-    const day = new Date(`${value.slice(0, 10)}T00:00:00Z`);
-    day.setUTCDate(day.getUTCDate() + 1);
-    return day.toISOString().slice(0, 10).replaceAll("-", "");
-  };
-  const escape = (value: string) => value.replaceAll("\\", "\\\\").replaceAll("\n", "\\n").replaceAll(",", "\\,").replaceAll(";", "\\;");
-  const description = [event.summary, event.sourceUrl].filter(Boolean).join("\n");
-  const startsAt = date(event.startsAt);
-  const endsAt = event.endsAt ? nextDay(event.endsAt) : nextDay(event.startsAt);
-  const contents = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Snupel//Events//KO",
-    "BEGIN:VEVENT",
-    `UID:snupel-event-${event.id}@snupel`,
-    `DTSTART;VALUE=DATE:${startsAt}`,
-    `DTEND;VALUE=DATE:${endsAt}`,
-    `SUMMARY:${escape(title)}`,
-    `LOCATION:${escape(location)}`,
-    ...(description ? [`DESCRIPTION:${escape(description)}`] : []),
-    "END:VEVENT",
-    "END:VCALENDAR",
-    "",
-  ].join("\r\n");
-  return new Blob([contents], { type: "text/calendar;charset=utf-8" });
 }
 
 export function EventDetailPage() {
@@ -116,15 +87,7 @@ function EventDetailContent({ eventId }: { eventId: number }) {
   const imageCaption = typeof event.metadata?.imageCaption === "string" ? event.metadata.imageCaption : null;
   const imageLabel = event.metadata?.imageType === "photo" ? "행사 사진" : "포스터";
   const closePoster = () => setPosterOpen(false);
-  const exportCalendar = () => {
-    const file = calendarFile(event, title, location);
-    if (!file) return;
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(file);
-    link.download = `${title.replaceAll(/[\\/:*?"<>|]/g, "-")}.ics`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-  };
+  const calendarHref = googleCalendarHref(event);
 
   return (
     <>
@@ -175,7 +138,7 @@ function EventDetailContent({ eventId }: { eventId: number }) {
                 <div className="flex gap-3"><AppIcon name="mapPin" className="mt-0.5 size-5 shrink-0 text-[#008f45]" /><div><dt className="font-semibold text-[#526058]">장소</dt><dd className="mt-1 leading-6 text-[#172033]">{location}</dd></div></div>
               </dl>
               <SaveActivityButton activityId={event.id} />
-              {event.startsAt && <button type="button" onClick={exportCalendar} className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white text-sm font-bold text-[#008f45] transition hover:bg-[#e8f5ed]">캘린더에 저장<AppIcon name="calendar" /></button>}
+              {calendarHref ? <div className="mt-6"><a href={calendarHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#008f45] bg-white px-3 py-3 text-sm font-bold text-[#008f45] transition hover:bg-[#e8f5ed] focus-visible:outline-2 focus-visible:outline-[#008f45]">Google 캘린더에 추가<AppIcon name="calendar" /></a><p className="mt-2 text-xs leading-5 text-[#68756d]">새 창에서 행사 기간을 확인하고 저장해 주세요. 종일 일정으로 입력되며 시간은 변경할 수 있어요.</p></div> : <p className="mt-4 text-xs text-[#68756d]">행사 일정 확인 후 캘린더에 추가할 수 있어요.</p>}
               {event.sourceUrl && <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#008f45] text-sm font-bold text-white transition hover:bg-[#00783a]">공식 안내 보기<AppIcon name="arrowRight" /></a>}
             </aside>
           </div>
