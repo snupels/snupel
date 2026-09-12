@@ -64,6 +64,6 @@ assert.ok(detail.includes("imageCaption"));
 assert.ok(detail.includes('event.metadata?.imageType === "photo"'));
 assert.ok(detail.includes("showModal()"));
 assert.ok(detail.includes("onCancel={closePoster}"));
-assert.ok(detail.includes("캘린더에 저장"));
+assert.ok(detail.includes("Google 캘린더에 추가"));
 assert.ok(detail.includes('rel="noopener noreferrer"'));
 console.log("PASS: verified event participation, KST deadlines, stale/onsite status, sports ranking and unchanged detail actions");

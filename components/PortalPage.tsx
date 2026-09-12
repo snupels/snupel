@@ -19,7 +19,7 @@ export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypa
 
 const portalQuickLinks: Array<{ icon: AppIconName; title: string; text: string; href?: string }> = [
   { icon: "map", title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
-  { icon: "calendar", title: "일정에 저장", text: "관심 활동과 행사를 내 일정에 모아보세요.", href: "https://calendar.google.com/calendar/u/0/r" },
+  { icon: "calendar", title: "내 행사 일정", text: "저장한 행사를 모아보고 Google 캘린더에 추가하세요.", href: "/saved-events/" },
   { icon: "users", title: "스포츠 피드", text: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
   { icon: "instagram", title: "Instargram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
 ];
