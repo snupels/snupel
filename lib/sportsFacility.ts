@@ -19,6 +19,8 @@ export function sportsFacilityType(activity: FacilityActivity) {
   const categoryCode = String(metadata?.cat3 ?? "").trim();
   const registeredType = String(metadata?.type ?? "").trim();
   const title = activity.placeName ?? "";
+  const hikingType = metadata?.facility_type;
+  if (hikingType === "산·산행 탐방지" || hikingType === "등산로 안내가 있는 산·국립공원") return hikingType;
 
   if (registeredType.includes("스키장")) return "스키장·리조트";
   if (registeredType.includes("골프장")) return "골프장";
