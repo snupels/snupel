@@ -198,6 +198,8 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
                 </div>
               </section>)}
               {description.trails.length > 0 && <p className="mt-4 text-xs leading-6 text-[#68756d]">{activity.source === "tourapi" ? "한국관광공사 API에서 제공한 등산로 안내입니다. " : "제공된 원문 코스 안내입니다. "}거리·소요 시간은 원문 기준이며, 방문 전 개방 여부와 현장 안내를 확인해 주세요.</p>}
+              {activity.sportName === "hiking" && !description.trails.length && <p className="mt-4 rounded-xl bg-[#f1f7f3] p-4 text-sm leading-6 text-[#526058]">산·산행 탐방지 정보입니다. 세부 등산 코스·거리·소요 시간은 현재 API에 제공되지 않았습니다. 방문 전 공식 안내처에서 탐방로 개방 여부와 코스를 확인해 주세요.</p>}
+              {activity.sportName === "hiking" && <p className="mt-3 text-xs leading-6 text-[#68756d]">지도는 API의 대표 위치이며 등산로 경로나 입산 지점을 보장하지 않습니다.</p>}
               <div className="mt-8 rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
                 <h3 className="font-bold">주소</h3>
                 <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#59675f]"><AppIcon name="mapPin" className="mt-0.5 shrink-0 text-[#008f45]" />{location}</p>
