@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "tsc --noEmit && node --test tests/*.cjs",
+    "test": "next typegen && tsc --noEmit && node --test tests/*.cjs",
     "lint": "eslint"
   },
   "dependencies": {
