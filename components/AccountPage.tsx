@@ -159,6 +159,11 @@ export function AccountPage() {
             {message && <p role="status" className="mt-5 rounded-xl bg-[#e9f7ee] px-4 py-3 text-sm font-semibold text-[#00783a]">{message}</p>}
             {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
             <button type="submit" disabled={pending} className="mt-7 h-12 w-full rounded-xl bg-[#008f45] text-sm font-bold text-white hover:bg-[#00783a] disabled:opacity-60">{pending ? "저장 중…" : "변경사항 저장"}</button>
+            <section aria-labelledby="account-danger-title" className="mt-8 border-t border-[#eadbd8] pt-6">
+              <h2 id="account-danger-title" className="text-sm font-bold text-[#8d443b]">계정 및 개인정보 요청</h2>
+              <p className="mt-2 text-xs leading-5 text-[#776965]">회원 탈퇴, 개인정보 열람·정정·삭제 요청 절차를 확인할 수 있습니다. 비밀번호와 인증번호는 문의 메시지로 보내지 마세요.</p>
+              <Link href="/support/#account-deletion" className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-[#d9aaa4] px-4 text-sm font-bold text-[#8d443b] hover:bg-[#fff5f3]">회원 탈퇴·개인정보 요청 안내</Link>
+            </section>
           </form>
         </div>
       </div>

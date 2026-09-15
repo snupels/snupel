@@ -12,6 +12,7 @@ import { AppIcon } from "./AppIcon";
 import { ProofGallery } from "./ProofGallery";
 
 type FeedTab = "all" | "mine" | "following" | "liked";
+const BLOCKED_USERS_KEY = "sportspassport-community-blocked-users";
 
 function initials(name: string) {
   return name.trim().slice(0, 2).toUpperCase() || "강원";
@@ -29,6 +30,14 @@ function tags(post: CommunityFeedResponse) {
   return [post.sportName, post.sigun].filter((tag): tag is string => Boolean(tag));
 }
 
+function readBlockedUserIds() {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(BLOCKED_USERS_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((id): id is number => Number.isInteger(id) && id > 0) : [];
+  } catch { return []; }
+}
+
 function CommunityPageContent() {
   const searchParams = useSearchParams();
   const postId = Number(searchParams.get("post"));
@@ -37,6 +46,7 @@ function CommunityPageContent() {
   const viewingProfile = Number.isInteger(profileUserId) && profileUserId > 0;
   const [tab, setTab] = useState<FeedTab>("all");
   const [posts, setPosts] = useState<CommunityFeedResponse[]>([]);
+  const [blockedUserIds, setBlockedUserIds] = useState<number[]>(readBlockedUserIds);
   const [profiles, setProfiles] = useState<Record<number, CommunityProfileResponse>>({});
   const [busyUsers, setBusyUsers] = useState<number[]>([]);
   const [expandedComments, setExpandedComments] = useState<number[]>([]);
@@ -58,6 +68,7 @@ function CommunityPageContent() {
     () => api.hasToken() ? api.currentUser() ?? null : null,
   );
   const loginUrl = loginHref(`/community/?${searchParams.toString()}`);
+  const visiblePosts = posts.filter((post) => !blockedUserIds.includes(post.authorId));
 
   useEffect(() => {
     const sync = () => {
@@ -219,6 +230,18 @@ function CommunityPageContent() {
     }
   }
 
+  function blockUser(id: number, name: string) {
+    if (!window.confirm(`${name}님의 게시물을 이 브라우저에서 숨길까요? 다른 기기에는 적용되지 않습니다.`)) return;
+    const next = [...new Set([...blockedUserIds, id])];
+    setBlockedUserIds(next);
+    try {
+      localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(next));
+      setActionMessage(`${name}님의 게시물을 이 브라우저에서 숨겼습니다. 브라우저 저장정보를 삭제하면 다시 표시됩니다.`);
+    } catch {
+      setActionMessage(`${name}님의 게시물을 현재 화면에서 숨겼습니다. 브라우저 저장소를 사용할 수 없어 새로고침하면 다시 표시됩니다.`);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f7f5] pb-20 text-[#172033]">
       <section className="border-b border-[#dfe8e2] bg-white px-4 py-10 sm:px-6">
@@ -260,6 +283,7 @@ function CommunityPageContent() {
           {(["mine", "liked"] as const).map(value => <button key={value} onClick={() => selectTab(value)} aria-pressed={tab === value} className={`cursor-pointer rounded-full px-5 py-2 text-sm font-bold ${tab === value ? "bg-[#173a2d] text-white" : "bg-white text-[#66736c]"}`}>{value === "mine" ? "내 게시글" : "좋아요한 게시글"}</button>)}
         </nav>}
         {actionMessage && <div role="status" className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#815f16]"><span>{actionMessage}</span>{!user && <Link href={loginUrl} className="shrink-0 font-black underline underline-offset-2">로그인</Link>}<button type="button" aria-label="알림 닫기" onClick={() => setActionMessage("")} className="ml-auto cursor-pointer text-lg">×</button></div>}
+        {!loading && visiblePosts.length > 0 && visiblePosts.every((post) => post.isDemo) && <aside className="mt-5 rounded-2xl border border-[#cfe0d5] bg-[#f1f8f3] px-5 py-4 text-sm leading-6 text-[#52605a]"><strong className="text-[#12653d]">현재 피드는 기능 안내용 데모입니다.</strong><span className="ml-1">실제 미션 인증에서 피드 공개를 선택하고 승인을 받으면 실제 참여 사진이 여기에 표시됩니다.</span><Link href="/missions/" className="ml-2 font-bold text-[#008f45] underline">인증 가능한 미션 보기</Link></aside>}
 
         {tab !== "all" && !viewingPost && !viewingProfile && !user ? (
           <section className="mt-8 rounded-[24px] border border-[#dce5df] bg-white px-6 py-16 text-center">
@@ -277,7 +301,7 @@ function CommunityPageContent() {
             <h2 className="text-lg font-bold">{error}</h2>
             <button type="button" onClick={() => void loadFeed(tab)} className="mt-5 h-11 cursor-pointer rounded-xl bg-[#172033] px-6 text-sm font-bold text-white">다시 불러오기</button>
           </section>
-        ) : posts.length === 0 ? (
+        ) : visiblePosts.length === 0 ? (
           <section className="mt-8 rounded-[24px] border border-dashed border-[#cbd9d0] bg-white/70 px-6 py-16 text-center">
             <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e9f5ed] text-[#008f45]"><AppIcon name="instagram" className="size-7" /></span>
             <h2 className="mt-5 text-xl font-bold">{tab === "liked" ? "좋아요한 게시글이 아직 없어요" : tab === "following" ? "팔로우한 탐험가의 게시글이 여기에 모여요" : "아직 공개된 인증 사진이 없어요"}</h2>
@@ -286,7 +310,7 @@ function CommunityPageContent() {
           </section>
         ) : (
           <section className={viewingPost ? "mt-8" : "mt-8 grid grid-cols-2 items-start gap-2 sm:gap-4 xl:grid-cols-4"}>
-            {posts.map((post) => {
+            {visiblePosts.map((post) => {
               const liked = post.likedByMe;
               const postTags = tags(post);
               if (!viewingPost) return <article key={post.id} className="relative"><Link href={`/community?post=${post.id}`} aria-label={`${post.authorName}님의 ${post.placeName ?? "스포츠"} 게시글 보기`} className="relative block aspect-square cursor-pointer overflow-hidden rounded-xl bg-[#e7ece8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#008f45]">
@@ -321,7 +345,7 @@ function CommunityPageContent() {
                       <button onClick={() => void loadComments(post.id)} className="cursor-pointer text-xs text-[#79867e]">댓글 {post.commentCount}개 보기</button>
                       {expandedComments.includes(post.id) && (comments[post.id] ?? []).map((comment) => <div key={comment.id} className="flex gap-2.5 text-sm">
                         <Link href={`/community?user=${comment.authorId}`} aria-label={`${comment.authorName}의 피드 보기`} className="shrink-0 cursor-pointer rounded-full">{comment.authorProfileImageUrl ? <span className="relative mt-0.5 block size-7 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={comment.authorProfileImageUrl} alt={`${comment.authorName} 프로필 사진`} fill sizes="28px" className="object-cover" /></span> : <span className="mt-0.5 flex size-7 items-center justify-center rounded-full bg-[#e9f3ec] text-[9px] font-black text-[#17633d]">{initials(comment.authorName)}</span>}</Link>
-                        <p className="min-w-0 leading-5"><strong className="mr-1.5"><Link href={`/community?user=${comment.authorId}`} className="cursor-pointer hover:text-[#008f45] hover:underline">{comment.authorName}</Link></strong><span className="break-words text-[#58655e]">{comment.content}</span></p>
+                        <p className="min-w-0 flex-1 leading-5"><strong className="mr-1.5"><Link href={`/community?user=${comment.authorId}`} className="cursor-pointer hover:text-[#008f45] hover:underline">{comment.authorName}</Link></strong><span className="break-words text-[#58655e]">{comment.content}</span></p><Link href={`/support/?topic=community-report&target=comment-${comment.id}#community-report`} aria-label={`댓글 ${comment.id} 신고 안내`} className="shrink-0 text-[11px] font-bold text-[#8d443b] underline underline-offset-2">신고</Link>
                       </div>)}
                       {expandedComments.includes(post.id) && ((comments[post.id]?.length ?? 0) < post.commentCount || loadingComments.includes(post.id)) && <button disabled={loadingComments.includes(post.id)} onClick={() => void loadComments(post.id, true)} className="cursor-pointer text-xs text-[#008f45] disabled:opacity-50">{loadingComments.includes(post.id) ? "불러오는 중…" : "댓글 더 보기"}</button>}
                       <form onSubmit={(event) => { event.preventDefault(); void submitComment(post.id); }} className="flex items-center gap-2">
@@ -330,6 +354,7 @@ function CommunityPageContent() {
                       </form>
                     </div>
                     <time className="mt-3 block text-[11px] text-[#9aa39e]">{displayDate(post.approvedAt)}</time>
+                    {!post.isDemo && user?.id !== post.authorId && <div className="mt-4 flex flex-wrap gap-3 border-t border-[#edf1ee] pt-4 text-xs"><Link href={`/support/?topic=community-report&target=post-${post.id}#community-report`} className="font-bold text-[#8d443b] underline underline-offset-2">게시물 #{post.id} 신고 안내</Link><button type="button" onClick={() => blockUser(post.authorId, post.authorName)} className="font-bold text-[#66736c] underline underline-offset-2">이 사용자의 게시물 숨기기</button></div>}
                     {user?.id === post.authorId && !post.isDemo && <button type="button" onClick={() => void hideFromFeed(post.id)} className="mt-4 cursor-pointer text-xs font-semibold text-[#929c96] underline-offset-2 hover:text-[#b43d3d] hover:underline">피드에서 숨기기</button>}
                   </div>
                 </article>
@@ -349,5 +374,5 @@ function CommunityRoute() {
 }
 
 export function CommunityPage() {
-  return <Suspense><CommunityRoute /></Suspense>;
+  return <Suspense fallback={<main className="min-h-[65vh] bg-[#f4f7f5] px-4 py-12 text-[#172033]"><div className="mx-auto max-w-[1120px] rounded-[24px] border border-[#dce5df] bg-white p-8"><p className="text-sm font-bold text-[#008f45]">GANGWON SPORTS COMMUNITY</p><h1 className="mt-2 text-3xl font-bold">강원 스포츠 피드</h1><p role="status" className="mt-4 text-sm text-[#66736c]">승인된 스포츠 인증 사진을 불러오는 중입니다…</p></div></main>}><CommunityRoute /></Suspense>;
 }

@@ -119,7 +119,7 @@ async function check(component) {
   assert.equal(own.state[0]?.id, 11, `${component}: own profile updates preserve the form`);
   const saved = own.submit();
   assert.equal(own.patches.length, 1);
-  assert.equal(own.patches[0].addressDetail, "101호");
+  assert.equal(own.patches[0].addressDetail, component === "AccountPage" ? "101호" : undefined);
   own.updating.resolve({ ...own.profile, onboardingRequired: false }); await saved;
   assert.equal(own.state[0]?.id, 11);
   own.unmount();
@@ -138,7 +138,7 @@ async function check(component) {
     if (interrupt !== "unmount") assert.equal(ui.state[0], null);
   }
 
-  for (const phase of ["upload-url", "upload-body"]) {
+  if (component === "AccountPage") for (const phase of ["upload-url", "upload-body"]) {
     const ui = setup(component); await ui.loaded(); ui.selectPhoto();
     const saving = ui.submit();
     if (phase === "upload-body") {

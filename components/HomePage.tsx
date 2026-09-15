@@ -65,7 +65,7 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string;
   { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "내 행사 일정", description: "저장한 행사를 모아보고 Google 캘린더에 추가하세요.", href: "/saved-events/" },
   { icon: "users", title: "스포츠 피드", description: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
-  { icon: "instagram", title: "Instargram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
+  { icon: "instagram", title: "Instagram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
 ];
 
 const gangwonWeatherRegions = [
@@ -317,15 +317,15 @@ export default function HomePage() {
       <div className="relative z-20 mx-auto -mt-[86px] max-w-[1180px] px-4 sm:px-6">
         <form role="search" action="/sports" className="flex min-h-20 items-center gap-3 rounded-2xl border border-[#dce5df] bg-white p-3 shadow-[0_18px_45px_rgba(25,70,49,0.18)] sm:p-4">
           <AppIcon name="search" className="ml-2 size-6 text-[#7a8780]" />
-          <label htmlFor="home-search" className="sr-only">스포츠, 지역, 코스 검색</label>
-          <input id="home-search" name="q" type="search" placeholder="스포츠, 지역, 코스를 검색해보세요" className="h-12 min-w-0 flex-1 rounded-xl bg-[#f3f5f4] px-4 text-sm outline-none placeholder:text-[#8c9691] focus:ring-2 focus:ring-[#008f45]/30" />
+          <label htmlFor="home-search" className="sr-only">스포츠 장소와 지역 검색</label>
+          <input id="home-search" name="q" type="search" placeholder="스포츠 장소나 지역을 검색해보세요" className="h-12 min-w-0 flex-1 rounded-xl bg-[#f3f5f4] px-4 text-sm outline-none placeholder:text-[#8c9691] focus:ring-2 focus:ring-[#008f45]/30" />
           <button type="submit" className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[#008f45] px-5 text-sm font-semibold text-white transition hover:bg-[#00783a] sm:px-7">검색<AppIcon name="arrowRight" /></button>
         </form>
       </div>
 
       <section className="bg-white pb-10 pt-16">
         <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
-          <h2 className="text-lg font-bold">이번 주말, 나에게 맞는 강원 스포츠 코스는?</h2>
+          <h2 className="text-lg font-bold">이번 주말, 어떤 강원 스포츠를 즐겨볼까요?</h2>
           <div className="mt-7 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {categories.map((category) => <Link key={category.title} href={{ pathname: "/sports", query: { sport: category.filter } }} style={{ "--sport-color": category.color, "--sport-tint": category.tint } as CSSProperties} className="group relative overflow-hidden rounded-2xl border border-[#e0e7e2] bg-white text-left shadow-sm transition duration-300 hover:border-[var(--sport-color)] hover:shadow-lg motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sport-color)]">
               <span aria-hidden="true" className="absolute inset-x-5 top-0 z-10 h-[3px] rounded-b-full bg-[var(--sport-color)] opacity-75 transition-opacity group-hover:opacity-100" />

@@ -21,7 +21,7 @@ const portalQuickLinks: Array<{ icon: AppIconName; title: string; text: string; 
   { icon: "map", title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "내 행사 일정", text: "저장한 행사를 모아보고 Google 캘린더에 추가하세요.", href: "/saved-events/" },
   { icon: "users", title: "스포츠 피드", text: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
-  { icon: "instagram", title: "Instargram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
+  { icon: "instagram", title: "Instagram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
 ];
 
 type PageConfig = {
@@ -305,7 +305,12 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
 }
 
 export function PortalPage({ page }: { page: PortalPageKey }) {
-  return <Suspense><PortalPageRoute page={page} /></Suspense>;
+  return <Suspense fallback={<PortalPageLoading page={page} />}><PortalPageRoute page={page} /></Suspense>;
+}
+
+function PortalPageLoading({ page }: { page: PortalPageKey }) {
+  const config = configs[page];
+  return <main className="min-h-[65vh] bg-[#f3f7f4] px-4 py-12 text-[#172033] sm:px-6"><div className="mx-auto max-w-[1180px]"><section className="rounded-[28px] bg-[#173a2d] p-7 text-white sm:p-10"><p className="text-sm font-bold text-[#75e5a5]">{config.eyebrow}</p><h1 className="mt-2 text-3xl font-bold sm:text-4xl">{config.title}</h1><p className="mt-4 max-w-2xl leading-7 text-white/80">{config.description}</p></section><section className="mt-8 rounded-[24px] border border-[#dfe8e2] bg-white p-8"><h2 className="text-2xl font-bold">{config.sectionTitle}</h2><p className="mt-2 text-sm text-[#6f7a87]">{config.sectionDescription}</p><p role="status" className="mt-6 text-sm font-semibold text-[#008f45]">최신 정보를 불러오는 중입니다…</p></section></div></main>;
 }
 
 function PortalPageRoute({ page }: { page: PortalPageKey }) {
@@ -390,7 +395,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
     if (!api.hasToken()) return;
 
     const params = new URLSearchParams(recommendationQuery);
-    const selectedSigun = params.get("sigun") === "all" ? null : params.get("sigun") || "강릉시";
+    const selectedSigun = params.get("sigun") === "all" ? null : params.get("sigun") || null;
     const selectedTheme = params.get("theme");
     const theme = selectedTheme === "thrill" || selectedTheme === "photo_spot" || selectedTheme === "stamp"
       ? selectedTheme
@@ -597,7 +602,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
             </div>)}
           </div>}
           {(recommendationNeedsLogin || recommendationPending || apiMessage) && <div role="status" className="mt-6 rounded-xl bg-[#f3f7f4] px-4 py-3 text-sm text-[#5f6b63]">
-            <p>{recommendationNeedsLogin ? "로그인하면 선택한 조건으로 맞춤 코스를 추천받을 수 있어요." : recommendationPending ? `${searchParams.get("sigun") === "all" ? "강원 전체" : searchParams.get("sigun") || "강릉시"}의 선택한 조건에 맞는 코스를 추천하고 있습니다.` : apiMessage}</p>
+            <p>{recommendationNeedsLogin ? "로그인하면 선택한 조건으로 맞춤 코스를 추천받을 수 있어요." : recommendationPending ? `${searchParams.get("sigun") === "all" || !searchParams.get("sigun") ? "강원 전체" : searchParams.get("sigun")}의 선택한 조건에 맞는 코스를 추천하고 있습니다.` : apiMessage}</p>
             {recommendationNeedsLogin && <Link href={`/login?next=${encodeURIComponent(`/courses/?${recommendationQuery}`)}`} className="mt-3 inline-flex rounded-lg bg-[#008f45] px-4 py-2 font-bold text-white">로그인하고 추천받기</Link>}
             {initialLoadFailed && <button type="button" onClick={() => { setInitialLoadFailed(false); setApiMessage(""); setRetryAttempt((attempt) => attempt + 1); }} className="mt-3 cursor-pointer rounded-lg border border-[#9dcdb0] px-4 py-2 font-bold text-[#00783a]">다시 불러오기</button>}
           </div>}
