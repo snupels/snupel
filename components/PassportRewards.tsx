@@ -7,9 +7,9 @@ export function PassportRewards({ stampCount }: { stampCount: number | null }) {
     <section aria-labelledby="passport-rewards-title">
       <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[#d5ae66]">PASSPORT REWARDS</p>
-          <h2 id="passport-rewards-title" className="mt-2 text-3xl font-bold">강원에서 머물고, 여정을 기념하세요</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">배지는 스포츠 도전의 기록, 패스포트 리워드는 강원에서 즐길 여행 혜택입니다.</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-[#d5ae66]">FUTURE BENEFIT PLANS</p>
+          <h2 id="passport-rewards-title" className="mt-2 text-3xl font-bold">패스포트 리워드 향후 계획</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">아래 항목은 현재 발급·사용할 수 있는 혜택이 아닙니다. 제휴처와 지급 조건이 확정된 뒤 별도로 안내합니다.</p>
         </div>
         <div className="shrink-0 rounded-2xl border border-[#d5ae66]/25 bg-[#d5ae66]/10 px-6 py-4">
           <p className="text-xs text-white/65">내가 모은 스탬프</p>
@@ -22,7 +22,7 @@ export function PassportRewards({ stampCount }: { stampCount: number | null }) {
           <article key={reward.id} className="rounded-[24px] border border-white/15 bg-[linear-gradient(145deg,#263327,#192231)] p-6 sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <span className="flex size-14 items-center justify-center rounded-2xl bg-[#d5ae66]/15 text-[#e6c88c]"><AppIcon name={index === 0 ? "mapPin" : "gift"} className="size-7" /></span>
-              <span className="rounded-full border border-[#d5ae66]/30 px-3 py-1 text-xs font-bold text-[#e6c88c]">준비 중</span>
+              <span className="rounded-full border border-[#d5ae66]/30 px-3 py-1 text-xs font-bold text-[#e6c88c]">미확정 계획</span>
             </div>
             <p className="mt-7 text-xs font-bold text-[#d5ae66]">{reward.phase}</p>
             <h3 className="mt-2 text-2xl font-bold">{reward.title}</h3>

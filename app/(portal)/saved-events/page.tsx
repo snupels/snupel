@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SavedEventsSection } from "@/components/SavedEventsSection";
+
+export const metadata: Metadata = { title: "내 행사 일정", description: "저장한 강원 스포츠 행사와 축제를 확인하고 Google 캘린더에 추가하세요." };
 
 export default function SavedEventsPage() {
   return <main className="min-h-screen bg-[#f3f7f4] px-5 pb-20 pt-10 text-[#172033] sm:px-8">

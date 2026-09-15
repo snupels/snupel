@@ -58,7 +58,7 @@ assert.doesNotMatch(eventSource, /<a href=\{`\/events\/detail\?id=\$\{event\.id\
 assert.match(read("components/SportsDetailPage.tsx"), /key=\{activityId\} activityId=\{activityId\}/);
 
 const portalSource = read("components/PortalPage.tsx");
-assert.match(portalSource, /href: `\/sports\/detail\/\?id=\$\{stop\.activityId\}`/);
+assert.doesNotMatch(portalSource, /href: `\/sports\/detail\/\?id=\$\{stop\.activityId\}`/);
 assert.match(portalSource, /key=\{page === "courses" \? `\$\{page\}:\$\{query\}` : page\}/);
 assert.match(portalSource, /id="kakao-map-sdk"/);
 assert.match(portalSource, /libraries=clusterer,services/);

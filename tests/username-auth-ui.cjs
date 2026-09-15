@@ -125,7 +125,7 @@ async function loginAndSignup() {
   ui.username().props.onVerifiedChange("new_user");
   const joining = ui.submit(values); ui.submit(values);
   assert.equal(signups.length, 1); assert.equal(signups[0].username, "new_user");
-  assert.equal(signups[0].addressDetail, "101호", "address remains connected");
+  assert.equal(signups[0].addressDetail, undefined, "optional address is deferred to account management");
   signup.resolve({ user: { id: 1, onboardingRequired: false } }); await joining;
   ui.unmount();
 }

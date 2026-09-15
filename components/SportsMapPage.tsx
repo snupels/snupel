@@ -163,8 +163,11 @@ export function SportsMapPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const mappedActivities = useMemo(() => activities.flatMap((activity): MappedActivity[] => {
-    if (selectedRegion !== "전체" && normalizeRegion(activity.sigun || activity.region) !== normalizeRegion(selectedRegion)) return [];
+  const visibleActivities = useMemo(() => activities.filter((activity) => (
+    selectedRegion === "전체" || normalizeRegion(activity.sigun || activity.region) === normalizeRegion(selectedRegion)
+  )), [activities, selectedRegion]);
+
+  const mappedActivities = useMemo(() => visibleActivities.flatMap((activity): MappedActivity[] => {
     const cached = geocodedCoordinates[activity.id];
     const sourceCoordinates = isGangwonCoordinate(activity.latitude, activity.longitude)
       ? { latitude: activity.latitude as number, longitude: activity.longitude as number }
@@ -174,7 +177,7 @@ export function SportsMapPage() {
     return latitude === null || latitude === undefined || longitude === null || longitude === undefined
       ? []
       : [{ activity, coordinates: { latitude, longitude } }];
-  }), [activities, geocodedCoordinates, selectedRegion]);
+  }), [geocodedCoordinates, visibleActivities]);
 
   const initializeMap = useCallback(() => {
     const maps = window.kakao?.maps;
@@ -367,6 +370,7 @@ export function SportsMapPage() {
                 key={region}
                 type="button"
                 onClick={() => setSelectedRegion(region)}
+                aria-pressed={selectedRegion === region}
                 className={`h-9 cursor-pointer rounded-full border px-4 text-xs font-bold transition ${selectedRegion === region ? "border-[#008f45] bg-[#008f45] text-white" : "border-[#d9e3dc] bg-white text-[#5f6c64] hover:border-[#7caf8d] hover:text-[#008f45]"}`}
               >
                 {region}
@@ -386,11 +390,19 @@ export function SportsMapPage() {
         {mapMessage && <p className="mb-4 rounded-2xl border border-[#f1d58b] bg-[#fff9e8] px-5 py-4 text-sm text-[#725900]">{mapMessage}</p>}
 
         <div className="overflow-hidden rounded-[24px] border border-[#dce6df] bg-white shadow-[0_18px_50px_rgba(32,76,51,0.12)]">
-          <div ref={mapContainerRef} className="h-[65vh] min-h-[480px] w-full" aria-label="강원 스포츠 시설 지도" />
+          <p id="sports-map-help" className="border-b border-[#e5ebe7] px-5 py-3 text-xs text-[#68756d]">지도 마커를 선택하거나 아래 시설 목록에서 상세정보를 확인하세요.</p>
+          <div ref={mapContainerRef} className="h-[65vh] min-h-[480px] w-full" aria-label={`${selectedRegion} 스포츠 시설 지도`} aria-describedby="sports-map-help" />
           {!loading && mappedActivities.length === 0 && (
-            <div className="border-t border-[#e5ebe7] p-5 text-center text-sm text-[#68756d]">선택한 지역에 좌표가 등록된 스포츠 시설이 없습니다.</div>
+            <div className="border-t border-[#e5ebe7] p-5 text-center text-sm text-[#68756d]">선택한 지역에 좌표가 등록된 스포츠 시설이 없습니다. 아래 목록에서 주소와 상세정보를 확인할 수 있습니다.</div>
           )}
         </div>
+
+        {!loading && visibleActivities.length > 0 && <section aria-labelledby="sports-list-title" className="mt-6 rounded-[24px] border border-[#dce6df] bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 id="sports-list-title" className="text-xl font-bold">{selectedRegion} 스포츠 시설 목록</h2><p className="mt-1 text-sm text-[#68756d]">총 {visibleActivities.length}개 시설</p></div><a href="#sports-map-help" className="text-sm font-bold text-[#008f45]">지도로 돌아가기</a></div>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleActivities.map((activity) => <li key={activity.id}><a href={`/sports/detail/?id=${activity.id}`} className="flex h-full flex-col rounded-2xl border border-[#e1e7e3] p-4 transition hover:border-[#79ad8b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45]"><strong>{activity.placeName ?? activity.sportName ?? "스포츠 시설"}</strong><span className="mt-2 text-xs font-semibold text-[#008f45]">{sportsFacilityType(activity)}</span><span className="mt-2 text-xs leading-5 text-[#68756d]">{activity.address ?? activity.sigun ?? activity.region ?? "주소 정보 확인 필요"}</span><span className="mt-auto pt-3 text-xs font-bold text-[#008f45]">상세정보 보기 →</span></a></li>)}
+          </ul>
+        </section>}
       </section>
     </main>
   );

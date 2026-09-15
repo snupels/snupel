@@ -29,14 +29,20 @@ assert.ok(markup.includes("공개 프로필·스포츠 피드에는 표시되지
 assert.ok(markup.includes("삭제할 수 있습니다"));
 assert.ok(renderToStaticMarkup(React.createElement(AddressFields, { idPrefix: "signup", disabled: true })).includes('disabled=""'));
 
-for (const file of ["components/LoginPage.tsx", "components/OnboardingPage.tsx", "components/AccountPage.tsx"]) {
-  const form = source(file);
-  assert.ok(form.includes("<AddressFields"), `${file} renders shared address fields`);
-  assert.ok(form.includes("...readAccountAddress(form)"), `${file} submits address fields`);
+const login = source("components/LoginPage.tsx");
+const onboarding = source("components/OnboardingPage.tsx");
+const account = source("components/AccountPage.tsx");
+for (const form of [login, onboarding]) {
+  assert.ok(!form.includes("<AddressFields"), "signup flows defer optional address fields until account management");
+  assert.ok(!form.includes("...readAccountAddress(form)"), "signup flows do not submit optional address fields");
+  assert.ok(form.includes("가입 후 마이페이지"));
 }
-assert.ok(source("components/AccountPage.tsx").includes("value={user}"));
-assert.ok(source("components/OnboardingPage.tsx").includes("value={user}"));
+assert.ok(account.includes("<AddressFields"), "account management renders shared address fields");
+assert.ok(account.includes("...readAccountAddress(form)"), "account management submits address fields");
+assert.ok(account.includes("value={user}"));
 const terms = source("components/TermsPage.tsx");
-assert.equal(terms.split("주소(우편번호·기본주소·상세주소)").length - 1, 2, "combined and standalone privacy notices list optional address");
-assert.equal(terms.split("주소는 선택 입력으로").length - 1, 2);
-console.log("PASS: optional private address fields, prefill, escaped rendering, form payload wiring and both privacy notices");
+const privacy = source("components/PrivacyPolicyPage.tsx");
+assert.ok(terms.includes("주소(우편번호·기본주소·상세주소)"), "signup consent lists optional address");
+assert.ok(privacy.includes("선택 항목"), "full privacy policy identifies optional fields");
+assert.ok(privacy.includes("주소"));
+console.log("PASS: optional private address fields are deferred to account management and documented in both privacy notices");

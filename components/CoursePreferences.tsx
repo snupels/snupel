@@ -81,13 +81,17 @@ export function CoursePreferences({ values = {}, collapsed = false }: { values?:
               <fieldset key={group.name}>
                 <legend className="flex items-center gap-2 text-sm font-bold"><AppIcon name={group.items[0].icon} className="size-4 text-[#00a94f]" />{group.title}{group.description && <span className="font-normal text-[#96a09a]">{group.description}</span>}</legend>
                 <div className={`mt-4 grid gap-3 ${group.name === "sigun" ? "grid-cols-3 sm:grid-cols-6 lg:grid-cols-9" : "grid-cols-2 lg:grid-cols-4"}`}>
-                  {group.items.map((item, index) => {
+                  {group.items.map((item) => {
                     const selected = values[group.name];
-                    const defaultValue = group.name === "sigun" ? "강릉시" : group.name === "theme" ? "healing" : group.name === "availableMinutes" ? "360" : "";
-                    const defaultChecked = Array.isArray(selected) ? selected.includes(item.value) : (selected ?? defaultValue) === item.value;
+                    const defaultValue = group.name === "sigun" ? "all" : group.name === "sport" ? "" : undefined;
+                    const defaultChecked = Array.isArray(selected)
+                      ? selected.includes(item.value)
+                      : selected !== undefined
+                        ? selected === item.value
+                        : defaultValue === item.value;
                     return (
                       <div key={`${group.name}-${item.value || "all"}`}>
-                        <input className="peer sr-only" id={`${group.name}-${item.value || "all"}`} name={group.name} value={item.value} type="radio" defaultChecked={defaultChecked || (!selected && !defaultValue && index === 0)} />
+                        <input className="peer sr-only" id={`${group.name}-${item.value || "all"}`} name={group.name} value={item.value} type="radio" required={group.name === "theme" || group.name === "availableMinutes"} defaultChecked={defaultChecked} />
                         <label htmlFor={`${group.name}-${item.value || "all"}`} className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[#e0e7e2] px-3 py-3 text-center text-sm font-semibold text-[#445065] transition hover:border-[#8cc3a1] peer-checked:border-[#008f45] peer-checked:bg-[#e9f6ee] peer-checked:text-[#008f45] focus-within:ring-2 focus-within:ring-[#008f45] sm:min-h-20 sm:flex-col">
                           <AppIcon name={item.icon} className="size-5" />
                           <span>{item.label}{item.caption && <small className="mt-1 hidden font-normal text-[#8a9590] sm:block">{item.caption}</small>}</span>
