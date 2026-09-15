@@ -22,6 +22,8 @@ assert.ok(map.includes("상세정보 보기"));
 
 const community = read("components/CommunityPage.tsx");
 assert.ok(community.includes("BLOCKED_USERS_KEY"));
+assert.ok(community.includes("catch { return []; }"));
+assert.ok(community.includes("브라우저 저장소를 사용할 수 없어"));
 assert.ok(community.includes("게시물 #{post.id} 신고 안내"));
 assert.ok(community.includes("이 사용자의 게시물 숨기기"));
 assert.ok(community.includes("댓글 ${comment.id} 신고 안내"));
@@ -30,6 +32,9 @@ const footer = read("components/SiteFooter.tsx");
 assert.ok(footer.includes("운영정보와 고객지원"));
 assert.ok(footer.includes("회원 탈퇴·개인정보 요청"));
 assert.ok(footer.includes("게시물·댓글 신고"));
+const serviceInfo = read("lib/serviceInfo.ts");
+assert.ok(serviceInfo.includes('"서울 관악구 관악로 1"'));
+assert.ok(serviceInfo.includes('"cs@sportspassport.kr"'));
 
 const support = read("components/SupportPage.tsx");
 const privacy = read("components/PrivacyPolicyPage.tsx");

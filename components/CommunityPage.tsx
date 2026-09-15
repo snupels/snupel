@@ -35,10 +35,7 @@ function readBlockedUserIds() {
   try {
     const parsed = JSON.parse(localStorage.getItem(BLOCKED_USERS_KEY) ?? "[]");
     return Array.isArray(parsed) ? parsed.filter((id): id is number => Number.isInteger(id) && id > 0) : [];
-  } catch {
-    localStorage.removeItem(BLOCKED_USERS_KEY);
-    return [];
-  }
+  } catch { return []; }
 }
 
 function CommunityPageContent() {
@@ -237,8 +234,12 @@ function CommunityPageContent() {
     if (!window.confirm(`${name}님의 게시물을 이 브라우저에서 숨길까요? 다른 기기에는 적용되지 않습니다.`)) return;
     const next = [...new Set([...blockedUserIds, id])];
     setBlockedUserIds(next);
-    localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(next));
-    setActionMessage(`${name}님의 게시물을 이 브라우저에서 숨겼습니다. 브라우저 저장정보를 삭제하면 다시 표시됩니다.`);
+    try {
+      localStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(next));
+      setActionMessage(`${name}님의 게시물을 이 브라우저에서 숨겼습니다. 브라우저 저장정보를 삭제하면 다시 표시됩니다.`);
+    } catch {
+      setActionMessage(`${name}님의 게시물을 현재 화면에서 숨겼습니다. 브라우저 저장소를 사용할 수 없어 새로고침하면 다시 표시됩니다.`);
+    }
   }
 
   return (

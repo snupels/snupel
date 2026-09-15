@@ -43,6 +43,10 @@ jobs:
       - name: Build static site
         env:
           NEXT_PUBLIC_KAKAO_MAP_APP_KEY: ${{ secrets.NEXT_PUBLIC_KAKAO_MAP_APP_KEY }}
+          NEXT_PUBLIC_SERVICE_OPERATOR_NAME: ${{ vars.NEXT_PUBLIC_SERVICE_OPERATOR_NAME }}
+          NEXT_PUBLIC_SERVICE_OPERATOR_ADDRESS: ${{ vars.NEXT_PUBLIC_SERVICE_OPERATOR_ADDRESS }}
+          NEXT_PUBLIC_PRIVACY_OFFICER: ${{ vars.NEXT_PUBLIC_PRIVACY_OFFICER }}
+          NEXT_PUBLIC_SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
         run: npm run build
 
       - name: Restore assets referenced by cached HTML
