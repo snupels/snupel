@@ -8,6 +8,7 @@ const sports: Record<string, string> = {
   golf: "골프", paragliding: "패러글라이딩", olympic_legacy: "올림픽 레거시",
 };
 const sources: Record<string, string> = {
+  forest_baekdu: "산림청 백두대간 등산로",
   tourapi: "한국관광공사", durunubi: "한국관광공사 두루누비", mountain100: "산림청",
   gangwon_ski_golf: "강원특별자치도 스키장·골프장 현황",
   gangwon_marine: "강원특별자치도 해양레저 현황",
