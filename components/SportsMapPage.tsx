@@ -6,6 +6,7 @@ import type { ActivityExploreResponse } from "@/lib/api/dto";
 import { api } from "@/lib/api/service";
 import { sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity } from "@/lib/sportsImage";
+import { sportCategories } from "@/lib/sportsCategories";
 
 type KakaoLatLng = object;
 type KakaoMap = {
@@ -33,6 +34,7 @@ type KakaoMaps = {
   MarkerClusterer: new (options: { map: KakaoMap; markers: KakaoMarker[]; averageCenter: boolean; minLevel: number }) => KakaoMarkerClusterer;
   InfoWindow: new (options: { content: HTMLElement; removable?: boolean }) => {
     open(map: KakaoMap, marker: KakaoMarker): void;
+    close(): void;
   };
   services: {
     Status: { OK: string };
@@ -61,6 +63,7 @@ const REGION_CENTERS: Record<string, Coordinates> = {
   "양양군": { latitude: 38.0754, longitude: 128.6191 },
 };
 const GEOCODE_CACHE_KEY = "gangwon-sports-map-geocodes-v2";
+const mapCategories = ["산악스포츠", "동계스포츠", "수상스포츠", "육상스포츠", "올림픽레거시", "스포츠"];
 const regions = [
   "전체",
   "춘천시",
@@ -129,8 +132,10 @@ export function SportsMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const kakaoMapRef = useRef<KakaoMap | null>(null);
   const markerClustererRef = useRef<KakaoMarkerClusterer | null>(null);
+  const infoWindowsRef = useRef<Array<{ close(): void }>>([]);
   const [activities, setActivities] = useState<ActivityExploreResponse[]>([]);
   const [selectedRegion, setSelectedRegion] = useState("전체");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiMessage, setApiMessage] = useState("스포츠 시설을 불러오는 중입니다.");
   const [mapMessage, setMapMessage] = useState("");
@@ -164,8 +169,9 @@ export function SportsMapPage() {
   }, []);
 
   const visibleActivities = useMemo(() => activities.filter((activity) => (
-    selectedRegion === "전체" || normalizeRegion(activity.sigun || activity.region) === normalizeRegion(selectedRegion)
-  )), [activities, selectedRegion]);
+    (selectedRegion === "전체" || normalizeRegion(activity.sigun || activity.region) === normalizeRegion(selectedRegion))
+    && (selectedCategories.length === 0 || sportCategories(activity.sportName, activity.metadata, activity.placeName).some(category => selectedCategories.includes(category)))
+  )), [activities, selectedRegion, selectedCategories]);
 
   const mappedActivities = useMemo(() => visibleActivities.flatMap((activity): MappedActivity[] => {
     const cached = geocodedCoordinates[activity.id];
@@ -193,6 +199,8 @@ export function SportsMapPage() {
       kakaoMapRef.current = map;
     }
 
+    infoWindowsRef.current.forEach(info => info.close());
+    infoWindowsRef.current = [];
     let clusterer = markerClustererRef.current;
     if (!clusterer) {
       clusterer = new maps.MarkerClusterer({ map, markers: [], averageCenter: true, minLevel: 7 });
@@ -213,6 +221,7 @@ export function SportsMapPage() {
         title: activity.placeName ?? activity.sportName ?? "스포츠 시설",
       });
       const infoWindow = new maps.InfoWindow({ content: markerContent(activity), removable: true });
+      infoWindowsRef.current.push(infoWindow);
       maps.event.addListener(marker, "click", () => infoWindow.open(map, marker));
       return marker;
     });
@@ -223,7 +232,9 @@ export function SportsMapPage() {
     if (focused && focusedMarker) {
       map.setCenter(new maps.LatLng(focused.coordinates.latitude, focused.coordinates.longitude));
       map.setLevel(4);
-      new maps.InfoWindow({ content: markerContent(focused.activity), removable: true }).open(map, focusedMarker);
+      const focusedInfo = new maps.InfoWindow({ content: markerContent(focused.activity), removable: true });
+      infoWindowsRef.current.push(focusedInfo);
+      focusedInfo.open(map, focusedMarker);
     } else if (selectedRegion === "전체") {
       map.setCenter(new maps.LatLng(GANGWON_CENTER.latitude, GANGWON_CENTER.longitude));
       map.setLevel(10);
@@ -253,6 +264,8 @@ export function SportsMapPage() {
   }, [initializeMap, loading, sdkReady]);
 
   useEffect(() => () => {
+    infoWindowsRef.current.forEach(info => info.close());
+    infoWindowsRef.current = [];
     markerClustererRef.current?.clear();
     markerClustererRef.current = null;
     kakaoMapRef.current = null;
@@ -364,7 +377,17 @@ export function SportsMapPage() {
           <p className="text-sm font-bold text-[#008f45]">GANGWON SPORTS MAP</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-[#172033]">지역별로 보기</h1>
           <p className="mt-3 text-sm text-[#68756d]">강원 18개 시군의 스포츠 활동과 시설을 지도에서 확인하세요.</p>
-          <div className="mt-6 flex flex-wrap gap-2" aria-label="지역 선택">
+          <fieldset className="mt-6">
+            <legend className="mb-3 text-sm font-bold text-[#172033]">스포츠 종류 <span className="font-normal text-[#68756d]">· 여러 개 선택 가능</span></legend>
+            <div className="flex flex-wrap gap-2">
+              {["전체 스포츠", ...mapCategories].map(category => {
+                const all = category === "전체 스포츠";
+                const active = all ? selectedCategories.length === 0 : selectedCategories.includes(category);
+                return <button key={category} type="button" aria-pressed={active} onClick={() => setSelectedCategories(current => all ? [] : current.includes(category) ? current.filter(item => item !== category) : [...current, category])} className={`min-h-10 cursor-pointer rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#008f45] ${active ? "border-[#008f45] bg-[#008f45] text-white" : "border-[#d9e3dc] bg-white text-[#5f6c64] hover:border-[#7caf8d]"}`}>{category === "스포츠" ? "기타 스포츠" : category}</button>;
+              })}
+            </div>
+          </fieldset>
+          <div className="mt-5 flex flex-wrap gap-2" aria-label="지역 선택">
             {regions.map((region) => (
               <button
                 key={region}
@@ -393,7 +416,7 @@ export function SportsMapPage() {
           <p id="sports-map-help" className="border-b border-[#e5ebe7] px-5 py-3 text-xs text-[#68756d]">지도 마커를 선택하거나 아래 시설 목록에서 상세정보를 확인하세요.</p>
           <div ref={mapContainerRef} className="h-[65vh] min-h-[480px] w-full" aria-label={`${selectedRegion} 스포츠 시설 지도`} aria-describedby="sports-map-help" />
           {!loading && mappedActivities.length === 0 && (
-            <div className="border-t border-[#e5ebe7] p-5 text-center text-sm text-[#68756d]">선택한 지역에 좌표가 등록된 스포츠 시설이 없습니다. 아래 목록에서 주소와 상세정보를 확인할 수 있습니다.</div>
+            <div role="status" className="border-t border-[#e5ebe7] p-5 text-center text-sm text-[#68756d]">{visibleActivities.length ? "선택한 조건에 지도 좌표가 등록된 시설이 없습니다. 아래 목록에서 주소와 상세정보를 확인하세요." : "선택한 지역·스포츠에 해당하는 시설이 없습니다. 다른 카테고리나 지역을 선택해 주세요."}<button type="button" onClick={() => { setSelectedCategories([]); setSelectedRegion("전체"); }} className="mx-auto mt-3 block cursor-pointer font-bold text-[#008f45] underline">필터 초기화</button></div>
           )}
         </div>
 

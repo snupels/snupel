@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
-const source = fs.readFileSync(path.join(__dirname, '../components/PortalPage.tsx'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '../lib/sportsCategories.ts'), 'utf8').replaceAll('export function', 'function');
 const category = source.slice(source.indexOf('function sportCategory('), source.indexOf('function sportCategories('));
 const { outputText } = ts.transpileModule(category, {});
 const context = { isGeneralSportsFacility: () => false };
