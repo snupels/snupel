@@ -15,7 +15,7 @@ assert.match(preferencesSource, /focus-visible:ring-inset focus-visible:ring-whi
 assert.match(portalSource, /collapsed=\{recommendationPending\s*\|\|\s*Boolean\(coursePlan\)\}/);
 assert.match(portalSource, /recommendationRequested = page === "courses" && searchParams\.get\("recommend"\) === "1"/);
 assert.match(portalSource, /if \(page === "courses"\) return;/);
-const helpers = portalSource.slice(portalSource.indexOf("function kakaoMapPoint("), portalSource.indexOf("function sportCategory("));
+const helpers = portalSource.slice(portalSource.indexOf("function kakaoMapPoint("), portalSource.indexOf("function sportIcon("));
 const { outputText } = ts.transpileModule(helpers, {});
 const context = { encodeURIComponent };
 vm.runInNewContext(outputText, context);
