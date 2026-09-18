@@ -46,7 +46,7 @@ assert.match(detail, /description\.trails\.map/);
 assert.doesNotMatch(detail, /dangerouslySetInnerHTML/);
 const sportsCards = read("components/PortalPage.tsx").split('if (page === "events")')[0];
 assert.doesNotMatch(sportsCards, /description: activity\.summary/);
-assert.match(sportsCards, /searchText: activity\.summary/);
+assert.match(sportsCards, /searchText: sportsSearchText\(activity\)/);
 assert.match(read("components/PortalPage.tsx"), /card\.searchText \?\? ""/);
 assert.match(sportsCards, /href: `\/sports\/detail\?id=\$\{activity\.id\}`/);
 console.log("PASS: API trail facts preserved, course cards, text-only HTML, compact clickable sports feed");

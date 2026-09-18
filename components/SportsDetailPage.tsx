@@ -9,6 +9,7 @@ import { api } from "@/lib/api/service";
 import { verifiedSportWebsite } from "@/lib/sportsWebsites";
 import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage, sportsPhotoSource } from "@/lib/sportsImage";
+import { sportDisplayName, sourceDisplayName } from "@/lib/sportsLabels";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
 import { sportsDescription } from "@/lib/sportsDescription";
@@ -143,7 +144,7 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
   const type = sportsFacilityType(activity);
   const sportLabel = isGeneralSportsFacility(activity.placeName)
     ? "스포츠"
-    : activity.sportName;
+    : sportDisplayName(activity.sportName);
   const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
     ? activity.sourceUrl
     : null;
@@ -223,7 +224,7 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
                 </div>}
               </dl>
               {referenceSourceUrl && <a href={referenceSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-[#65736b] underline underline-offset-4 transition hover:text-[#008f45]">{referenceSourceLabel(referenceSourceUrl)}<AppIcon name="arrowRight" className="size-3.5" /></a>}
-              {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {activity.source}</p>}
+              {activity.source && <p className="mt-4 text-center text-[11px] text-[#7a867f]">정보 출처: {sourceDisplayName(activity.source)}</p>}
             </aside>
           </div>
         </article>

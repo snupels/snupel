@@ -20,6 +20,7 @@ const courses = [
   { id: 10, title: "수상 미션", category: "event", sportName: "WATER", isPublished: true },
 ];
 const context = {
+  matchesSportsKeyword: (text, query) => !query || text.toLowerCase().includes(query.toLowerCase()),
   missionPresentation: exportsObject.missionPresentation,
   sportsImage: () => "/photo.svg",
   api: {

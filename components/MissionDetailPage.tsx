@@ -176,11 +176,16 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
         </section>
 
         <form onSubmit={submit} className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 shadow-[0_16px_50px_rgba(36,73,50,0.10)] lg:sticky lg:top-24">
-          <h2 className="text-xl font-bold">참여 인증하기</h2>
+            <h2 className="text-xl font-bold">참여 인증하기</h2>
+            <div className="mt-4 rounded-2xl border border-[#a8d8bb] bg-[#edf8f1] p-4 text-sm leading-6 text-[#245b3a]">
+              <p className="font-bold">사진은 1~5장, 도전의 순간을 함께 남겨요</p>
+              <p className="mt-2">사진을 여러 장 한 번에 선택하거나, 선택 후 추가할 수 있어요.</p>
+              <p className="mt-2"><strong>스포츠 피드 공개는 선택이에요.</strong> 아래에서 공개를 선택하면 운영자 승인 후 사진과 작성한 글이 다른 이용자에게 공개됩니다. 공개하지 않아도 미션 인증을 신청할 수 있어요.</p>
+            </div>
           {!api.hasToken() ? <div className="mt-5 rounded-2xl bg-[#f3f7f4] p-5 text-center"><p className="text-sm leading-6 text-[#66736b]">로그인하면 참여 사진으로 인증을 신청할 수 있어요.</p><Link href={`/login?next=${encodeURIComponent(`/missions/detail/?id=${courseId}`)}`} className="mt-4 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">로그인하고 이 미션 참여하기</Link></div> : <>
-            <label className="mt-5 block text-sm font-bold" htmlFor="mission-photo">인증 사진</label>
+              <label className="mt-5 flex items-center justify-between text-sm font-bold" htmlFor="mission-photo"><span>1. 인증 사진 올리기</span><span className="text-[#008f45]">{photos.length} / {MAX_MISSION_PHOTOS}장</span></label>
             <label htmlFor="mission-photo" className="mt-2 flex min-h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[#cbdacf] bg-[#f8faf8] text-center">
-              <span className="px-5 text-sm text-[#718078]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" />{photos.length ? "사진 더 선택하기" : mission.photoPrompt}<br /><small>JPG, PNG, WEBP · 장당 최대 10MB · 최대 5장</small></span>
+                <span className="px-5 text-sm text-[#52645a]"><AppIcon name="camera" className="mx-auto mb-2 size-7 text-[#008f45]" /><strong className="block text-base text-[#008f45]">{photos.length >= MAX_MISSION_PHOTOS ? "사진 5장 선택 완료" : photos.length ? "사진 추가하기" : "사진 선택하기 · 최대 5장"}</strong><span className="mt-2 block">{mission.photoPrompt}</span><small className="mt-2 block">JPG, PNG, WEBP · 장당 최대 10MB</small></span>
             </label>
             <input id="mission-photo" type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={completed || submitting || photos.length >= MAX_MISSION_PHOTOS} onChange={(event) => {
               const selected = Array.from(event.target.files ?? []);
@@ -192,9 +197,10 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
               if (!validationError) setPhotos(next);
             }} />
             {photos.length > 0 && <><p className="mt-3 text-xs text-[#66736b]">{photos.length}/5장 · 첫 사진이 피드 대표 사진이 됩니다.</p><div className="mt-2 grid grid-cols-3 gap-2">{previewUrls.map((url, index) => <div key={url} className="relative aspect-square overflow-hidden rounded-xl bg-[#edf2ef]"><Image src={url} alt={`인증 사진 ${index + 1}`} fill sizes="120px" className="object-cover" unoptimized /><button type="button" disabled={completed || submitting} aria-label={`사진 ${index + 1} 삭제`} onClick={() => setPhotos(current => current.filter((_, number) => number !== index))} className="absolute right-1 top-1 flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/65 text-white disabled:hidden">×</button></div>)}</div></>}
-            <label className="mt-5 flex items-start gap-3 rounded-xl bg-[#f3f7f4] p-4 text-sm">
+              <h3 className="mt-6 text-sm font-bold">2. 스포츠 피드 공개 여부 선택</h3>
+              <label className={`mt-2 flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 text-sm ${shareToFeed ? "border-[#008f45] bg-[#edf8f1]" : "border-[#dbe6de] bg-[#f8faf8]"}`}>
               <input type="checkbox" checked={shareToFeed} disabled={completed || submitting} onChange={(event) => setShareToFeed(event.target.checked)} className="mt-0.5 size-4 accent-[#008f45]" />
-              <span><strong className="block">승인 후 스포츠 피드에 공개</strong><span className="mt-1 block text-xs leading-5 text-[#718078]">선택하지 않으면 인증 기록은 나에게만 보입니다.</span></span>
+                <span><strong className="block">승인 후 스포츠 피드에 공개</strong><span className="mt-1 block text-sm leading-6 text-[#52645a]">체크하면 선택한 사진 최대 5장과 글을 함께 공유해요. 다른 이용자가 좋아요와 댓글을 남길 수 있어요.</span><span className="mt-2 block text-xs leading-5 text-[#52645a]">선택하지 않으면 피드에 게시되지 않습니다. 인증 사진은 운영자가 심사하며, 인증 기록은 나에게만 보입니다.</span></span>
             </label>
             {shareToFeed && <label className="mt-4 block text-sm font-bold">피드에 함께 올릴 글<textarea value={feedCaption} onChange={(event) => setFeedCaption(event.target.value)} maxLength={300} disabled={completed || submitting} aria-label="피드에 함께 올릴 글" placeholder="오늘의 도전은 어땠나요? 사진과 함께 이야기를 나눠보세요. (선택)" className="mt-2 min-h-28 w-full resize-y rounded-xl border border-[#cbdacf] p-3 text-sm font-normal outline-none focus:border-[#008f45]" /><span className="block text-right text-xs font-normal text-[#718078]">{feedCaption.length}/300</span></label>}
             <button type="submit" disabled={!photos.length || submitting || completed} className="mt-6 flex h-13 w-full cursor-pointer items-center justify-center rounded-xl bg-[#008f45] text-sm font-black text-white transition hover:bg-[#00783a] disabled:cursor-not-allowed disabled:bg-[#aab7af]">{completed ? "인증 접수 완료" : submitting ? "사진 업로드 및 인증 제출 중..." : "사진으로 인증 신청"}</button>
