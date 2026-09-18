@@ -5,6 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { sportsSearchText, matchesSportsKeyword } from "@/lib/sportsSearch";
 import { compareEvents, eventParticipation } from "@/lib/eventParticipation";
 import { api } from "@/lib/api/service";
 import { missionPresentation } from "@/lib/missionCatalog";
@@ -235,7 +236,7 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
           facilityTag: sportsFacilityType(activity) ?? undefined,
           title: activity.placeName ?? activity.sportName ?? `스포츠 활동 #${activity.id}`,
           description: `${activity.sigun ?? "강원"} · ${category}`,
-          searchText: activity.summary ?? "",
+          searchText: sportsSearchText(activity),
           meta: [activity.sigun, activity.address ?? activity.region].filter(Boolean).join(" · ") || "강원특별자치도",
           icon: sportIcon(category),
           href: `/sports/detail?id=${activity.id}`,
@@ -533,7 +534,7 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       card.title.includes(sport) || card.tag.replace(/\s/g, "").includes(sport.replace(/\s/g, "")) || card.secondaryTag?.includes(sport) || card.facilityTag?.includes(sport)
     ));
     const matchesRegion = page === "courses" || activeRegionFilters.length === 0 || activeRegionFilters.some((region) => card.meta.includes(region));
-    return (!query || `${card.title} ${card.description} ${card.searchText ?? ""} ${card.meta}`.toLowerCase().includes(query))
+    return matchesSportsKeyword(`${card.title} ${card.description} ${card.searchText ?? ""} ${card.meta}`, query)
       && matchesRegion
       && matchesSport;
   });
