@@ -14,6 +14,12 @@ assert.deepEqual(Array.from(sportCategories('ski', { sport_categories: ['snow', 
 assert.equal(sportCategories('marine', null, '서핑장')[0], '수상스포츠');
 assert.equal(sportCategories('hiking', null, '등산로')[0], '산악스포츠');
 assert.equal(sportCategories(null, null, '강릉볼링장')[0], '스포츠');
+for (const metadata of [null, { sport_categories: ['snow', 'olympic_legacy'] }, { sport_categories: ['olympic_legacy'] }]) {
+  assert.deepEqual(Array.from(sportCategories('olympic_legacy', metadata, '알펜시아 리조트 알파인코스터')), ['산악스포츠']);
+  assert.deepEqual(Array.from(sportCategories('olympic_legacy', metadata, '알펜시아 눈썰매장')), ['동계스포츠']);
+}
+assert.deepEqual(Array.from(sportCategories('ski', { sport_categories: ['snow', 'olympic_legacy'] }, '알펜시아리조트스키장')), ['동계스포츠', '올림픽레거시']);
+assert.deepEqual(Array.from(sportCategories('olympic_legacy', { sport_categories: ['olympic_legacy'] }, '강릉올림픽뮤지엄')), ['올림픽레거시']);
 const map = fs.readFileSync(path.join(__dirname, '../components/SportsMapPage.tsx'), 'utf8');
 assert.match(map, /selectedCategories\.length === 0 \|\| sportCategories/);
 assert.match(map, /\[activities, selectedRegion, selectedCategories\]/);

@@ -3,6 +3,8 @@ import { isGeneralSportsFacility } from "./sportsFacility";
 export function sportCategory(sportName: string | null, placeName?: string | null) {
   const sport = sportName?.toLowerCase() ?? "";
   const place = placeName?.replace(/\s+/g, "").toLowerCase() ?? "";
+  if (place.includes("알펜시아") && place.includes("알파인코스터")) return "산악스포츠";
+  if (place.includes("알펜시아") && place.includes("눈썰매장")) return "동계스포츠";
   if (isGeneralSportsFacility(placeName)) return "스포츠";
   const isWalkingRoute = ["둘레길", "탐방로", "산소길", "트레킹", "걷기길", "산책로"].some((value) => place.includes(value))
     || /(?:길|로)$/.test(place);
@@ -21,6 +23,12 @@ export function sportCategories(
   metadata: Record<string, unknown> | null | undefined,
   placeName?: string | null,
 ) {
+  // These leisure attractions are not Olympic venues, even when upstream
+  // metadata broadly tags all Alpensia facilities as Olympic legacy.
+  const place = placeName?.replace(/\s+/g, "") ?? "";
+  if (place.includes("알펜시아") && /알파인코스터|눈썰매장/.test(place)) {
+    return [sportCategory(sportName, placeName)];
+  }
   const labels: Record<string, string> = {
     snow: "동계스포츠",
     olympic_legacy: "올림픽레거시",

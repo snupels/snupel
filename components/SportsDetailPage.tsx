@@ -10,6 +10,7 @@ import { verifiedSportWebsite } from "@/lib/sportsWebsites";
 import { isGeneralSportsFacility, sportsFacilityType } from "@/lib/sportsFacility";
 import { isExcludedSportActivity, sportsImage, sportsPhotoSource } from "@/lib/sportsImage";
 import { sportDisplayName, sourceDisplayName } from "@/lib/sportsLabels";
+import { sportCategory } from "@/lib/sportsCategories";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
 import { sportsDescription } from "@/lib/sportsDescription";
@@ -144,6 +145,8 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
   const type = sportsFacilityType(activity);
   const sportLabel = isGeneralSportsFacility(activity.placeName)
     ? "스포츠"
+    : /알펜시아.*(?:알파인코스터|눈썰매장)/.test(title.replace(/\s+/g, ""))
+    ? sportCategory(activity.sportName, title)
     : sportDisplayName(activity.sportName);
   const referenceSourceUrl = activity.sourceUrl && isReferenceSource(activity.sourceUrl)
     ? activity.sourceUrl
@@ -200,7 +203,7 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
               </section>)}
               {description.trails.length > 0 && <p className="mt-4 text-xs leading-6 text-[#68756d]">{activity.source === "tourapi" ? "한국관광공사 API에서 제공한 등산로 안내입니다. " : "제공된 원문 코스 안내입니다. "}거리·소요 시간은 원문 기준이며, 방문 전 개방 여부와 현장 안내를 확인해 주세요.</p>}
               {activity.sportName === "hiking" && !description.trails.length && <p className="mt-4 rounded-xl bg-[#f1f7f3] p-4 text-sm leading-6 text-[#526058]">산·산행 탐방지 정보입니다. 세부 등산 코스·거리·소요 시간은 현재 API에 제공되지 않았습니다. 방문 전 공식 안내처에서 탐방로 개방 여부와 코스를 확인해 주세요.</p>}
-              {activity.sportName === "hiking" && <p className="mt-3 text-xs leading-6 text-[#68756d]">지도는 API의 대표 위치이며 등산로 경로나 입산 지점을 보장하지 않습니다.</p>}
+              {activity.sportName === "hiking" && <p className="mt-3 text-xs leading-6 text-[#68756d]">{activity.metadata?.coordinate_type === "route_start" ? "지도는 코스 구간의 출발점입니다. 주차장이나 차량 접근 지점이 아닐 수 있으며, 현재 탐방 가능 여부는 출발 전 확인해 주세요." : "지도는 API의 대표 위치이며 등산로 경로나 입산 지점을 보장하지 않습니다."}</p>}
               <div className="mt-8 rounded-2xl border border-[#dce6df] bg-[#f7faf8] p-5">
                 <h3 className="font-bold">주소</h3>
                 <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#59675f]"><AppIcon name="mapPin" className="mt-0.5 shrink-0 text-[#008f45]" />{location}</p>
