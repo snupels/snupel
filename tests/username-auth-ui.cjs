@@ -135,7 +135,7 @@ async function profileUsername() {
     for (const existing of [null, "existing_user"]) {
       const profile = { id: 11, username: existing, email: "old@example.invalid", nickname: "테스트", phoneNumber: "01011112222", onboardingRequired: component === "OnboardingPage", marketingEmailAgreed: false, marketingSnsAgreed: false };
       const patches = [];
-      const ui = setup(component, { hasToken: () => true, currentUser: () => profile, me: async () => profile, completeOnboarding: async () => ({ user: { ...profile, onboardingRequired: false } }), updateProfile: async (input) => { patches.push(input); return { ...profile, ...input, onboardingRequired: false }; } });
+      const ui = setup(component, { hasToken: () => true, currentUser: () => profile, me: async () => profile, emailInfo: async () => ({ userId: profile.id, accountEmail: profile.email, kakaoEmail: null, kakaoLinked: false }), completeOnboarding: async () => ({ user: { ...profile, onboardingRequired: false } }), updateProfile: async (input) => { patches.push(input); return { ...profile, ...input, onboardingRequired: false }; } });
       await flush();
       const values = { nickname: "테스트", phoneNumber: "01011112222" };
       if (component === "OnboardingPage") {

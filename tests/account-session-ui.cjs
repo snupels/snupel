@@ -34,6 +34,7 @@ function setup(component) {
   };
   const state = [], refs = [], listeners = new Set(), paths = [], patches = [];
   const loading = deferred(), updating = deferred(), signing = deferred(), uploading = deferred();
+  const emailLoading = deferred();
   let current = profile, token = true, stateIndex = 0, refIndex = 0, effect, cleanup, writes = 0, fetches = 0;
   const router = { replace: (path) => paths.push(path), refresh() {} };
   const hooks = {
@@ -49,6 +50,7 @@ function setup(component) {
     hasToken: () => token,
     currentUser: () => current,
     me: () => loading.promise,
+    emailInfo: () => emailLoading.promise,
     updateProfile: (input) => { patches.push(input); return updating.promise; },
     completeOnboarding: async () => ({ user: { ...current, onboardingRequired: false } }),
     createProfileUploadUrl: () => signing.promise,
@@ -85,7 +87,7 @@ function setup(component) {
     for (const listener of listeners) listener();
   };
   return {
-    profile, state, paths, patches, loading, updating, signing, uploading, render,
+    profile, state, paths, patches, loading, updating, signing, uploading, emailLoading, render,
     writes: () => writes, fetches: () => fetches,
     authChange, logout: () => authChange(undefined), unmount: () => cleanup(),
     async loaded() { loading.resolve(profile); await flush(); render(); },
@@ -161,5 +163,23 @@ async function check(component) {
 
 (async () => {
   await check("AccountPage"); await check("OnboardingPage");
+  for (const scenario of ["verified", "missing", "failed", "wrong-user", "logout", "switch", "unmount"]) {
+    const ui = setup("AccountPage");
+    ui.profile.email = "kakao_77@oauth.sportspassport.kr";
+    await ui.loaded();
+    assert.equal(find(ui.render(), node => node.props?.id === "email").props.value, "");
+    if (scenario === "logout") ui.logout();
+    if (scenario === "switch") ui.authChange({ ...ui.profile, id: 22 });
+    if (scenario === "unmount") ui.unmount();
+    const writes = ui.writes();
+    if (scenario === "failed") ui.emailLoading.reject(new Error("unavailable"));
+    else ui.emailLoading.resolve({ userId: scenario === "wrong-user" ? 22 : 11, accountEmail: ui.profile.email, kakaoEmail: scenario === "missing" ? null : "verified@example.com", kakaoLinked: true });
+    await flush();
+    if (["logout", "switch", "unmount"].includes(scenario)) assert.equal(ui.writes(), writes, "late private email ignored");
+    else {
+      assert.equal(find(ui.render(), node => node.props?.id === "email").props.value, scenario === "verified" ? "verified@example.com" : "");
+      assert.equal(ui.paths.length, 0, "email-info failure must not log user out");
+    }
+  }
   console.log("PASS: account/onboarding private forms clear on auth changes and ignore late load/save/unmount/upload responses");
 })().catch((error) => { console.error(error); process.exitCode = 1; });
