@@ -46,10 +46,14 @@ export function OnboardingPage() {
       window.removeEventListener("sportspassport-auth-change", onAuthChange);
     };
     if (!api.hasToken()) { onAuthChange(); return cleanup; }
-    api.me().then((profile) => {
+    api.me().then(async (profile) => {
       if (!isCurrent() || (ownerId !== undefined && profile.id !== ownerId)) return;
       ownerId = profile.id;
-      if (!profile.onboardingRequired) { router.replace(next); return; }
+      if (!profile.onboardingRequired) {
+        await api.completeOnboarding();
+        if (isCurrent()) router.replace(next);
+        return;
+      }
       setUser(profile);
       setConsents((current) => ({ ...current, email: profile.marketingEmailAgreed, sns: profile.marketingSnsAgreed }));
     }).catch((reason) => {
@@ -67,6 +71,10 @@ export function OnboardingPage() {
     const isCurrent = () => activeSession.current && version === sessionVersion.current
       && api.hasToken() && api.currentUser()?.id === user.id;
     if (!isCurrent()) return;
+    if (!consents.terms || !consents.privacy) {
+      setError("이용약관과 개인정보 수집·이용에 동의해야 가입을 완료할 수 있습니다.");
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const parsedUsername = usernameSchema.safeParse(String(form.get("username") || ""));
     const username = parsedUsername.success ? parsedUsername.data : "";
@@ -89,6 +97,8 @@ export function OnboardingPage() {
       });
       if (!isCurrent()) return;
       if (updated.onboardingRequired) throw new Error("onboarding incomplete");
+      await api.completeOnboarding();
+      if (!isCurrent()) return;
       router.replace(next);
     } catch (reason) { if (isCurrent()) setError(authErrorMessage(reason)); }
     finally { submitting.current = false; if (isCurrent()) setPending(false); }

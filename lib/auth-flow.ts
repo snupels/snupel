@@ -43,6 +43,7 @@ export function parseOAuthSession(saved: string | null, origin: string, now = Da
 export function authErrorMessage(reason: unknown): string {
   const error = reason as { status?: number; body?: { error?: string } } | null;
   const messages: Record<string, string> = {
+    onboarding_required: "필수 약관 동의와 회원정보 설정을 마친 뒤 이용해 주세요.",
     invalid_credentials: "아이디(또는 이메일)와 비밀번호를 확인해 주세요.",
     username_already_exists: "이미 사용 중인 아이디입니다. 다른 아이디로 중복 확인해 주세요.",
     username_change_not_allowed: "설정한 아이디는 변경할 수 없습니다. 계정 정보를 새로 불러와 주세요.",

@@ -11,6 +11,7 @@ import { loginHref } from "@/lib/auth-flow";
 import { PASSPORT_LEVELS, passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { isMissionHistory } from "@/lib/activityHistory";
 import { SavedEventsSection } from "./SavedEventsSection";
+import { MissionReviewLink } from "./MissionReviewLink";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 
@@ -107,6 +108,7 @@ export function MyPassportPage() {
 
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
+      <div className="mx-auto max-w-[1180px] px-4 sm:px-6"><MissionReviewLink /></div>
       <section className="relative overflow-hidden px-4 pb-24 pt-12 sm:px-6">
         <Image src={heroImage} alt="강원 산악 전경" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,35,28,0.9),rgba(11,35,28,0.6))]" />

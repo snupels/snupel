@@ -69,11 +69,13 @@ function CommunityPageContent() {
   );
   const loginUrl = loginHref(`/community/?${searchParams.toString()}`);
   const visiblePosts = posts.filter((post) => !blockedUserIds.includes(post.authorId));
+  const detailIsPublic = posts.some(post => post.id === postId && post.shareToFeed);
 
   useEffect(() => {
     const sync = () => {
       requestId.current++;
       setCommentDrafts({}); setProfiles({}); setActionMessage("");
+      setPosts([]); setComments({});
       setUser(api.hasToken() ? api.currentUser() ?? null : null);
     };
     window.addEventListener("sportspassport-auth-change", sync);
@@ -156,14 +158,14 @@ function CommunityPageContent() {
   }
 
   useEffect(() => {
-    if (!viewingPost || !Number.isInteger(postId) || postId < 1) return;
+    if (!viewingPost || !Number.isInteger(postId) || postId < 1 || !detailIsPublic) return;
     let active = true;
     api.communityFeed.comments(postId, 1, 20).then(result => {
       if (!active) return;
       setComments({ [postId]: result }); setCommentPages({ [postId]: 1 }); setExpandedComments([postId]);
     }).catch(() => { if (active) setActionMessage("댓글을 불러오지 못했습니다. 댓글 보기를 눌러 다시 시도해 주세요."); });
     return () => { active = false; };
-  }, [viewingPost, postId]);
+  }, [viewingPost, postId, detailIsPublic]);
 
   const followButton = (id: number) => user?.id === id ? null : <button type="button" disabled={!profiles[id] || busyUsers.includes(id)} aria-pressed={profiles[id]?.followedByMe ?? false} onClick={() => void toggleFollow(id)} className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-xs font-bold disabled:opacity-40 ${profiles[id]?.followedByMe ? "bg-[#edf2ef] text-[#59675f]" : "bg-[#008f45] text-white"}`}>{profiles[id]?.followedByMe ? "팔로잉 · 취소" : "팔로우"}</button>;
 
@@ -218,15 +220,26 @@ function CommunityPageContent() {
     }
   }
 
-  async function hideFromFeed(id: number) {
+  async function manageFeed(post: CommunityFeedResponse, remove = false) {
+    if (postLocks.current.has(post.id)) return;
+    if (remove && !window.confirm("피드에서 이 게시글을 삭제할까요? 피드에서는 복구할 수 없으며, 미션 인증 기록과 받은 스탬프·배지는 그대로 유지됩니다.")) return;
+    if (!remove && !post.shareToFeed && !window.confirm("사진과 글을 모든 이용자가 볼 수 있도록 공개할까요?")) return;
+    postLocks.current.add(post.id); setBusyPostIds(current => [...current, post.id]);
     try {
-      await api.stampSubmissions.updateFeedVisibility(id, {
-        share_to_feed: false,
-        feed_caption: null,
-      });
-      setPosts((current) => current.filter((post) => post.id !== id));
+      if (remove) {
+        await api.stampSubmissions.deleteFeed(post.id);
+        setPosts(current => current.filter(item => item.id !== post.id));
+        setActionMessage("피드에서 삭제했습니다. 미션 인증 기록과 받은 스탬프·배지는 유지됩니다.");
+      } else {
+        await api.stampSubmissions.updateFeedVisibility(post.id, { share_to_feed: !post.shareToFeed });
+        setPosts(current => current.map(item => item.id === post.id ? { ...item, shareToFeed: !post.shareToFeed } : item));
+        setComments(current => ({ ...current, [post.id]: [] }));
+        setActionMessage(post.shareToFeed ? "비공개로 변경했습니다. 내 피드에서 다시 공개할 수 있습니다." : "공개로 변경했습니다.");
+      }
     } catch {
-      setError("피드 공개 설정을 변경하지 못했습니다.");
+      setActionMessage("게시글 설정을 변경하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      postLocks.current.delete(post.id); setBusyPostIds(current => current.filter(id => id !== post.id));
     }
   }
 
@@ -289,7 +302,7 @@ function CommunityPageContent() {
           <section className="mt-8 rounded-[24px] border border-[#dce5df] bg-white px-6 py-16 text-center">
             <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#e9f5ed] text-[#008f45]"><AppIcon name="person" className="size-7" /></span>
             <h2 className="mt-5 text-xl font-bold">로그인하고 내 인증 피드를 확인하세요</h2>
-            <p className="mt-2 text-sm text-[#748078]">공개에 동의한 승인 완료 인증만 내 피드에 표시됩니다.</p>
+            <p className="mt-2 text-sm text-[#748078]">내 피드에서는 승인된 공개·비공개 인증을 관리할 수 있습니다.</p>
             <Link href={loginUrl} className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white">로그인하기</Link>
           </section>
         ) : loading ? (
@@ -316,6 +329,7 @@ function CommunityPageContent() {
               if (!viewingPost) return <article key={post.id} className="relative"><Link href={`/community?post=${post.id}`} aria-label={`${post.authorName}님의 ${post.placeName ?? "스포츠"} 게시글 보기`} className="relative block aspect-square cursor-pointer overflow-hidden rounded-xl bg-[#e7ece8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#008f45]">
                 {post.proofUrl ? <Image src={post.proofUrl} alt={post.isDemo ? "운영자 데모 안내" : `${post.placeName ?? "강원 스포츠"} 인증 사진`} fill sizes="(max-width: 1280px) 50vw, 25vw" className="object-cover transition hover:scale-105" /> : <span className="flex h-full items-center justify-center text-sm text-[#66736c]">사진을 불러올 수 없습니다</span>}
                 {post.isDemo && <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-[#12653d]">운영자 DEMO</span>}
+                {!post.shareToFeed && <span className="absolute left-2 top-2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">비공개 · 나만 보기</span>}
                 {(post.proofUrls?.length ?? 0) > 1 && <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white">사진 {post.proofUrls!.length}장</span>}
               </Link><Link href={`/community?user=${post.authorId}`} aria-label={`${post.authorName}의 프로필 보기`} className="absolute bottom-2 left-2 flex max-w-[90%] items-center gap-2 rounded-full bg-white/95 py-1 pl-1 pr-3 text-xs font-bold text-[#173a2d] shadow hover:bg-white">{post.authorProfileImageUrl ? <Image src={post.authorProfileImageUrl} alt="" width={28} height={28} className="size-7 rounded-full object-cover" /> : <span className="flex size-7 items-center justify-center rounded-full bg-[#e2efe7] text-[10px]">{initials(post.authorName)}</span>}<span className="truncate">{post.authorName}</span></Link></article>;
               return (
@@ -333,15 +347,18 @@ function CommunityPageContent() {
                     {post.isDemo && <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-[#12653d]">운영자 DEMO · 실제 인증 아님</span>}
                   </div>
                   <div className="p-4">
+                    {!post.shareToFeed && <p className="mb-4 rounded-xl bg-[#f1f5f2] p-3 text-sm">비공개 · 나에게만 보이는 게시글입니다. 공개하면 좋아요와 댓글을 이용할 수 있습니다.</p>}
+                    {post.shareToFeed && <>
                     <div className="flex items-center gap-2">
                       <button type="button" aria-label={liked ? "좋아요 취소" : "좋아요"} aria-pressed={liked} onClick={() => void toggleLike(post)} disabled={busyPostIds.includes(post.id)} className={`inline-flex size-9 cursor-pointer items-center justify-center rounded-full transition disabled:opacity-50 ${liked ? "bg-[#fff0f0] text-[#e04444]" : "bg-[#f3f6f4] text-[#4f5d55] hover:text-[#e04444]"}`}><AppIcon name="heart" className={`size-5 ${liked ? "fill-current" : ""}`} /></button>
                       <span className="text-xs font-bold text-[#4f5d55]">{post.likeCount}</span>
                       <button type="button" onClick={() => expandedComments.includes(post.id) ? setExpandedComments(current => current.filter(id => id !== post.id)) : void loadComments(post.id)} aria-label="댓글 펼치기" className="ml-1 inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-[#4f5d55]"><AppIcon name="messageCircle" className="size-5" />{post.commentCount}</button>
 
                     </div>
+                    </>}
                     <p className="mt-3 whitespace-pre-line break-words text-sm leading-6"><strong className="mr-2">{post.isDemo ? "운영자 안내" : post.placeName ?? "강원 스포츠 인증"}</strong>{post.caption ?? "미션 인증을 완료했습니다."}</p>
                     {postTags.length > 0 && <p className="mt-2 text-xs font-semibold text-[#008f45]">{postTags.map((tag) => `#${tag}`).join(" ")}</p>}
-                    <div className="mt-4 space-y-3 border-t border-[#edf1ee] pt-3">
+                    {post.shareToFeed && <div className="mt-4 space-y-3 border-t border-[#edf1ee] pt-3">
                       <button onClick={() => void loadComments(post.id)} className="cursor-pointer text-xs text-[#79867e]">댓글 {post.commentCount}개 보기</button>
                       {expandedComments.includes(post.id) && (comments[post.id] ?? []).map((comment) => <div key={comment.id} className="flex gap-2.5 text-sm">
                         <Link href={`/community?user=${comment.authorId}`} aria-label={`${comment.authorName}의 피드 보기`} className="shrink-0 cursor-pointer rounded-full">{comment.authorProfileImageUrl ? <span className="relative mt-0.5 block size-7 overflow-hidden rounded-full bg-[#e7ece8]"><Image src={comment.authorProfileImageUrl} alt={`${comment.authorName} 프로필 사진`} fill sizes="28px" className="object-cover" /></span> : <span className="mt-0.5 flex size-7 items-center justify-center rounded-full bg-[#e9f3ec] text-[9px] font-black text-[#17633d]">{initials(comment.authorName)}</span>}</Link>
@@ -352,10 +369,14 @@ function CommunityPageContent() {
                         <input aria-label="댓글 내용" value={commentDrafts[post.id] ?? ""} onChange={(event) => setCommentDrafts((current) => ({ ...current, [post.id]: event.target.value }))} maxLength={500} placeholder={user ? "댓글 달기..." : "로그인 후 댓글을 남겨보세요"} className="h-10 min-w-0 flex-1 rounded-full border border-[#dce5df] bg-[#f8faf8] px-4 text-sm outline-none transition focus:border-[#008f45]" />
                         <button type="submit" disabled={!commentDrafts[post.id]?.trim() || busyPostIds.includes(post.id)} className="h-9 cursor-pointer rounded-full px-3 text-xs font-black text-[#008f45] disabled:cursor-not-allowed disabled:text-[#aab4ae]">게시</button>
                       </form>
-                    </div>
+                    </div>}
                     <time className="mt-3 block text-[11px] text-[#9aa39e]">{displayDate(post.approvedAt)}</time>
                     {!post.isDemo && user?.id !== post.authorId && <div className="mt-4 flex flex-wrap gap-3 border-t border-[#edf1ee] pt-4 text-xs"><Link href={`/support/?topic=community-report&target=post-${post.id}#community-report`} className="font-bold text-[#8d443b] underline underline-offset-2">게시물 #{post.id} 신고 안내</Link><button type="button" onClick={() => blockUser(post.authorId, post.authorName)} className="font-bold text-[#66736c] underline underline-offset-2">이 사용자의 게시물 숨기기</button></div>}
-                    {user?.id === post.authorId && !post.isDemo && <button type="button" onClick={() => void hideFromFeed(post.id)} className="mt-4 cursor-pointer text-xs font-semibold text-[#929c96] underline-offset-2 hover:text-[#b43d3d] hover:underline">피드에서 숨기기</button>}
+                    {user?.id === post.authorId && !post.isDemo && <div className="mt-5 border-t border-[#edf1ee] pt-4">
+                      <div className="flex flex-wrap gap-3"><button type="button" disabled={busyPostIds.includes(post.id)} onClick={() => void manageFeed(post)} className="cursor-pointer rounded-lg border px-4 py-2 text-sm font-bold disabled:opacity-40">{post.shareToFeed ? "비공개로 변경" : "공개로 변경"}</button>
+                      <button type="button" disabled={busyPostIds.includes(post.id)} onClick={() => void manageFeed(post, true)} className="cursor-pointer rounded-lg border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40">피드에서 삭제</button></div>
+                      <p className="mt-3 text-xs text-[#66736c]">공개 변경·피드 삭제는 미션 인증 기록과 받은 스탬프·배지에 영향을 주지 않습니다.</p>
+                    </div>}
                   </div>
                 </article>
               );
