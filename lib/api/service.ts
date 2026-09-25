@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  missionReviewPermissionSchema,
   activityCreateSchema,
   activityHistoryResponseSchema,
   activityHistoryStatusSchema,
@@ -199,6 +200,18 @@ export const api = {
   hasToken: () => Boolean(token()),
   currentUser,
   me: () => privateProfileRequest(),
+  completeOnboarding: async () => {
+    const requestedToken = token();
+    const ownerId = currentUser()?.id;
+    if (!requestedToken || !ownerId) throw new Error("Login is required.");
+    const result = await request("/auth/complete-onboarding", {
+      schema: authResponseSchema, method: "POST", token: requestedToken,
+    });
+    if (token() !== requestedToken || currentUser()?.id !== ownerId || result.user.id !== ownerId) {
+      throw new Error("Account session changed.");
+    }
+    return saveToken(result);
+  },
   myBadges: (page = 1, size = 100) => withToken(`/me/badges${pageQuery(page, size)}`, z.array(meBadgeResponseSchema)),
   myStampbook: (status: StampbookFilter = "all", page = 1, size = 100) => withToken(
     `/me/stampbook${queryString({ status: stampbookFilterSchema.parse(status), page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size) })}`,
@@ -309,6 +322,7 @@ export const api = {
     z.array(missionProgressSchema),
   ),
   stampSubmissions: {
+    deleteFeed: (id: number) => withToken(`/stamp-submissions/${itemIdSchema.parse(id)}/feed`, z.void(), "DELETE"),
     list: (page = 1, size = 20) => withToken(`/stamp-submissions${pageQuery(page, size)}`, z.array(stampSubmissionResponseSchema)),
     create: (input: StampSubmissionCreate) => withToken("/stamp-submissions", stampSubmissionResponseSchema, "POST", stampSubmissionCreateSchema.parse(input)),
     createUploadUrl: (input: UploadUrlRequest) => withToken("/stamp-submissions/upload-url", uploadUrlResponseSchema, "POST", uploadUrlRequestSchema.parse(input)),
@@ -356,6 +370,7 @@ export const api = {
     ),
   },
   adminStampSubmissions: {
+    permission: () => withToken("/me/mission-review-permission", missionReviewPermissionSchema),
     list: (status: SubmissionStatus = "pending", page = 1, size = 20) => withToken(
       `/admin/stamp-submissions${queryString({ status: submissionStatusSchema.parse(status), page: positiveIntSchema.parse(page), size: pageSizeSchema.parse(size) })}`,
       z.array(stampSubmissionResponseSchema),

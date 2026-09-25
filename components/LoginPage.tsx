@@ -112,6 +112,8 @@ export function LoginPage() {
     setError("");
     try {
       const redirectUri = new URL("/login/", location.origin).toString();
+      // A cancelled account switch must not leave the previous account signed in.
+      api.logout();
       sessionStorage.setItem(OAUTH_SESSION_KEY, JSON.stringify({ provider, redirectUri, next, createdAt: Date.now() }));
       // The JSON endpoint surfaces configuration errors here instead of leaving users on an API error page.
       const result = await api.authorize(provider, redirectUri);
@@ -141,6 +143,7 @@ export function LoginPage() {
           {!signup && <div className="mt-4 flex items-center justify-center gap-3 text-sm text-[#68736d]"><Link href="/account-help?mode=id" className="hover:text-[#008f45]">아이디 찾기</Link><span className="h-3 w-px bg-[#d7ddd9]" /><Link href="/account-help?mode=password" className="hover:text-[#008f45]">비밀번호 찾기</Link></div>}
           <div className="my-6 flex items-center gap-3 text-xs text-[#98a19c]"><span className="h-px flex-1 bg-[#e4e9e6]" />또는<span className="h-px flex-1 bg-[#e4e9e6]" /></div>
           <div className="grid gap-3"><button type="button" disabled={pending} onClick={() => oauth("google")} className="h-11 rounded-xl border border-[#dfe5e1] text-sm font-medium hover:bg-[#f6f8f7]">Google로 로그인·가입</button><button type="button" disabled={pending} onClick={() => oauth("kakao")} className="h-11 rounded-xl bg-[#fee500] text-sm font-medium text-[#191919]">카카오로 로그인·가입</button></div>
+          <p className="mt-3 text-xs leading-5 text-[#6f7a87]">카카오는 공식 로그인 화면에서 사용할 계정을 확인해 주세요. 처음 이용하시면 서비스 약관 동의와 회원정보 설정을 진행합니다. 카카오톡 안에서 다른 계정을 쓰려면 외부 브라우저에서 열어 주세요.</p>
           <p className="mt-7 text-center text-sm text-[#7a8491]">{signup ? "이미 계정이 있으신가요?" : "계정이 없으신가요?"} <button type="button" disabled={pending} onClick={() => { if (submitting.current) return; setSignup(!signup); setCheckedUsername(null); setError(""); }} className="font-semibold text-[#008f45] disabled:opacity-60">{signup ? "로그인" : "회원가입"}</button></p>
           <Link href="/" className="mt-5 flex items-center justify-center gap-1 text-sm font-semibold text-[#52605a]">로그인 없이 둘러보기<AppIcon name="arrowRight" /></Link>
         </div>

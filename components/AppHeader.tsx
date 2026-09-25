@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/service";
+import { authDestination } from "@/lib/auth-flow";
 import { NAV_ITEMS } from "@/types";
 
 const LOGO_PATH =
@@ -16,11 +17,16 @@ export function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const refreshAuth = () => setLoggedIn(api.hasToken());
+    const refreshAuth = () => {
+      setLoggedIn(api.hasToken());
+      if (api.hasToken() && api.currentUser()?.onboardingRequired) {
+        router.replace(authDestination(true, pathname));
+      }
+    };
     const timer = window.setTimeout(refreshAuth, 0);
     window.addEventListener("sportspassport-auth-change", refreshAuth);
     return () => { window.clearTimeout(timer); window.removeEventListener("sportspassport-auth-change", refreshAuth); };
-  }, []);
+  }, [router, pathname]);
 
   return (
     <header onKeyDown={(event) => { if (event.key === "Escape") setMenuOpen(false); }} className="fixed inset-x-0 top-0 z-[200] h-16 border-b border-[#e5e7eb] bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.08)] backdrop-blur-md">

@@ -50,6 +50,7 @@ function setup(component) {
     currentUser: () => current,
     me: () => loading.promise,
     updateProfile: (input) => { patches.push(input); return updating.promise; },
+    completeOnboarding: async () => ({ user: { ...current, onboardingRequired: false } }),
     createProfileUploadUrl: () => signing.promise,
   };
   class FormDataStub {
@@ -93,6 +94,9 @@ function setup(component) {
       input.props.onChange({ target: { files: [{ type: "image/png", size: 123 }] } });
     },
     submit() {
+      if (component === "OnboardingPage") {
+        state[1] = { terms: true, privacy: true, email: false, sns: false };
+      }
       const form = find(render(), (node) => node.type === "form");
       assert.ok(form, `${component}: form available`);
       return form.props.onSubmit({ preventDefault() {}, currentTarget: {

@@ -420,6 +420,9 @@ export const uploadUrlResponseSchema = z.strictObject({
   expiresIn: z.number().int(),
 });
 export const stampSubmissionResponseSchema = z.object({
+  feedDeletedAt: apiDateTime.nullable().default(null),
+  authorName: z.string().default("참여자"),
+  proofInstructions: z.string().nullable().default(null),
   ...timestamps,
   passportId: z.number().int(),
   stampId: z.number().int(),
@@ -500,6 +503,7 @@ export const feedVisibilityUpdateSchema = z.strictObject({
   feed_caption: z.string().max(300).nullable().optional(),
 });
 export const communityFeedResponseSchema = z.object({
+  shareToFeed: z.boolean().default(true),
   isDemo: z.boolean().default(false),
   id: positiveInt,
   proofUrl: z.string().nullable(),
@@ -535,7 +539,8 @@ export const feedEngagementResponseSchema = z.object({
   likeCount: z.number().int().nonnegative(),
   likedByMe: z.boolean(),
 });
-export const rejectSubmissionSchema = z.strictObject({ reason: z.string().min(1).max(1000) });
+export const rejectSubmissionSchema = z.strictObject({ reason: z.string().trim().min(1).max(1000) });
+export const missionReviewPermissionSchema = z.object({ canReviewMissions: z.boolean() });
 
 export type AuthProvider = z.infer<typeof authProviderSchema>;
 export type AuthUser = z.infer<typeof authUserSchema>;

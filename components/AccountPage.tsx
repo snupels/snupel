@@ -1,4 +1,5 @@
 "use client";
+import { MissionReviewLink } from "./MissionReviewLink";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -140,6 +141,7 @@ export function AccountPage() {
           <aside className="rounded-[24px] border border-[#dfe7e1] bg-white p-6 text-center shadow-sm">
             <div className="mx-auto flex size-28 items-center justify-center overflow-hidden rounded-full bg-[#e7f4ec] text-4xl font-bold text-[#008f45] shadow-inner" style={shownImage ? { backgroundImage: `url(${shownImage})`, backgroundPosition: "center", backgroundSize: "cover" } : undefined}>{!shownImage && displayName.slice(0, 1).toUpperCase()}</div>
             <h2 className="mt-5 text-xl font-bold">{displayName}</h2><p className="mt-1 break-all text-sm text-[#7b8580]">{user.email}</p>
+            <MissionReviewLink />
             <Link href="/account/password" className="mt-6 flex h-10 items-center justify-center rounded-xl bg-[#f1f7f3] text-sm font-bold text-[#008f45]">비밀번호 변경</Link>
             <button type="button" onClick={logout} className="mt-3 h-10 w-full rounded-xl border border-[#e0e5e2] text-sm font-semibold text-[#6a746f] hover:bg-[#f7f9f8]">로그아웃</button>
           </aside>
