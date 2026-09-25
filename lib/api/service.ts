@@ -10,6 +10,7 @@ import {
   authProviderSchema,
   authResponseSchema,
   authUserSchema,
+  accountEmailInfoSchema,
   usernameSchema,
   usernameAvailabilitySchema,
   badgeInputSchema,
@@ -200,6 +201,13 @@ export const api = {
   hasToken: () => Boolean(token()),
   currentUser,
   me: () => privateProfileRequest(),
+  emailInfo: async () => {
+    const requestedToken = token();
+    if (!requestedToken) throw new Error("Login is required.");
+    const result = await request("/auth/email-info", { schema: accountEmailInfoSchema, token: requestedToken });
+    if (token() !== requestedToken) throw new Error("Account session changed.");
+    return result;
+  },
   completeOnboarding: async () => {
     const requestedToken = token();
     const ownerId = currentUser()?.id;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/service";
 import { authErrorMessage, loginHref } from "@/lib/auth-flow";
-import { usernameSchema, type AuthUser } from "@/lib/api/dto";
+import { usernameSchema, type AuthUser, type AccountEmailInfo } from "@/lib/api/dto";
 import { AppIcon } from "./AppIcon";
 import { ConsentDocumentModal, type ConsentDocument } from "./ConsentDocumentModal";
 import { AddressFields } from "./AddressFields";
@@ -26,6 +26,7 @@ export function AccountPage() {
   const sessionVersion = useRef(0);
   const submitting = useRef(false);
   const [checkedUsername, setCheckedUsername] = useState<string | null>(null);
+  const [emailInfo, setEmailInfo] = useState<AccountEmailInfo | null>(null);
 
   useEffect(() => {
     activeSession.current = true;
@@ -36,6 +37,7 @@ export function AccountPage() {
       if (api.hasToken() && (ownerId === undefined || api.currentUser()?.id === ownerId)) return;
       sessionVersion.current += 1;
       setUser(null);
+      setEmailInfo(null);
       setFile(null);
       setPreview("");
       setMessage("");
@@ -56,6 +58,10 @@ export function AccountPage() {
       ownerId = profile.id;
       if (profile.onboardingRequired) { router.replace("/onboarding"); return; }
       setUser(profile);
+      // A private, separate response keeps older strict auth clients compatible.
+      void api.emailInfo().then((info) => {
+        if (isCurrent() && info.userId === ownerId) setEmailInfo(info);
+      }).catch(() => { /* Keep the account form usable during an email-info outage. */ });
     }).catch(() => { if (isCurrent()) router.replace(loginHref("/account/")); })
       .finally(() => { if (isCurrent()) setPending(false); });
     return cleanup;
@@ -128,6 +134,9 @@ export function AccountPage() {
 
   const shownImage = preview || user.profileImageUrl || "";
   const displayName = user.nickname || user.email.split("@")[0];
+  const displayEmail = emailInfo?.userId === user.id && emailInfo.kakaoEmail
+    ? emailInfo.kakaoEmail
+    : (user.email.endsWith("@oauth.sportspassport.kr") ? "" : user.email);
 
   return (
     <div className="bg-[#f3f7f4] px-4 py-12 sm:px-6">
@@ -140,7 +149,7 @@ export function AccountPage() {
         <div className="mt-8 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="rounded-[24px] border border-[#dfe7e1] bg-white p-6 text-center shadow-sm">
             <div className="mx-auto flex size-28 items-center justify-center overflow-hidden rounded-full bg-[#e7f4ec] text-4xl font-bold text-[#008f45] shadow-inner" style={shownImage ? { backgroundImage: `url(${shownImage})`, backgroundPosition: "center", backgroundSize: "cover" } : undefined}>{!shownImage && displayName.slice(0, 1).toUpperCase()}</div>
-            <h2 className="mt-5 text-xl font-bold">{displayName}</h2><p className="mt-1 break-all text-sm text-[#7b8580]">{user.email}</p>
+            <h2 className="mt-5 text-xl font-bold">{displayName}</h2><p className="mt-1 break-all text-sm text-[#7b8580]">{displayEmail || "카카오 이메일 확인 필요"}</p>
             <MissionReviewLink />
             <Link href="/account/password" className="mt-6 flex h-10 items-center justify-center rounded-xl bg-[#f1f7f3] text-sm font-bold text-[#008f45]">비밀번호 변경</Link>
             <button type="button" onClick={logout} className="mt-3 h-10 w-full rounded-xl border border-[#e0e5e2] text-sm font-semibold text-[#6a746f] hover:bg-[#f7f9f8]">로그아웃</button>
@@ -150,7 +159,7 @@ export function AccountPage() {
             <h2 className="text-xl font-bold">계정 정보 수정</h2>
             <div className="mt-7 space-y-5">
               {user.username ? <div><label className="text-sm font-bold" htmlFor="accountUsername">아이디</label><input id="accountUsername" value={user.username} readOnly autoComplete="username" className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" /><p className="mt-2 text-xs text-[#7c8781]">등록한 아이디는 변경할 수 없습니다.</p></div> : <UsernameField idPrefix="account" disabled={pending} required={false} onVerifiedChange={setCheckedUsername} />}
-              <div><label className="text-sm font-bold" htmlFor="email">이메일</label><input id="email" value={user.email} readOnly autoComplete="email" className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" /></div>
+              <div><label className="text-sm font-bold" htmlFor="email">{emailInfo?.kakaoEmail ? "카카오 이메일" : "이메일"}</label><input id="email" value={displayEmail} placeholder="카카오 이메일 확인 필요" readOnly autoComplete="email" className="mt-2 h-12 w-full rounded-xl border border-[#e1e6e3] bg-[#f4f6f5] px-4 text-sm text-[#6f7974]" />{emailInfo?.kakaoEmail && <p className="mt-2 text-xs text-[#7c8781]">카카오에서 확인한 이메일입니다. 같은 이메일의 다른 계정과 자동으로 합쳐지지는 않습니다.</p>}{!displayEmail && <p role="status" className="mt-2 text-xs leading-5 text-[#7c8781]">카카오 이메일을 아직 확인하지 못했습니다. 로그아웃 후 카카오로 다시 로그인하고 이메일 제공에 동의해 주세요. 이미 동의하셨다면 잠시 후 새로고침해 주세요.</p>}</div>
               <div><label className="text-sm font-bold" htmlFor="nickname">닉네임</label><input id="nickname" name="nickname" defaultValue={user.nickname ?? ""} minLength={2} maxLength={30} placeholder="2~30자로 입력해 주세요" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" /></div>
               <div><label className="text-sm font-bold" htmlFor="phoneNumber">전화번호</label><input id="phoneNumber" name="phoneNumber" type="tel" required inputMode="tel" autoComplete="tel" pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}" defaultValue={user.phoneNumber ?? ""} placeholder="010-1234-5678" className="mt-2 h-12 w-full rounded-xl border border-[#dce4df] px-4 text-sm outline-none focus:border-[#008f45] focus:ring-2 focus:ring-[#008f45]/15" /></div>
               <AddressFields idPrefix="account" value={user} disabled={pending} />

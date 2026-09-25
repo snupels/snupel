@@ -67,6 +67,14 @@ export const authUserSchema = z.strictObject({
   marketingEmailAgreed: z.boolean().default(false),
   marketingSnsAgreed: z.boolean().default(false),
 });
+export const accountEmailInfoSchema = z.strictObject({
+  userId: positiveInt,
+  accountEmail: z.email(),
+  kakaoEmail: z.email().nullable(),
+  kakaoLinked: z.boolean(),
+});
+export type AccountEmailInfo = z.infer<typeof accountEmailInfoSchema>;
+
 export const authResponseSchema = z.strictObject({
   accessToken: z.string(),
   tokenType: z.string().default("Bearer"),

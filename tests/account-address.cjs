@@ -80,6 +80,19 @@ async function main() {
   assert.equal((await update).address, "수정주소");
   assert.ok(!storage.get(userKey).includes("수정주소"));
 
+  const emailInfo = { userId: 1, accountEmail: user.email, kakaoEmail: "verified@example.com", kakaoLinked: true };
+  const emailRequest = api.emailInfo();
+  assert.equal(pending[0].url, "/auth/email-info");
+  assert.equal(pending[0].options.token, "synthetic-token-a");
+  pending.shift().resolve(emailInfo);
+  assert.equal((await emailRequest).kakaoEmail, emailInfo.kakaoEmail);
+  assert.ok(!storage.get(userKey).includes(emailInfo.kakaoEmail), "provider contact is not cached");
+  const lateEmail = api.emailInfo();
+  storage.set(tokenKey, "synthetic-token-b");
+  pending.shift().resolve(emailInfo);
+  await assert.rejects(lateEmail, /session changed/);
+  storage.set(tokenKey, "synthetic-token-a");
+
   const late = api.me();
   api.logout();
   pending.shift().resolve(user);
