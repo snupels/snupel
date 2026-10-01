@@ -20,6 +20,9 @@ export function SiteFooter() {
           <div className="mt-4 flex flex-col items-start gap-3"><Link href="/terms/service/" className="hover:text-white hover:underline">이용약관</Link><Link href="/terms/privacy/" className="font-bold hover:text-white hover:underline">개인정보 처리방침</Link><a href={SERVICE_INFO.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white hover:underline">공식 인스타그램</a></div>
         </nav>
       </div>
+      <p className="mx-auto mt-8 max-w-[1180px] px-4 text-[11px] text-white/50 sm:px-6">
+        날씨 정보 출처: <a href="https://www.weather.go.kr/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white">기상청</a> · <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white">Open-Meteo</a>
+      </p>
     </footer>
   );
 }

@@ -92,7 +92,6 @@ const gangwonWeatherRegions = [
 export default function HomePage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
-  const [weatherSource, setWeatherSource] = useState<"kma" | "open_meteo">("kma");
   const [weatherRetry, setWeatherRetry] = useState(0);
   const [weatherFailed, setWeatherFailed] = useState(false);
   const [weatherLoading, setWeatherLoading] = useState(true);
@@ -125,7 +124,6 @@ export default function HomePage() {
         if (cancelled) return;
         setWeatherLoading(false);
         setWeatherFailed(false);
-        setWeatherSource(weather.source);
         setTemperature(weather.temperatureC === null ? null : Math.round(weather.temperatureC));
         setTemperatureRange(weather.precipitationProbability === null ? "강수 확률 확인 중" : `강수 확률 ${weather.precipitationProbability}%`);
         const labels: Record<string, string> = { clear: "맑음", cloudy: "구름 많음", overcast: "흐림", none: "", rain: "비", rain_snow: "비·눈", snow: "눈", shower: "소나기" };
@@ -249,7 +247,6 @@ export default function HomePage() {
                 <AppIcon name="activity" className="size-3.5" /> {weatherDetail}
               </p>
               {weatherFailed && <button type="button" onClick={() => { setWeatherLoading(true); setWeatherFailed(false); setTemperatureRange("날씨 불러오는 중"); setWeatherRetry(value => value + 1); }} className="mt-2 cursor-pointer text-xs font-semibold text-[#007a3d] underline">날씨 다시 불러오기</button>}
-              <a href={weatherSource === "open_meteo" ? "https://open-meteo.com/" : "https://www.weather.go.kr/"} target="_blank" rel="noreferrer" className="mt-2 block text-right text-[9px] text-[#87918c] underline-offset-2 hover:underline">{weatherSource === "open_meteo" ? "Weather data by Open-Meteo.com" : "날씨 제공: 기상청"}</a>
             </aside>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
