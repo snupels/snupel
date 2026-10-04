@@ -39,7 +39,7 @@ const heroChallenges: Array<{
     description: "대관령의 초원을 달리는 5K·13K·23K 트레일런. 평창 삼양라운드힐에서 러닝과 캠핑·웰니스를 함께 즐겨보세요.",
     date: "2026.10.24(토) ~ 10.25(일)",
     location: "평창 삼양라운드힐",
-    actionLabel: "공식 행사 안내",
+    actionLabel: "공식 홈페이지",
     href: "https://sqnc.global/buldak-burning-festa-with-peppo",
   },
   {
