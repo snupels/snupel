@@ -230,7 +230,7 @@ export default function HomePage() {
   return (
     <div className="bg-[#f3f7f4] text-[#172033]">
       <section className="bg-gradient-to-b from-[#e8f0eb] via-[#f3f7f4] to-[#f3f7f4] px-4 pb-14 pt-8 sm:px-6 lg:px-8">
-        <div className="relative mx-auto min-h-[500px] max-w-[1280px] overflow-hidden rounded-[28px] bg-[#244839] shadow-[0_20px_60px_rgba(21,55,40,0.18)]">
+        <div data-testid="home-hero" className="relative mx-auto min-h-[500px] max-w-[1280px] overflow-hidden rounded-[28px] bg-[#244839] shadow-[0_20px_60px_rgba(21,55,40,0.18)]">
           <Image key={heroChallenge.title} src={heroChallenge.image} alt={`${heroChallenge.title} 배경`} fill preload sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" />
           <div
             className="absolute inset-0"
@@ -238,10 +238,8 @@ export default function HomePage() {
               ? "linear-gradient(90deg,rgba(45,3,7,0.82) 0%,rgba(92,8,16,0.76) 48%,rgba(145,12,22,0.58) 100%)"
               : "linear-gradient(90deg,rgba(10,35,27,0.78) 0%,rgba(10,35,27,0.48) 48%,rgba(10,35,27,0.65) 100%)" }}
           />
-          <div className={`relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:p-12 ${heroChallenge.artwork ? "lg:grid-cols-[260px_minmax(0,1fr)_220px]" : "lg:grid-cols-[190px_minmax(0,1fr)_220px]"}`}>
-            <div className="order-2 space-y-6 lg:order-1">
-              {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="260px" className="hidden h-auto w-full object-contain drop-shadow-xl lg:block" />}
-            <aside className="rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur">
+          <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
+            <aside data-testid="home-weather" className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={() => changeWeatherRegion(-1)} aria-label="이전 지역 날씨" className="cursor-pointer rounded-full p-1 text-[#687385] transition hover:bg-[#edf3ef] hover:text-[#008f45]"><AppIcon name="chevronLeft" className="size-4" /></button>
                 <p className="text-center text-xs font-semibold text-[#687385]">{weatherRegion.name} 오늘의 날씨</p>
@@ -258,13 +256,14 @@ export default function HomePage() {
               </p>
               {weatherFailed && <button type="button" onClick={() => { setWeatherLoading(true); setWeatherFailed(false); setTemperatureRange("날씨 불러오는 중"); setWeatherRetry(value => value + 1); }} className="mt-2 cursor-pointer text-xs font-semibold text-[#007a3d] underline">날씨 다시 불러오기</button>}
             </aside>
-            </div>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
-              {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="260px" className="mx-auto mb-6 h-auto w-[260px] max-w-full object-contain drop-shadow-xl lg:hidden" />}
               <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">{heroChallenge.tag}</span>
-              <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl lg:text-[44px] lg:leading-[1.18]">{heroChallenge.title}</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{heroChallenge.description}</p>
+              <div data-testid="home-hero-heading" className="mt-4 flex h-36 items-center gap-3 sm:gap-4">
+                <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-[1.2] tracking-[-0.04em] sm:text-[32px] xl:text-[40px]">{heroChallenge.title}</h1>
+                {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="(min-width: 1280px) 152px, (min-width: 640px) 128px, 96px" className="h-auto w-24 shrink-0 object-contain drop-shadow-xl sm:w-32 xl:w-[152px]" />}
+              </div>
+              <p className="mt-3 min-h-24 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{heroChallenge.description}</p>
               <div className="mt-6 space-y-2 text-sm text-white/90">
                 <p className="flex items-center gap-2"><AppIcon name="calendar" className="size-4" />{heroChallenge.date}</p>
                 <p className="flex items-center gap-2"><AppIcon name="mapPin" className="size-4" />{heroChallenge.location}</p>
@@ -299,7 +298,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <aside className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
+            <aside data-testid="home-passport" className="order-3 rounded-2xl bg-white p-4 text-[#172033] shadow-2xl">
               <h2 className="text-xs font-semibold">나의 패스포트</h2>
               {passportProfile.status !== "guest" ? <>
                 <div className="mt-3 rounded-xl bg-[#008f45] p-4 text-center text-white">

@@ -19,7 +19,7 @@ assert.equal(featured.tone, "fire");
 assert.equal(featured.artwork, "https://sqnc.global/_next/static/media/logo-buldak-burning-festa-with-peppo.349e9f3b.png");
 assert.equal(marathon.artwork, undefined);
 assert.equal(tourism.artwork, undefined);
-assert.equal((home.match(/src=\{heroChallenge.artwork\}/g) || []).length, 2);
+assert.equal((home.match(/src=\{heroChallenge.artwork\}/g) || []).length, 1);
 assert.match(home, /불닭 페포 마스코트와 버닝 페스타 공식 로고/);
 assert.equal(marathon.tone, undefined);
 assert.equal(tourism.tone, undefined);
