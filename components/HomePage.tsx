@@ -28,10 +28,12 @@ const heroChallenges: Array<{
   actionLabel?: string;
   href?: string;
   tone?: "fire";
+  artwork?: string;
 }> = [
   {
     image: "https://sqnc.global/_next/static/media/hero-fire-first-frame.e3bf6c5e.jpg",
     tone: "fire",
+    artwork: "https://sqnc.global/_next/static/media/logo-buldak-burning-festa-with-peppo.349e9f3b.png",
     tag: "개최 예정 · 트레일러닝",
     title: "불닭 버닝 페스타 With 페포",
     description: "대관령의 초원을 달리는 5K·13K·23K 트레일런. 평창 삼양라운드힐에서 러닝과 캠핑·웰니스를 함께 즐겨보세요.",
@@ -236,8 +238,10 @@ export default function HomePage() {
               ? "linear-gradient(90deg,rgba(45,3,7,0.82) 0%,rgba(92,8,16,0.76) 48%,rgba(145,12,22,0.58) 100%)"
               : "linear-gradient(90deg,rgba(10,35,27,0.78) 0%,rgba(10,35,27,0.48) 48%,rgba(10,35,27,0.65) 100%)" }}
           />
-          <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
-            <aside className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
+          <div className={`relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:p-12 ${heroChallenge.artwork ? "lg:grid-cols-[260px_minmax(0,1fr)_220px]" : "lg:grid-cols-[190px_minmax(0,1fr)_220px]"}`}>
+            <div className="order-2 space-y-6 lg:order-1">
+              {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="260px" className="hidden h-auto w-full object-contain drop-shadow-xl lg:block" />}
+            <aside className="rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur">
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={() => changeWeatherRegion(-1)} aria-label="이전 지역 날씨" className="cursor-pointer rounded-full p-1 text-[#687385] transition hover:bg-[#edf3ef] hover:text-[#008f45]"><AppIcon name="chevronLeft" className="size-4" /></button>
                 <p className="text-center text-xs font-semibold text-[#687385]">{weatherRegion.name} 오늘의 날씨</p>
@@ -254,8 +258,10 @@ export default function HomePage() {
               </p>
               {weatherFailed && <button type="button" onClick={() => { setWeatherLoading(true); setWeatherFailed(false); setTemperatureRange("날씨 불러오는 중"); setWeatherRetry(value => value + 1); }} className="mt-2 cursor-pointer text-xs font-semibold text-[#007a3d] underline">날씨 다시 불러오기</button>}
             </aside>
+            </div>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
+              {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="260px" className="mx-auto mb-6 h-auto w-[260px] max-w-full object-contain drop-shadow-xl lg:hidden" />}
               <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">{heroChallenge.tag}</span>
               <h1 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl lg:text-[44px] lg:leading-[1.18]">{heroChallenge.title}</h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{heroChallenge.description}</p>
