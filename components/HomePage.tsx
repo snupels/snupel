@@ -259,16 +259,16 @@ export default function HomePage() {
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
               <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">{heroChallenge.tag}</span>
-              <div data-testid="home-hero-heading" className="mt-4 flex h-36 items-center gap-3 sm:gap-4">
+              <div data-testid="home-hero-heading" className="mt-3 flex h-28 items-center gap-3 sm:h-24 sm:gap-4">
                 <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-[1.2] tracking-[-0.04em] sm:text-[32px] xl:text-[40px]">{heroChallenge.title}</h1>
-                {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="(min-width: 1280px) 152px, (min-width: 640px) 128px, 96px" className="h-auto w-24 shrink-0 object-contain drop-shadow-xl sm:w-32 xl:w-[152px]" />}
+                {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="(min-width: 1280px) 104px, (min-width: 640px) 96px, 80px" className="h-auto w-20 shrink-0 object-contain drop-shadow-xl sm:w-24 xl:w-[104px]" />}
               </div>
-              <p className="mt-3 min-h-24 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{heroChallenge.description}</p>
+              <p className="mt-3 min-h-24 max-w-xl text-sm leading-6 text-white/90 sm:min-h-18 sm:text-base">{heroChallenge.description}</p>
               <div className="mt-6 space-y-2 text-sm text-white/90">
                 <p className="flex items-center gap-2"><AppIcon name="calendar" className="size-4" />{heroChallenge.date}</p>
                 <p className="flex items-center gap-2"><AppIcon name="mapPin" className="size-4" />{heroChallenge.location}</p>
               </div>
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-3">
                 {heroChallenge.href ? (
                   <a href={heroChallenge.href} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
                     {heroChallenge.actionLabel ?? "자세히 보기"}<AppIcon name="arrowRight" />
@@ -279,7 +279,7 @@ export default function HomePage() {
                   </button>
                 )}
               </div>
-              <div className="mt-6 flex items-center gap-3 text-sm text-white/90">
+              <div className="mt-4 flex items-center gap-3 text-sm text-white/90">
                 <button type="button" onClick={showPreviousHero} aria-label="이전 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronLeft" /></button>
                 <span className="min-w-9 text-center">{heroIndex + 1} / {heroChallenges.length}</span>
                 <button type="button" onClick={showNextHero} aria-label="다음 챌린지" className="cursor-pointer rounded-full bg-white/15 p-1.5 transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><AppIcon name="chevronRight" /></button>
