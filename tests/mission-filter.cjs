@@ -14,7 +14,7 @@ const filterStart = portal.indexOf("const cards = (recommendationNeedsLogin ? []
 const filterSource = portal.slice(filterStart, portal.indexOf("\n\n  return (", filterStart));
 assert.ok(filterStart > 0, "Test must exercise the actual PortalPage filter.");
 const courses = [
-  { id: 1, title: "홍천사랑마라톤 참가 인증", category: "event", sportName: null, isPublished: true },
+  { id: 1, title: "홍천사랑마라톤 참가 인증", category: "event", sportName: null, isPublished: true, isClosed: true },
   { id: 2, title: "평창 올림픽 기념관 방문 인증", category: "event", sportName: null, isPublished: true },
   { id: 18, title: "육상 미션", category: "event", sportName: "ATHLETICS", isPublished: true },
   { id: 10, title: "수상 미션", category: "event", sportName: "WATER", isPublished: true },
@@ -32,6 +32,9 @@ vm.runInNewContext(compile(loadSource + "\nfunction applyFilters(remoteCards, ac
 (async () => {
   const cards = await context.loadCards("missions");
   assert.equal(cards.find((card) => card.href.endsWith("id=1")).tag, "육상스포츠");
+  assert.equal(cards.find((card) => card.href.endsWith("id=1")).secondaryTag, "마감");
+  assert.match(cards.find((card) => card.href.endsWith("id=1")).meta, /인증 접수 마감/);
+  assert.equal(cards.find((card) => card.href.endsWith("id=2")).secondaryTag, undefined);
   const ids = (filters) => Array.from(context.applyFilters(cards, filters), (card) => Number(card.href.split("id=")[1]));
   assert.deepEqual(ids(["육상스포츠"]), [1, 18]);
   assert.deepEqual(ids(["올림픽레거시"]), [2]);

@@ -204,6 +204,7 @@ const courseFields = {
   official_url: nullableUrl.optional(),
   official_label: z.string().max(100).nullable().optional(),
   is_published: z.boolean().optional(),
+  is_closed: z.boolean().optional(),
 };
 export const courseCreateSchema = z.strictObject({ ...courseFields, theme: courseThemeSchema });
 export const coursePatchSchema = z.strictObject({
@@ -228,6 +229,7 @@ export const courseResponseSchema = z.object({
   officialUrl: z.string().nullable().optional(),
   officialLabel: z.string().nullable().optional(),
   isPublished: z.boolean().default(false),
+  isClosed: z.boolean().default(false),
 });
 
 // Optional organizer-verified information in activity.metadata; old API rows stay valid.

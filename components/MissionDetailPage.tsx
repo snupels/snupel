@@ -15,6 +15,7 @@ import type { CourseItineraryResponse, CourseResponse } from "@/lib/api/dto";
 function errorMessage(reason: unknown) {
   if (reason instanceof ApiError) {
     if (reason.status === 401) return "로그인 정보가 만료되었습니다. 다시 로그인해 주세요.";
+    if (reason.status === 404) return "마감되었거나 현재 인증할 수 없는 미션입니다. 미션 목록을 확인해 주세요.";
     if (reason.status === 409) return "이미 획득했거나 검토 중인 미션입니다.";
   }
   return "인증 신청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
@@ -76,7 +77,7 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submissionLock.current || completed) return;
+    if (submissionLock.current || completed || course?.isClosed) return;
     if (!api.hasToken()) {
       setMessage("로그인 후 인증을 신청할 수 있습니다.");
       return;
@@ -141,7 +142,7 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
         <div className="absolute inset-0 bg-gradient-to-r from-[#09271d]/95 via-[#09271d]/75 to-[#09271d]/25" />
         <div className="relative mx-auto flex min-h-[390px] max-w-[1180px] flex-col justify-end px-5 pb-12 pt-24 text-white sm:px-8">
           <Link href="/missions" className="mb-auto inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/80 hover:text-white"><AppIcon name="chevronLeft" />미션 목록</Link>
-          <span className="w-fit rounded-full bg-[#00a94f] px-4 py-2 text-xs font-bold">사진 인증</span>
+          <span className={`w-fit rounded-full px-4 py-2 text-xs font-bold ${course.isClosed ? "bg-[#59645f]" : "bg-[#00a94f]"}`}>{course.isClosed ? "마감된 미션" : "사진 인증"}</span>
           <h1 className="mt-4 max-w-3xl text-3xl font-black tracking-[-0.04em] sm:text-5xl">{course.title}</h1>
           <p className="mt-4 max-w-2xl leading-7 text-white/80">{mission.intro}</p>
         </div>
@@ -175,7 +176,13 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
           </div>
         </section>
 
-        <form onSubmit={submit} className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 shadow-[0_16px_50px_rgba(36,73,50,0.10)] lg:sticky lg:top-24">
+        {course.isClosed ? <aside className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 lg:sticky lg:top-24">
+          <h2 className="text-xl font-bold">인증 접수가 마감되었습니다</h2>
+          {course.participationPeriod && <p className="mt-3 text-sm font-bold text-[#617168]">{course.participationPeriod}</p>}
+          <p className="mt-4 text-sm leading-7 text-[#617168]">이 미션은 더 이상 신규 인증을 받지 않습니다. 이미 제출한 인증은 계속 심사되며, 획득한 스탬프와 배지는 유지됩니다.</p>
+          <Link href="/missions" className="mt-5 flex h-11 items-center justify-center rounded-xl bg-[#008f45] text-sm font-bold text-white">다른 미션 둘러보기</Link>
+          <Link href="/activity-history" className="mt-3 flex h-11 items-center justify-center rounded-xl border border-[#dbe6de] text-sm font-bold">내 인증 내역 확인</Link>
+        </aside> : <form onSubmit={submit} className="h-fit rounded-[24px] border border-[#dbe6de] bg-white p-6 shadow-[0_16px_50px_rgba(36,73,50,0.10)] lg:sticky lg:top-24">
             <h2 className="text-xl font-bold">참여 인증하기</h2>
             <div className="mt-4 rounded-2xl border border-[#a8d8bb] bg-[#edf8f1] p-4 text-sm leading-6 text-[#245b3a]">
               <p className="font-bold">사진은 1~5장, 도전의 순간을 함께 남겨요</p>
@@ -208,7 +215,7 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
           {message && <p role="status" className={`mt-4 rounded-xl px-4 py-3 text-sm leading-6 ${completed ? "bg-[#e9f7ee] text-[#08743a]" : "bg-[#fff2f0] text-[#a03d32]"}`}>{message}</p>}
           {completed && <Link href="/activity-history" className="mt-4 flex h-11 items-center justify-center rounded-xl border border-[#9dcdb0] text-sm font-bold text-[#00783a]">내 인증 신청 확인하기<AppIcon name="arrowRight" /></Link>}
           {mission.officialUrl && <a href={mission.officialUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex items-center justify-center gap-1 text-xs font-bold text-[#617168] hover:text-[#008f45]">{mission.officialLabel ?? "공식 안내"} <AppIcon name="arrowRight" /></a>}
-        </form>
+        </form>}
       </div>
     </main>
   );

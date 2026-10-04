@@ -254,9 +254,10 @@ async function loadCards(page: PortalPageKey, dataPage = 1): Promise<PortalCard[
       return {
         image: course.representativeImageUrl ?? sportsImage({ placeName: course.title ?? null, sportName: course.sportName, representativeImageUrl: null, metadata: null }, [presentation.category.replace(/\s/g, "")]),
         tag: presentation.category,
+        secondaryTag: course.isClosed ? "마감" : undefined,
         title: course.title ?? `이벤트 미션 #${course.id}`,
         description: "",
-        meta: `${presentation.region} · 스탬프 1개`,
+        meta: course.isClosed ? `${presentation.region} · 인증 접수 마감` : `${presentation.region} · 스탬프 1개`,
         icon: presentation.category === "올림픽 레거시" ? "olympicRings" as const : "medal" as const,
         href: `/missions/detail?id=${course.id}`,
       };
