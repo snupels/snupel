@@ -7,7 +7,6 @@ import { api } from "@/lib/api/service";
 import { ApiError } from "@/lib/api/repository";
 import { passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { AppIcon, type AppIconName } from "./AppIcon";
-import hongcheonMarathonImage from "@/imports/LandingPage/2026-hongcheon-love-marathon.jpg";
 import chuncheonMarathonImage from "@/imports/LandingPage/2026-chuncheon-marathon-hero.jpg";
 import digitalTourCardImage from "@/imports/LandingPage/digital-tour-card-gangwon-hero.png";
 
@@ -20,7 +19,7 @@ const categories: Array<{ image?: string; icon?: AppIconName; title: string; des
 ];
 
 const heroChallenges: Array<{
-  image: StaticImageData;
+  image: StaticImageData | string;
   tag: string;
   title: string;
   description: string;
@@ -30,14 +29,14 @@ const heroChallenges: Array<{
   href?: string;
 }> = [
   {
-    image: hongcheonMarathonImage,
-    tag: "접수 현황은 공식 사이트 확인",
-    title: "2026 홍천사랑마라톤대회",
-    description: "홍천강을 따라 함께 달리는 러닝 페스티벌. 홍천종합운동장에서 힘차게 출발하세요.",
-    date: "2026.10.04(일) 09:00",
-    location: "홍천종합운동장",
-    actionLabel: "대회 참가 신청",
-    href: "https://www.hongcheonrun.net/participate.php",
+    image: "https://sqnc.global/_next/static/media/run-ridge.4a7ade5d.jpg",
+    tag: "개최 예정 · 트레일러닝",
+    title: "불닭 버닝 페스타 With 페포",
+    description: "대관령의 초원을 달리는 5K·13K·23K 트레일런. 평창 삼양라운드힐에서 러닝과 캠핑·웰니스를 함께 즐겨보세요.",
+    date: "2026.10.24(토) ~ 10.25(일)",
+    location: "평창 삼양라운드힐",
+    actionLabel: "공식 행사 안내",
+    href: "https://sqnc.global/buldak-burning-festa-with-peppo",
   },
   {
     image: chuncheonMarathonImage,
