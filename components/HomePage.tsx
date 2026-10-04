@@ -27,9 +27,11 @@ const heroChallenges: Array<{
   location: string;
   actionLabel?: string;
   href?: string;
+  tone?: "fire";
 }> = [
   {
-    image: "https://sqnc.global/_next/static/media/run-ridge.4a7ade5d.jpg",
+    image: "https://sqnc.global/_next/static/media/hero-fire-first-frame.e3bf6c5e.jpg",
+    tone: "fire",
     tag: "개최 예정 · 트레일러닝",
     title: "불닭 버닝 페스타 With 페포",
     description: "대관령의 초원을 달리는 5K·13K·23K 트레일런. 평창 삼양라운드힐에서 러닝과 캠핑·웰니스를 함께 즐겨보세요.",
@@ -228,7 +230,12 @@ export default function HomePage() {
       <section className="bg-gradient-to-b from-[#e8f0eb] via-[#f3f7f4] to-[#f3f7f4] px-4 pb-14 pt-8 sm:px-6 lg:px-8">
         <div className="relative mx-auto min-h-[500px] max-w-[1280px] overflow-hidden rounded-[28px] bg-[#244839] shadow-[0_20px_60px_rgba(21,55,40,0.18)]">
           <Image key={heroChallenge.title} src={heroChallenge.image} alt={`${heroChallenge.title} 배경`} fill preload sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,35,27,0.78)_0%,rgba(10,35,27,0.48)_48%,rgba(10,35,27,0.65)_100%)]" />
+          <div
+            className="absolute inset-0"
+            style={{ background: heroChallenge.tone === "fire"
+              ? "linear-gradient(90deg,rgba(45,3,7,0.82) 0%,rgba(92,8,16,0.76) 48%,rgba(145,12,22,0.58) 100%)"
+              : "linear-gradient(90deg,rgba(10,35,27,0.78) 0%,rgba(10,35,27,0.48) 48%,rgba(10,35,27,0.65) 100%)" }}
+          />
           <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
             <aside className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
               <div className="flex items-center justify-between gap-2">
