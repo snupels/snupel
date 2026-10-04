@@ -37,7 +37,9 @@ assert.equal(missionPresentation(legacyMission).category, "이벤트");
 
 const missionSource = read("components/MissionDetailPage.tsx");
 assert.match(missionSource, /key=\{courseId\} courseId=\{courseId\}/);
-assert.match(missionSource, /if \(submissionLock\.current \|\| completed\) return/);
+assert.match(missionSource, /if \(submissionLock\.current \|\| completed \|\| course\?\.isClosed\) return/);
+assert.match(missionSource, /course\.isClosed \? <aside[\s\S]*인증 접수가 마감되었습니다[\s\S]*<\/aside> : <form/);
+assert.match(missionSource, /이미 제출한 인증은 계속 심사되며, 획득한 스탬프와 배지는 유지됩니다/);
 assert.match(missionSource, /if \(cancelled\) return/);
 assert.match(missionSource, /!courseData\.isPublished/);
 assert.match(missionSource, /!itineraryData\.stops\.length/);
