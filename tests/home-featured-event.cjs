@@ -10,8 +10,18 @@ const context = { chuncheonMarathonImage: "chuncheon.jpg", digitalTourCardImage:
 vm.runInNewContext(ts.transpileModule(catalog + "\nglobalThis.slides = heroChallenges;", {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText, context);
-const [featured, marathon, tourism] = context.slides;
-assert.equal(context.slides.length, 3);
+const [featured, marvel, marathon, tourism] = context.slides;
+assert.equal(context.slides.length, 4);
+assert.equal(marvel.title, "2026 마블런");
+assert.equal(marvel.date, "2026.10.31(토)");
+assert.equal(marvel.location, "인제 인제스피디움");
+assert.equal(marvel.href, "https://marvelrunkorea2026.com/");
+assert.equal(marvel.image, "https://marvelrunkorea2026.com/images/main/hero-characters.png");
+assert.equal(marvel.logo, "https://marvelrunkorea2026.com/images/coming-soon/marvel-run-logo.png");
+assert.equal(marvel.tone, "marvel");
+assert.equal(marvel.actionLabel, "공식 홈페이지");
+assert.match(home, /©2026 MARVEL/);
+assert.match(home, /7000/);
 assert.equal(featured.title, "불닭 버닝 페스타 With 페포");
 assert.equal(featured.href, "https://sqnc.global/buldak-burning-festa-with-peppo");
 assert.equal(featured.image, "https://sqnc.global/_next/static/media/hero-fire-first-frame.e3bf6c5e.jpg");
@@ -33,4 +43,4 @@ assert.equal(marathon.title, "2026 춘천마라톤");
 assert.equal(tourism.image, "tour-card.png");
 assert.doesNotMatch(catalog, /홍천|hongcheon/);
 assert.match(home, /setHeroIndex\(\(current\) => \(current \+ 1\) % heroChallenges.length\)/);
-console.log("PASS: official Buldak event replaces only the first home slide; other slides and rotation preserved");
+console.log("PASS: official Marvel event added; Buldak, existing slides and 7-second rotation preserved");

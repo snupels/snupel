@@ -27,7 +27,8 @@ const heroChallenges: Array<{
   location: string;
   actionLabel?: string;
   href?: string;
-  tone?: "fire";
+  tone?: "fire" | "marvel";
+  logo?: string;
   artwork?: string;
 }> = [
   {
@@ -41,6 +42,18 @@ const heroChallenges: Array<{
     location: "평창 삼양라운드힐",
     actionLabel: "공식 홈페이지",
     href: "https://sqnc.global/buldak-burning-festa-with-peppo",
+  },
+  {
+    image: "https://marvelrunkorea2026.com/images/main/hero-characters.png",
+    tone: "marvel",
+    logo: "https://marvelrunkorea2026.com/images/coming-soon/marvel-run-logo.png",
+    tag: "개최 예정 · 마블 테마 러닝",
+    title: "2026 마블런",
+    description: "마블 히어로와 함께 달리는 인제스피디움. 10km·5km·2.3km 코스에서 나만의 히어로 레이스를 시작해 보세요.",
+    date: "2026.10.31(토)",
+    location: "인제 인제스피디움",
+    actionLabel: "공식 홈페이지",
+    href: "https://marvelrunkorea2026.com/",
   },
   {
     image: chuncheonMarathonImage,
@@ -231,13 +244,16 @@ export default function HomePage() {
     <div className="bg-[#f3f7f4] text-[#172033]">
       <section className="bg-gradient-to-b from-[#e8f0eb] via-[#f3f7f4] to-[#f3f7f4] px-4 pb-14 pt-8 sm:px-6 lg:px-8">
         <div data-testid="home-hero" className="relative mx-auto min-h-[500px] max-w-[1280px] overflow-hidden rounded-[28px] bg-[#244839] shadow-[0_20px_60px_rgba(21,55,40,0.18)]">
-          <Image key={heroChallenge.title} src={heroChallenge.image} alt={`${heroChallenge.title} 배경`} fill preload sizes="(max-width: 1280px) 100vw, 1280px" className="object-cover" />
+          <Image key={heroChallenge.title} src={heroChallenge.image} alt={`${heroChallenge.title} 배경`} fill preload sizes="(max-width: 1280px) 100vw, 1280px" className={`object-cover ${heroChallenge.tone === "marvel" ? "bg-[#100e26] object-[65%_center]" : ""}`} />
           <div
             className="absolute inset-0"
             style={{ background: heroChallenge.tone === "fire"
               ? "linear-gradient(90deg,rgba(45,3,7,0.82) 0%,rgba(92,8,16,0.76) 48%,rgba(145,12,22,0.58) 100%)"
-              : "linear-gradient(90deg,rgba(10,35,27,0.78) 0%,rgba(10,35,27,0.48) 48%,rgba(10,35,27,0.65) 100%)" }}
+              : heroChallenge.tone === "marvel"
+                ? "linear-gradient(90deg,rgba(9,8,23,0.82) 0%,rgba(15,10,30,0.80) 40%,rgba(18,10,30,0.45) 70%,rgba(48,6,18,0.28) 100%)"
+                : "linear-gradient(90deg,rgba(10,35,27,0.78) 0%,rgba(10,35,27,0.48) 48%,rgba(10,35,27,0.65) 100%)" }}
           />
+          {heroChallenge.tone === "marvel" && <span className="absolute right-5 top-3 z-10 text-[10px] tracking-wide text-white/75">공식 행사 이미지 · ©2026 MARVEL</span>}
           <div className="relative z-10 grid min-h-[500px] items-center gap-8 p-6 sm:p-10 lg:grid-cols-[190px_minmax(0,1fr)_220px] lg:p-12">
             <aside data-testid="home-weather" className="order-2 rounded-2xl border border-white/60 bg-white/95 p-5 shadow-xl backdrop-blur lg:order-1">
               <div className="flex items-center justify-between gap-2">
@@ -258,9 +274,12 @@ export default function HomePage() {
             </aside>
 
             <div className="order-1 max-w-2xl text-white lg:order-2" aria-live="polite">
-              <span className="inline-flex rounded-full bg-[#02b957] px-3 py-1 text-xs font-semibold">{heroChallenge.tag}</span>
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${heroChallenge.tone === "marvel" ? "bg-[#d71920]" : "bg-[#02b957]"}`}>{heroChallenge.tag}</span>
               <div data-testid="home-hero-heading" className="mt-3 flex h-28 items-center gap-3 sm:h-24 sm:gap-4">
-                <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-[1.2] tracking-[-0.04em] sm:text-[32px] xl:text-[40px]">{heroChallenge.title}</h1>
+                {heroChallenge.logo ? <>
+                  <h1 className="sr-only">{heroChallenge.title}</h1>
+                  <Image src={heroChallenge.logo} alt="MARVEL RUN 2026 KOREA" width={926} height={420} sizes="240px" className="h-full w-auto max-w-full object-contain object-left drop-shadow-lg" />
+                </> : <h1 className="min-w-0 flex-1 text-[26px] font-bold leading-[1.2] tracking-[-0.04em] sm:text-[32px] xl:text-[40px]">{heroChallenge.title}</h1>}
                 {heroChallenge.artwork && <Image src={heroChallenge.artwork} alt="불닭 페포 마스코트와 버닝 페스타 공식 로고" width={1200} height={1053} sizes="(min-width: 1280px) 104px, (min-width: 640px) 96px, 80px" className="h-auto w-20 shrink-0 object-contain drop-shadow-xl sm:w-24 xl:w-[104px]" />}
               </div>
               <p className="mt-3 min-h-24 max-w-xl text-sm leading-6 text-white/90 sm:min-h-18 sm:text-base">{heroChallenge.description}</p>
@@ -270,7 +289,7 @@ export default function HomePage() {
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
                 {heroChallenge.href ? (
-                  <a href={heroChallenge.href} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#00a94f] px-5 text-sm font-semibold text-white shadow-lg transition hover:bg-[#008f43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                  <a href={heroChallenge.href} target="_blank" rel="noopener noreferrer" className={`inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white shadow-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${heroChallenge.tone === "marvel" ? "bg-[#d71920] hover:bg-[#b91018]" : "bg-[#00a94f] hover:bg-[#008f43]"}`}>
                     {heroChallenge.actionLabel ?? "자세히 보기"}<AppIcon name="arrowRight" />
                   </a>
                 ) : (
