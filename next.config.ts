@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
     remotePatterns: [
+      { protocol: "https", hostname: "marvelrunkorea2026.com", pathname: "/images/**", search: "" },
       { protocol: "https", hostname: "sqnc.global", pathname: "/_next/static/media/**" },
       { protocol: "https", hostname: "kw-marathon.com", pathname: "/theme/krf/img/**" },
       { protocol: "https", hostname: "koreawalk.kr", pathname: "/images/**" },
