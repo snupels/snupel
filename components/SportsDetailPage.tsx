@@ -13,6 +13,7 @@ import { sportDisplayName, sourceDisplayName } from "@/lib/sportsLabels";
 import { sportCategory } from "@/lib/sportsCategories";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { SportsLocationMap } from "./SportsLocationMap";
+import { RelatedMissions } from "./RelatedMissions";
 import { sportsDescription } from "@/lib/sportsDescription";
 
 type DetailItem = {
@@ -185,6 +186,7 @@ function SportsDetailContent({ activityId }: { activityId: number }) {
           </div>
 
           {photoSource && <p className="px-7 pt-3 text-right text-xs text-[#637069] sm:px-10">사진 출처: <a href={photoSource.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{photoSource.label}</a></p>}
+          <RelatedMissions key={activity.id} activityId={activity.id} />
           <div className="grid gap-10 p-7 sm:p-10 lg:grid-cols-[minmax(0,1fr)_340px]">
             <section>
               <p className="text-sm font-bold text-[#008f45]">{isSportsPlace ? "스포츠 장소 소개" : "여행 장소 소개"}</p>
