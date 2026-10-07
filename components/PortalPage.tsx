@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { sportsSearchText, matchesSportsKeyword } from "@/lib/sportsSearch";
 import { compareEvents, eventParticipation } from "@/lib/eventParticipation";
 import { api } from "@/lib/api/service";
+import { SERVICE_INFO } from "@/lib/serviceInfo";
 import { missionPresentation } from "@/lib/missionCatalog";
 import { courseItineraryDescription, courseStopReason } from "@/lib/coursePresentation";
 import { sportsFacilityType } from "@/lib/sportsFacility";
@@ -23,7 +24,7 @@ const portalQuickLinks: Array<{ icon: AppIconName; title: string; text: string; 
   { icon: "map", title: "지역별로 보기", text: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "내 행사 일정", text: "저장한 행사를 모아보고 Google 캘린더에 추가하세요.", href: "/saved-events/" },
   { icon: "users", title: "스포츠 피드", text: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
-  { icon: "instagram", title: "Instagram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
+  { icon: "instagram", title: "Instagram", text: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: SERVICE_INFO.instagramUrl },
 ];
 
 type PageConfig = {

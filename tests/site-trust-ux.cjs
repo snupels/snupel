@@ -35,6 +35,11 @@ assert.ok(footer.includes("게시물·댓글 신고"));
 const serviceInfo = read("lib/serviceInfo.ts");
 assert.ok(serviceInfo.includes('"서울 관악구 관악로 1"'));
 assert.ok(serviceInfo.includes('"cs@sportspassport.kr"'));
+assert.ok(serviceInfo.includes('instagramUrl: "https://www.instagram.com/sportspassport_kr/"'));
+for (const file of ["components/HomePage.tsx", "components/PortalPage.tsx", "components/SiteFooter.tsx", "components/SupportPage.tsx"]) {
+  assert.ok(read(file).includes("SERVICE_INFO.instagramUrl"), `${file} uses the shared Instagram URL`);
+  assert.ok(!read(file).includes("https://www.instagram.com/"), `${file} must not duplicate the account URL`);
+}
 
 const support = read("components/SupportPage.tsx");
 const privacy = read("components/PrivacyPolicyPage.tsx");

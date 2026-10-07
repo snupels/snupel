@@ -73,6 +73,7 @@ const portal = load(portalSource, (name) => {
   if (name === "next/link") return { __esModule: true, default: ({ children, ...props }) => React.createElement("a", props, children) };
   if (name === "next/image" || name === "next/script") return { __esModule: true, default: () => null };
   if (name === "@/lib/api/service") return { api: { hasToken: () => false } };
+  if (name === "@/lib/serviceInfo") return load(read("lib/serviceInfo.ts"));
   if (name === "./AppIcon") return { AppIcon: () => null };
   if (name === "./CoursePreferences") return { CoursePreferences: () => null };
   if (name === "./CourseGuide") return { CourseGuide: () => null };
@@ -80,6 +81,7 @@ const portal = load(portalSource, (name) => {
   return {};
 });
 const sportsHtml = renderToStaticMarkup(React.createElement(portal.PortalPage, { page: "sports" }));
+assert.ok(sportsHtml.includes('href="https://www.instagram.com/sportspassport_kr/"'));
 for (const [name, values] of [["sport", ["산악스포츠", "동계스포츠"]], ["region", ["평창", "강릉"]]]) {
   for (const value of values) assert.ok(sportsHtml.includes(`type="hidden" name="${name}" value="${value}"`));
 }

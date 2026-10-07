@@ -9,7 +9,7 @@ export const SERVICE_INFO = {
   operatorAddress: configuredOperatorAddress || "서울 관악구 관악로 1",
   privacyOfficer: configuredPrivacyOfficer || "개인정보 보호 담당자",
   supportEmail: configuredSupportEmail || "cs@sportspassport.kr",
-  instagramUrl: "https://www.instagram.com/gangwonsportspassport/",
+  instagramUrl: "https://www.instagram.com/sportspassport_kr/",
   policyEffectiveDate: "2026년 9월 15일",
 } as const;
 
