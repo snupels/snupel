@@ -2,9 +2,9 @@
 
 강원특별자치도의 스포츠 관광 정보를 탐색하고, 미션에 참여해 나만의 스포츠 패스포트를 완성하는 정적 프론트엔드 웹 서비스입니다.
 
-- **프론트엔드 저장소:** `snupel` (Next.js, 정적 출력)
-- **백엔드 저장소:** `snupel-fastapi` (FastAPI, `/api/*` 계약)
-- **운영 배포:** GitHub Actions가 정적 파일을 S3에 업로드하며 CloudFront를 통해 제공합니다. API는 별도 백엔드 도메인으로 요청합니다.
+- **이 저장소 `snupel`:** Next.js 화면과 브라우저용 API 클라이언트. 빌드 결과는 정적 파일이며 서버 API·DB 스키마·마이그레이션은 포함하지 않습니다.
+- **백엔드 저장소 [`snupel-fastapi`](https://github.com/snupels/snupel-fastapi):** FastAPI의 `/api/*`, 인증·권한·비즈니스 로직, 관광 데이터 동기화, MySQL 모델과 Alembic 마이그레이션을 관리합니다.
+- **운영 배포:** 이 저장소는 S3·CloudFront로 정적 파일을 배포합니다. 브라우저는 `https://api.sportspassport.kr/api`의 별도 FastAPI 서버를 호출하며, 백엔드·DB 배포는 FastAPI 저장소에서 관리합니다.
 
 ## 서비스 개요
 
@@ -44,7 +44,6 @@
 
 - 한국관광공사 OpenAPI (국문 관광정보, 두루누비 정보)
 - 강원특별자치도 파일데이터 (스키장·골프장, 해양레저, 산소길)
-- 100대 명산 기본정보 OpenAPI
 - Kakao Maps JavaScript API, Kakao Local REST API
 - 기상청 단기예보 / Open-Meteo Forecast API
 - OpenRouter API (코스 구성·추천 사유 생성)
@@ -56,12 +55,13 @@
 snupel/
 ├── app/                 # Next.js App Router (라우트, 레이아웃)
 ├── components/          # 재사용 React 컴포넌트
-├── lib/                 # 도메인별 비즈니스 로직, API DTO/타입
+├── lib/                 # 화면 표시용 데이터 변환과 유틸리티
+│   └── api/             # FastAPI 호출과 프론트엔드 요청·응답 검증
 ├── imports/             # 디자인 자료, 이미지 자산
 ├── public/              # 정적 자산, 이미지
 ├── tests/               # 자동 회귀 테스트 (Node test runner)
 ├── out/                 # `npm run build` 생성 정적 출력
-└── nginx/               운영 Nginx 설정
+└── nginx/               # 별도 Nginx 호스팅 참고 설정(현재 배포에 미사용)
 ```
 
 ## 개발
@@ -74,15 +74,15 @@ npm run build    # 정적 빌드 → out/
 npm test         # 타입 체크 + 테스트
 ```
 
+로컬 화면에서도 기본값으로 운영 FastAPI API를 호출합니다. 개발용 API가 필요하면 `NEXT_PUBLIC_API_BASE_URL`을 빌드·실행 전에 설정하세요. 이 저장소에서 DB를 만들거나 마이그레이션하지 않습니다. 백엔드 실행과 DB 준비는 [FastAPI README](https://github.com/snupels/snupel-fastapi#readme)를 따릅니다.
+
 ## 배포
 
 - `main` 푸시 또는 수동 실행으로 `.github/workflows/deploy.yml`이 테스트·린트·정적 빌드 후 S3에 업로드합니다.
 - CloudFront 배포 ID를 확인한 뒤 업로드하고 캐시 무효화 완료까지 기다립니다. 기존 해시 자산은 이전 HTML을 위해 보존합니다.
 - 업로드 전에 현재 S3 파일을 내려받아 `previous-site-실행ID-시도번호` 아티팩트로 7일 보관합니다. 다운로드·홈 파일 확인·아티팩트 저장 실패 시 배포가 중단됩니다. 배포 역할에는 해당 버킷의 `s3:GetObject`도 필요합니다.
 - `nginx/`는 별도 Nginx 호스팅 시 참고할 설정이며 현재 배포 워크플로에서 사용하지 않습니다.
-- 기본 API 주소는 `https://api.sportspassport.kr/api`이며, `NEXT_PUBLIC_API_BASE_URL`로 재정의할 수 있습니다.
-
-- 배포 점검 진행 상황과 남은 확인: [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)
+- 기본 API 주소는 `https://api.sportspassport.kr/api`이며, `NEXT_PUBLIC_API_BASE_URL`로 재정의할 수 있습니다. 이 값과 `NEXT_PUBLIC_*` 설정은 정적 빌드 시점에 반영됩니다.
 
 ## 정책 및 지원
 
