@@ -87,4 +87,4 @@ npm test         # 타입 체크 + 테스트
 ## 정책 및 지원
 
 - privacy, service, 마케팅 이메일/SMS 약관: `app/terms/` 하위 페이지
-- 지원: `cs@sportspassport.kr`, 공식 인스타그램: `@gangwonsportspassport`
+- 지원: `cs@sportspassport.kr`, 공식 인스타그램: `@sportspassport_kr`

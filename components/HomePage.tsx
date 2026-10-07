@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties } from "react";
 import { api } from "@/lib/api/service";
+import { SERVICE_INFO } from "@/lib/serviceInfo";
 import { ApiError } from "@/lib/api/repository";
 import { passportLevelLabel, resolvePassportLevel } from "@/lib/passportLevel";
 import { AppIcon, type AppIconName } from "./AppIcon";
@@ -81,7 +82,7 @@ const quickLinks: Array<{ icon: AppIconName; title: string; description: string;
   { icon: "map", title: "지역별로 보기", description: "강원 18개 시군의 활동을 지도에서 확인하세요.", href: "/map" },
   { icon: "calendar", title: "내 행사 일정", description: "저장한 행사를 모아보고 Google 캘린더에 추가하세요.", href: "/saved-events/" },
   { icon: "users", title: "스포츠 피드", description: "강원에서 즐긴 순간을 사진으로 나눠보세요.", href: "/community" },
-  { icon: "instagram", title: "Instagram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: "https://www.instagram.com/gangwonsportspassport/" },
+  { icon: "instagram", title: "Instagram", description: "강원 스포츠 패스포트의 새로운 소식을 만나보세요.", href: SERVICE_INFO.instagramUrl },
 ];
 
 const gangwonWeatherRegions = [
