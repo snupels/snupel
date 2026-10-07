@@ -78,7 +78,8 @@ function setup(component) {
     },
     window: { addEventListener: (_, fn) => listeners.add(fn), removeEventListener: (_, fn) => listeners.delete(fn) },
     FormData: FormDataStub, FileReader: FileReaderStub, URLSearchParams,
-    fetch: () => { fetches++; return uploading.promise; },
+    AbortSignal: { timeout(ms) { assert.equal(ms, 120_000); return { timeout: ms }; } },
+    fetch: (_, options) => { assert.equal(options.signal?.timeout, 120_000); fetches++; return uploading.promise; },
   });
   const render = () => { stateIndex = 0; refIndex = 0; return pageExports[component](); };
   render(); cleanup = effect();
@@ -142,6 +143,22 @@ async function check(component) {
     assert.equal(ui.writes(), writes, `${component}: late save after ${interrupt} ignored`);
     assert.equal(ui.paths.length, paths, `${component}: late save after ${interrupt} cannot redirect`);
     if (interrupt !== "unmount") assert.equal(ui.state[0], null);
+  }
+
+  if (component === "AccountPage") {
+    const ui = setup(component); await ui.loaded(); ui.selectPhoto();
+    const saving = ui.submit();
+    ui.signing.resolve({ uploadUrl: "https://upload.invalid/", objectKey: "private/test", fields: {} });
+    await flush();
+    assert.equal(ui.fetches(), 1);
+    ui.uploading.reject(new Error("Upload timeout"));
+    await saving;
+    assert.equal(ui.patches.length, 0, "failed upload must not update the profile");
+    assert.equal(find(ui.render(), node => node.type === "button" && node.props.type === "submit").props.disabled, false, "upload failure releases submit button");
+    const retry = ui.submit();
+    await retry;
+    assert.equal(ui.fetches(), 2, "upload failure releases the submission lock");
+    ui.unmount();
   }
 
   if (component === "AccountPage") for (const phase of ["upload-url", "upload-body"]) {

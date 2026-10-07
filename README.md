@@ -4,7 +4,7 @@
 
 - **프론트엔드 저장소:** `snupel` (Next.js, 정적 출력)
 - **백엔드 저장소:** `snupel-fastapi` (FastAPI, `/api/*` 계약)
-- **운영 배포:** Nginx가 정적 파일을 제공하고 `/api/*` 요청을 백엔드로 전달합니다.
+- **운영 배포:** GitHub Actions가 정적 파일을 S3에 업로드하며 CloudFront를 통해 제공합니다. API는 별도 백엔드 도메인으로 요청합니다.
 
 ## 서비스 개요
 
@@ -76,9 +76,13 @@ npm test         # 타입 체크 + 테스트
 
 ## 배포
 
-- `npm run build`로 생성된 정적 파일을 Nginx로 제공합니다.
-- `/api/*` 요청은 Nginx 설정을 통해 백엔드(`snupel-fastapi`)로 전달합니다.
+- `main` 푸시 또는 수동 실행으로 `.github/workflows/deploy.yml`이 테스트·린트·정적 빌드 후 S3에 업로드합니다.
+- CloudFront 배포 ID를 확인한 뒤 업로드하고 캐시 무효화 완료까지 기다립니다. 기존 해시 자산은 이전 HTML을 위해 보존합니다.
+- 업로드 전에 현재 S3 파일을 내려받아 `previous-site-실행ID-시도번호` 아티팩트로 7일 보관합니다. 다운로드·홈 파일 확인·아티팩트 저장 실패 시 배포가 중단됩니다. 배포 역할에는 해당 버킷의 `s3:GetObject`도 필요합니다.
+- `nginx/`는 별도 Nginx 호스팅 시 참고할 설정이며 현재 배포 워크플로에서 사용하지 않습니다.
 - 기본 API 주소는 `https://api.sportspassport.kr/api`이며, `NEXT_PUBLIC_API_BASE_URL`로 재정의할 수 있습니다.
+
+- 배포 점검 진행 상황과 남은 확인: [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)
 
 ## 정책 및 지원
 

@@ -94,7 +94,7 @@ export function AccountPage() {
         const uploadBody = new FormData();
         Object.entries(upload.fields).forEach(([key, value]) => uploadBody.append(key, value));
         uploadBody.append("file", file);
-        const uploaded = await fetch(upload.uploadUrl, { method: "POST", body: uploadBody });
+        const uploaded = await fetch(upload.uploadUrl, { method: "POST", body: uploadBody, signal: AbortSignal.timeout(120_000) });
         if (!isCurrent()) return;
         if (!uploaded.ok) throw new Error("upload failed");
         profileImageKey = upload.objectKey;

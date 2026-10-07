@@ -106,7 +106,7 @@ function MissionDetailContent({ courseId }: { courseId: number }) {
       const form = new FormData();
       Object.entries(upload.fields).forEach(([key, value]) => form.append(key, value));
       form.append("file", photo);
-      const uploaded = await fetch(upload.uploadUrl, { method: "POST", body: form });
+      const uploaded = await fetch(upload.uploadUrl, { method: "POST", body: form, signal: AbortSignal.timeout(120_000) });
       if (!uploaded.ok) throw new Error("upload_failed");
       keys.push(upload.objectKey);
       }
