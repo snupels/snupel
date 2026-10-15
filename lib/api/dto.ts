@@ -372,6 +372,8 @@ export const courseRecommendationRequestSchema = z.strictObject({
   sigun: z.string().max(100).nullable().optional(),
   sport: z.string().max(100).nullable().optional(),
   availableMinutes: positiveInt.max(1440),
+  travelDate: z.iso.date().optional(),
+  startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/).optional(),
 });
 export const recommendedStopSchema = z.strictObject({
   activityId: z.number().int(),
@@ -382,6 +384,13 @@ export const recommendedStopSchema = z.strictObject({
   representativeImageUrl: z.string().nullable(),
   reason: z.string(),
   estimatedMinutes: positiveInt,
+  role: z.enum(["activity", "meal", "sightseeing", "rest"]).optional(),
+  arrivalTime: z.string().optional(),
+  departureTime: z.string().optional(),
+  waitingMinutes: z.number().int().nonnegative().optional(),
+  hoursStatus: z.enum(["provided", "unknown"]).optional(),
+  openingHours: z.string().nullable().optional(),
+  visitNote: z.string().optional(),
 });
 export const recommendedLegSchema = z.strictObject({
   fromActivityId: z.number().int(),
@@ -399,6 +408,10 @@ export const courseRecommendationResponseSchema = z.strictObject({
   legs: z.array(recommendedLegSchema),
   usedAi: z.boolean(),
   matchScore: z.number().int().min(0).max(100),
+  travelDate: z.iso.date().optional(),
+  startTime: z.string().optional(),
+  waitingMinutes: z.number().int().nonnegative().optional(),
+  planningNotes: z.array(z.string()).optional(),
 });
 
 export const missionProgressSchema = z.strictObject({
