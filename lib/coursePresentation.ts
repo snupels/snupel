@@ -1,9 +1,5 @@
 type CoursePlace = { activityId: number; placeName: string | null };
 
-export function courseTravelDate() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
-
 export function courseRoleLabel(role: string | undefined) {
   return ({ activity: "메인 체험", meal: "식사", sightseeing: "관광", rest: "휴식" } as Record<string, string>)[role ?? ""];
 }
