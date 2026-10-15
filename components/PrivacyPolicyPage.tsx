@@ -33,6 +33,18 @@ export function PrivacyPolicyPage() {
             </dl>
           </PolicySection>
 
+          <PolicySection title="2-1. 티셔츠 리워드 배송 신청">
+            <p>티셔츠 리워드 배송을 신청한 회원에 한해 아래 정보를 추가로 수집·이용합니다. 신청 화면에서 별도로 동의를 받으며, 회원가입 시 선택 입력한 주소와는 별도로 처리합니다.</p>
+            <dl className="overflow-hidden rounded-2xl border border-[#dfe5e1]">
+              <div className="grid gap-2 p-4 sm:grid-cols-[170px_1fr]"><dt className="font-bold">목적</dt><dd>티셔츠 배송, 신청 내역과 배송 상태 관리, 관련 문의 처리</dd></div>
+              <div className="grid gap-2 border-t border-[#e5ebe7] p-4 sm:grid-cols-[170px_1fr]"><dt className="font-bold">신청 시 필수 항목</dt><dd>수령인명, 연락처, 우편번호·기본주소, 선택 사이즈, 배송 개인정보 수집·이용 동의 여부</dd></div>
+              <div className="grid gap-2 border-t border-[#e5ebe7] p-4 sm:grid-cols-[170px_1fr]"><dt className="font-bold">해당 시 입력 항목</dt><dd>상세주소(동·호수 등 정확한 배송에 필요한 정보)</dd></div>
+              <div className="grid gap-2 border-t border-[#e5ebe7] p-4 sm:grid-cols-[170px_1fr]"><dt className="font-bold">생성·기록 항목</dt><dd>신청 시각·접수 순번·신청 및 배송 상태, 동의 시각과 동의 안내 버전</dd></div>
+              <div className="grid gap-2 border-t border-[#e5ebe7] p-4 sm:grid-cols-[170px_1fr]"><dt className="font-bold">보유 기간</dt><dd>회원 탈퇴 시까지. 관계 법령에 보존 의무가 있으면 해당 기간까지 보관</dd></div>
+            </dl>
+            <p>배송 정보는 신청자 본인과 기존 관리자만 확인하며 공개 프로필·스포츠 피드에는 표시하지 않습니다. 수집·이용 동의를 거부할 수 있으며, 거부 시 티셔츠 배송 신청은 할 수 없지만 다른 서비스 이용에는 영향이 없습니다. 정보의 수정·삭제 등은 위 문의 채널로 요청할 수 있습니다.</p>
+          </PolicySection>
+
           <PolicySection title="3. 보유기간과 파기">
             <p>회원정보는 회원 탈퇴 시까지 보유합니다. 관계 법령에 따라 일정 기간 보존해야 하는 정보는 해당 기간 동안 분리 보관한 뒤 복구할 수 없는 방법으로 파기합니다.</p>
             <p>전자파일은 재생할 수 없도록 삭제하고, 출력물은 분쇄 또는 소각합니다.</p>
@@ -59,6 +71,7 @@ export function PrivacyPolicyPage() {
           <PolicySection title="8. 처리방침 변경">
             <p>처리방침이 변경되면 적용일과 주요 변경 내용을 서비스 화면에서 안내합니다.</p>
             <p className="font-bold text-[#24342b]">시행일: {SERVICE_INFO.policyEffectiveDate}</p>
+            <p>티셔츠 배송 신청 관련 항목 추가: 2026년 10월 15일</p>
           </PolicySection>
         </div>
       </article>
