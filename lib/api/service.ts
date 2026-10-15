@@ -1,6 +1,12 @@
 import { z } from "zod";
 import {
   missionReviewPermissionSchema,
+  teeClaimCreateSchema,
+  teeClaimResponseSchema,
+  teeRewardResponseSchema,
+  teeClaimStatusSchema,
+  type TeeClaimCreate,
+  type TeeClaimStatus,
   activityCreateSchema,
   activityHistoryResponseSchema,
   activityHistoryStatusSchema,
@@ -246,6 +252,10 @@ export const api = {
     get: (historyId: number) => withToken(`/me/activity-history/${itemIdSchema.parse(historyId)}`, activityHistoryResponseSchema),
   },
   myRewards: (page = 1, size = 100) => withToken(`/me/rewards${pageQuery(page, size)}`, z.array(rewardClaimResponseSchema)),
+  teeReward: () => withToken("/me/passport-rewards/tee", teeRewardResponseSchema),
+  claimTee: (input: TeeClaimCreate) => withToken("/me/passport-rewards/tee/claim", teeClaimResponseSchema, "POST", teeClaimCreateSchema.parse(input)),
+  teeClaims: (page = 1) => withToken(`/admin/passport-tee-claims${pageQuery(page, 20)}`, z.array(teeClaimResponseSchema)),
+  updateTeeClaim: (id: number, status: TeeClaimStatus) => withToken(`/admin/passport-tee-claims/${itemIdSchema.parse(id)}`, teeClaimResponseSchema, "PATCH", {status: teeClaimStatusSchema.parse(status)}),
   claimReward: (milestone: "badge_6" | "badge_12", input: RewardClaimCreate) => withToken(
     `/me/rewards/${rewardMilestoneSchema.parse(milestone)}/claim`,
     rewardClaimResponseSchema,

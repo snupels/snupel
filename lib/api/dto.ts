@@ -492,6 +492,33 @@ export const activityHistoryResponseSchema = z.object({
   rejectionReason: z.string().nullable(),
 });
 export const rewardMilestoneSchema = z.enum(["badge_6", "badge_12"]);
+export const teeSizeSchema = z.enum(["S", "M", "L", "XL", "2XL"]);
+export const teeClaimStatusSchema = z.enum(["requested", "preparing", "shipped", "completed"]);
+export const teeClaimCreateSchema = z.strictObject({
+  size: teeSizeSchema,
+  recipientName: z.string().trim().min(1).max(100),
+  phoneNumber: z.string().trim().transform(value => value.replace(/[\s()-]/g, "")).pipe(z.string().regex(/^0[0-9]{8,10}$/)),
+  postalCode: z.string().trim().regex(/^[0-9]{5}$/),
+  address: z.string().trim().min(5).max(500),
+  addressDetail: z.string().trim().max(200).default(""),
+  shippingConsent: z.literal(true),
+});
+export const teeClaimResponseSchema = z.strictObject({
+  id: positiveInt, allocationNo: positiveInt, size: teeSizeSchema,
+  recipientName: z.string(), phoneNumber: z.string(), postalCode: z.string(),
+  address: z.string(), addressDetail: z.string(), status: teeClaimStatusSchema,
+  requestedAt: apiDateTime, fulfilledAt: apiDateTime.nullable(),
+});
+export const teeRewardResponseSchema = z.strictObject({
+  requiredStamps: positiveInt, collectedStamps: z.number().int().nonnegative(),
+  quantity: positiveInt, remaining: z.number().int().nonnegative(),
+  isOpen: z.boolean(), eligible: z.boolean(), canManage: z.boolean(),
+  claim: teeClaimResponseSchema.nullable(),
+});
+export type TeeClaimCreate = z.input<typeof teeClaimCreateSchema>;
+export type TeeClaimResponse = z.infer<typeof teeClaimResponseSchema>;
+export type TeeRewardResponse = z.infer<typeof teeRewardResponseSchema>;
+export type TeeClaimStatus = z.infer<typeof teeClaimStatusSchema>;
 export const rewardClaimStatusSchema = z.enum(["eligible", "requested", "preparing", "shipped", "completed"]);
 export const rewardClaimCreateSchema = z.strictObject({
   recipient_name: z.string().trim().min(1).max(100),
