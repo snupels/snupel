@@ -1,5 +1,13 @@
 type CoursePlace = { activityId: number; placeName: string | null };
 
+export function courseTravelDate() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
+
+export function courseRoleLabel(role: string | undefined) {
+  return ({ activity: "메인 체험", meal: "식사", sightseeing: "관광", rest: "휴식" } as Record<string, string>)[role ?? ""];
+}
+
 export function courseItineraryDescription(stops: readonly CoursePlace[]) {
   if (!stops.length) return "추천 장소가 없습니다. 조건을 바꿔 다시 추천받아 주세요.";
   const names = stops.map((stop, index) => stop.placeName?.trim() || `${index + 1}번째 장소`);

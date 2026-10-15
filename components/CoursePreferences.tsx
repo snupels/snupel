@@ -77,6 +77,18 @@ export function CoursePreferences({ values = {}, collapsed = false }: { values?:
             <span className="text-sm font-bold"><span className="group-open:hidden">다른 코스 보기</span><span className="hidden group-open:inline">접기</span></span>
           </summary>
           <div className="space-y-8 p-6 sm:p-8">
+            <fieldset>
+              <legend className="flex items-center gap-2 text-sm font-bold"><AppIcon name="calendar" className="size-4 text-[#00a94f]" />언제 출발하나요?</legend>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-semibold text-[#445065]">여행일 <span className="font-normal text-[#7a867f]">미선택 시 오늘</span>
+                  <input type="date" name="travelDate" defaultValue={typeof values.travelDate === "string" ? values.travelDate : undefined} className="mt-2 block min-h-12 w-full rounded-xl border border-[#dce6df] bg-white px-4 text-[#172033] focus:outline-2 focus:outline-[#008f45]" />
+                </label>
+                <label className="text-sm font-semibold text-[#445065]">출발 시각
+                  <input type="time" name="startTime" required defaultValue={typeof values.startTime === "string" ? values.startTime : "09:00"} className="mt-2 block min-h-12 w-full rounded-xl border border-[#dce6df] bg-white px-4 text-[#172033] focus:outline-2 focus:outline-[#008f45]" />
+                </label>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#7a867f]">체험 한 곳에 주변 식사·관광·휴식을 연결해요. 제공된 운영시간과 휴무 정보를 반영하며, 미확인 장소는 따로 표시해요.</p>
+            </fieldset>
             {groups.map((group) => (
               <fieldset key={group.name}>
                 <legend className="flex items-center gap-2 text-sm font-bold"><AppIcon name={group.items[0].icon} className="size-4 text-[#00a94f]" />{group.title}{group.description && <span className="font-normal text-[#96a09a]">{group.description}</span>}</legend>
