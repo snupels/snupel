@@ -10,13 +10,12 @@ import { compareEvents, eventParticipation } from "@/lib/eventParticipation";
 import { api } from "@/lib/api/service";
 import { SERVICE_INFO } from "@/lib/serviceInfo";
 import { missionPresentation } from "@/lib/missionCatalog";
-import { courseItineraryDescription, courseStopReason, courseTravelDate, courseRoleLabel } from "@/lib/coursePresentation";
+import { courseItineraryDescription, courseStopReason, courseRoleLabel } from "@/lib/coursePresentation";
 import { sportsFacilityType } from "@/lib/sportsFacility";
 import { sportCategory, sportCategories } from "@/lib/sportsCategories";
 import { isExcludedSportActivity, sportsImage } from "@/lib/sportsImage";
 import { AppIcon, type AppIconName } from "./AppIcon";
 import { CoursePreferences } from "./CoursePreferences";
-import { CourseVisitDetails, type CourseVisit } from "./CourseVisitDetails";
 import heroImage from "@/imports/LandingPage/a0d5da596bc83d9effc7a18d6702727ac6b06d43.png";
 
 export type PortalPageKey = "sports" | "courses" | "missions" | "events" | "mypage";
@@ -39,7 +38,7 @@ type PageConfig = {
   sectionDescription: string;
 };
 
-type PortalCard = { image: string | StaticImageData; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; searchText?: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null; visit?: CourseVisit };
+type PortalCard = { image: string | StaticImageData; tag: string; secondaryTag?: string; facilityTag?: string; title: string; description: string; searchText?: string; meta: string; icon: AppIconName; href?: string; mapHref?: string; order?: number; hidden?: boolean; latitude?: number | null; longitude?: number | null; sigun?: string | null; kakaoPlaceId?: string | null };
 
 type CoursePlan = {
   title: string;
@@ -50,10 +49,6 @@ type CoursePlan = {
   totalEstimatedMinutes: number;
   legs: Array<{ distanceKm: number; travelMinutes: number }>;
   mapHref: string | null;
-  travelDate?: string;
-  startTime?: string;
-  waitingMinutes?: number;
-  planningNotes?: string[];
 };
 
 const configs: Record<PortalPageKey, PageConfig> = {
@@ -389,8 +384,6 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
       sigun: selectedSigun,
       sport: params.get("sport") || null,
       availableMinutes: selectedMinutes,
-      travelDate: params.get("travelDate") || courseTravelDate(),
-      startTime: params.get("startTime") || "09:00",
     }).then((recommendation) => {
       if (cancelled) return;
 
@@ -409,10 +402,6 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
           latitude: stop.latitude,
           longitude: stop.longitude,
           sigun: selectedSigun,
-          visit: stop.arrivalTime ? {
-            arrivalTime: stop.arrivalTime, departureTime: stop.departureTime,
-            waitingMinutes: stop.waitingMinutes, hoursStatus: stop.hoursStatus, openingHours: stop.openingHours,
-          } : undefined,
         };
       });
       setRemoteCards(recommendedCards);
@@ -424,10 +413,6 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
         travelMinutes: recommendation.travelMinutes,
         totalEstimatedMinutes: recommendation.totalEstimatedMinutes,
         legs: recommendation.legs,
-        travelDate: recommendation.travelDate,
-        startTime: recommendation.startTime,
-        waitingMinutes: recommendation.waitingMinutes,
-        planningNotes: recommendation.planningNotes,
         mapHref: kakaoRouteHref(recommendedCards.map((card, index) => ({
           title: card.title,
           latitude: recommendation.stops[index].latitude,
@@ -608,15 +593,12 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
               <h3 id="recommended-course-title" className="mt-2 text-2xl font-bold tracking-[-0.03em]">{coursePlan.title}</h3>
               <p className="mt-3 text-sm leading-6 text-[#59675f]">{coursePlan.description}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#405149]">
-                {coursePlan.travelDate && <span className="rounded-full bg-white px-3 py-1.5">{coursePlan.travelDate} · {coursePlan.startTime} 출발</span>}
                 <span className="rounded-full bg-white px-3 py-1.5">{coursePlan.stopCount}개 장소</span>
                 <span className="rounded-full bg-white px-3 py-1.5">예상 활동 약 {coursePlan.activityMinutes}분</span>
                 <span className="rounded-full bg-white px-3 py-1.5">예상 이동 약 {coursePlan.travelMinutes}분</span>
-                {Boolean(coursePlan.waitingMinutes) && <span className="rounded-full bg-white px-3 py-1.5">예상 대기 약 {coursePlan.waitingMinutes}분</span>}
                 <span className="rounded-full bg-white px-3 py-1.5">총 예상 {coursePlan.totalEstimatedMinutes}분</span>
               </div>
               <p className="mt-3 text-xs leading-5 text-[#68756d]">거리와 활동·이동 시간은 추정값이며 실제 도로, 교통 및 현장 여건에 따라 달라집니다. 출발 전 카카오맵에서 실제 경로를 확인해 주세요.</p>
-              {coursePlan.planningNotes?.map(note => <p key={note} className="mt-2 text-xs leading-5 text-[#8a6800]">{note}</p>)}
             </div>
             {coursePlan.mapHref ? <a href={coursePlan.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#008f45] px-6 text-sm font-bold text-white transition hover:bg-[#00783a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008f45] focus-visible:ring-offset-2"><AppIcon name="map" className="size-4" />카카오맵 전체 길찾기<AppIcon name="arrowRight" className="size-4" /></a> : <p className="max-w-52 text-xs leading-5 text-[#6f7a87]">모든 장소의 좌표가 확인되면 전체 길찾기를 열 수 있습니다.</p>}
           </section>}
@@ -637,7 +619,6 @@ function PortalPageContent({ page }: { page: PortalPageKey }) {
                   {card.facilityTag && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#8a6800]"><AppIcon name="clipboard" />{card.facilityTag}</p>}
                   {card.description && <p className="mt-2 min-h-10 text-sm leading-5 text-[#6f7a87]">{card.description}</p>}
                   <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#008f45]"><AppIcon name="mapPin" />{card.meta}</p>
-                  {card.visit && <CourseVisitDetails visit={card.visit} />}
                   {card.mapHref && <div className="mt-auto flex gap-2 border-t border-[#edf1ee] pt-4"><a href={card.mapHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#fae100] px-3 text-xs font-bold text-[#191919] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a7d00]"><AppIcon name="map" />카카오맵</a></div>}
                 </div>
               </article>;
