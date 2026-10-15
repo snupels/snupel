@@ -59,4 +59,8 @@ test('shipping privacy stays private and admin screen is not indexed',()=>{
   assert.match(source,/신청 내역 다시 확인/);assert.match(source,/reward\?\.canManage/);
   assert.match(fs.readFileSync('app/(portal)/reward-management/page.tsx','utf8'),/index: false/);
   assert.match(fs.readFileSync('components/TeeRewardManagement.tsx','utf8'),/sportspassport-auth-change/);
+  const route=fs.readFileSync('app/terms/privacy/page.tsx','utf8');
+  assert.match(route,/PrivacyPolicyPage/);
+  const policy=fs.readFileSync('components/PrivacyPolicyPage.tsx','utf8');
+  for(const label of ['티셔츠 리워드 배송 신청','수령인명','선택 사이즈','동의 시각','신청자 본인과 기존 관리자','회원 탈퇴 시까지']) assert.ok(policy.includes(label));
 });
