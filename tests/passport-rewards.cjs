@@ -14,14 +14,17 @@ const { PASSPORT_REWARD_PLANS, PASSPORT_REWARD_NOTICE } = moduleValue.exports;
 
 assert.equal(PASSPORT_REWARD_PLANS.length, 2);
 assert.equal(PASSPORT_REWARD_PLANS[0].title, "강원 숙박 할인권");
-assert.match(PASSPORT_REWARD_PLANS[1].title, /티셔츠.*굿즈/);
+assert.match(PASSPORT_REWARD_PLANS[1].title, /자체 제작 GSP.*티셔츠/);
+assert.equal(PASSPORT_REWARD_PLANS[1].requiredStamps, 5);
+assert.equal(PASSPORT_REWARD_PLANS[1].quantity, 100);
+assert.equal(PASSPORT_REWARD_PLANS[1].previewImage, '/rewards/gsp-performance-tee-black.png');
 for (const plan of PASSPORT_REWARD_PLANS) {
-  assert.equal(plan.status, "planned");
-  assert.equal(plan.threshold, undefined, "Do not fabricate unconfirmed eligibility thresholds");
+  assert.equal(plan.status, plan.previewImage ? "open" : "planned");
+  assert.equal(plan.threshold, undefined, "Do not mix reward criteria with badge-shipping milestones");
   assert.equal(plan.couponCode, undefined, "Product plans must not look like issued coupons");
 }
-assert.match(PASSPORT_REWARD_NOTICE, /확정되지 않았/);
-assert.match(PASSPORT_REWARD_NOTICE, /보장하지 않/);
+assert.match(PASSPORT_REWARD_NOTICE, /신청 접수 완료 순/);
+assert.match(PASSPORT_REWARD_NOTICE, /보장되지는 않/);
 
 const passport = source("components/PassportPage.tsx");
 const rewards = source("components/PassportRewards.tsx");
@@ -37,6 +40,7 @@ assert.ok(passport.includes("mix-blend-multiply"));
 assert.ok(rewards.includes("준비 중"));
 assert.ok(rewards.includes("<details"));
 assert.ok(!rewards.includes("claimReward"));
+assert.ok(rewards.includes('<TeeRewardClaim />'));
 assert.ok(myPassport.includes('href="/stampbook#rewards"'));
 assert.ok(myPassport.includes("실물 배지 배송"));
 assert.ok(badges.includes("api.claimReward("), "Preserve the independent badge-shipping workflow");

@@ -28,7 +28,7 @@ export function TermsPage() {
 }
 
 function TermsLayout({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="bg-[#f3f7f4] px-4 py-12 sm:px-6"><article className="mx-auto max-w-4xl rounded-[28px] border border-[#dfe7e1] bg-white p-6 shadow-sm sm:p-10"><p className="text-sm font-bold text-[#008f45]">GANGWON SPORTS PASSPORT</p><h1 className="mt-2 text-3xl font-bold">{title}</h1>{children}</article></div>;
+  return <div className="bg-[#f3f7f4] px-4 py-12 sm:px-6"><article className="mx-auto max-w-4xl rounded-[28px] border border-[#dfe7e1] bg-white p-6 shadow-sm sm:p-10"><p className="text-sm font-bold text-[#008f45]">GANGWON SPORTS PASSPORT</p><h1 className="mt-2 text-3xl font-bold">{title}</h1>{children}{title === "개인정보 수집·이용 동의" && <section className="mt-8 border-t pt-6"><h2 className="text-xl font-bold">티셔츠 리워드 배송 신청 시 추가 수집</h2><p className="mt-3 text-sm leading-7 text-[#5f6c65]">배송 신청자에 한해 수령인명, 연락처, 우편번호·주소·상세주소, 선택 사이즈와 신청·배송 상태를 티셔츠 배송 및 관련 문의 처리에 이용합니다. 보유 기간은 회원 탈퇴 시까지이며 관계 법령에 보관 의무가 있으면 해당 기간을 따릅니다. 신청 화면에서 별도로 수집·이용 동의를 받으며, 거부 시 배송 신청은 할 수 없지만 다른 서비스는 이용할 수 있습니다. 배송 정보는 공개 프로필이나 피드에 표시되지 않으며 신청자 본인과 기존 관리자만 확인할 수 있습니다.</p></section>}</article></div>;
 }
 
 export function ServiceTermsPage() {
